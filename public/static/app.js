@@ -93,6 +93,10 @@ async function loadPage(page) {
       updatePageTitle('출고 관리', '출고 지시, 피킹, 패킹 및 배송 처리');
       await loadOutbound(content);
       break;
+    case 'settings':
+      updatePageTitle('설정', '회사 정보 및 시스템 설정');
+      await loadSettings(content);
+      break;
   }
 }
 
@@ -2437,5 +2441,325 @@ async function submitStockMovement(e) {
     console.error('재고 처리 실패:', error);
     const msg = error.response?.data?.error || '처리 중 오류가 발생했습니다.';
     alert(msg);
+  }
+}
+
+// ==================== 설정 페이지 ====================
+
+// 설정 페이지 로드
+async function loadSettings(content) {
+  try {
+    // API에서 데이터 로드
+    const [profileRes, businessRes, systemRes] = await Promise.all([
+      axios.get(`${API_BASE}/settings/profile`),
+      axios.get(`${API_BASE}/settings/business`),
+      axios.get(`${API_BASE}/settings/system`)
+    ]);
+
+    const profile = profileRes.data.data;
+    const business = businessRes.data.data;
+    const system = systemRes.data.data;
+
+    content.innerHTML = `
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- 탭 네비게이션 -->
+        <div class="flex border-b border-slate-200 bg-slate-50">
+          <button class="settings-tab active px-6 py-4 font-medium transition-all flex items-center" data-tab="company" onclick="switchSettingsTab('company')">
+            <i class="fas fa-building mr-2"></i>회사 정보
+          </button>
+          <button class="settings-tab px-6 py-4 font-medium transition-all flex items-center" data-tab="manager" onclick="switchSettingsTab('manager')">
+            <i class="fas fa-user-tie mr-2"></i>담당자
+          </button>
+          <button class="settings-tab px-6 py-4 font-medium transition-all flex items-center" data-tab="document" onclick="switchSettingsTab('document')">
+            <i class="fas fa-file-alt mr-2"></i>공문 작성
+          </button>
+          <button class="settings-tab px-6 py-4 font-medium transition-all flex items-center" data-tab="api" onclick="switchSettingsTab('api')">
+            <i class="fas fa-code mr-2"></i>API 설정
+          </button>
+          <button class="settings-tab px-6 py-4 font-medium transition-all flex items-center" data-tab="logo" onclick="switchSettingsTab('logo')">
+            <i class="fas fa-image mr-2"></i>상표 로고
+          </button>
+        </div>
+
+        <!-- 탭 컨텐츠 -->
+        <div class="p-8">
+          <!-- 회사 정보 탭 -->
+          <div id="tab-content-company" class="tab-content">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">회사 정보</h3>
+            <form onsubmit="saveBusinessInfo(event)" class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">회사명</label>
+                  <input type="text" id="companyName" value="${business.business_name || ''}" 
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">대표자명</label>
+                  <input type="text" id="cetalName" value="${business.ceo_name || ''}"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">사업자등록번호</label>
+                  <input type="text" id="businessNumber" value="${business.business_number || ''}" placeholder="000-00-00000"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">대표 전화번호</label>
+                  <input type="tel" id="businessPhone" value="${business.phone || ''}" placeholder="02-0000-0000"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">사업장 주소</label>
+                <input type="text" id="businessAddress" value="${business.address || ''}"
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                       placeholder="도로명 주소 (예: 서울시 강남구 테헤란로 123)">
+              </div>
+
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">팩스 번호</label>
+                  <input type="tel" id="businessFax" value="${business.fax || ''}"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">이메일</label>
+                  <input type="email" id="businessEmail" value="${profile.email || ''}"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-4">
+                <button type="submit" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                  <i class="fas fa-save mr-2"></i>저장
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- 담당자 정보 탭 -->
+          <div id="tab-content-manager" class="tab-content hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">담당자 정보</h3>
+            <form onsubmit="saveProfileInfo(event)" class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">담당자명</label>
+                  <input type="text" id="managerName" value="${profile.name || ''}"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">연락처</label>
+                  <input type="tel" id="managerPhone" value="${profile.phone || ''}" placeholder="010-0000-0000"
+                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">이메일</label>
+                <input type="email" id="managerEmail" value="${profile.email || ''}"
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+              </div>
+
+              <div class="flex justify-end pt-4">
+                <button type="submit" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                  <i class="fas fa-save mr-2"></i>저장
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- 공문 작성 탭 -->
+          <div id="tab-content-document" class="tab-content hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">공문 작성 설정</h3>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+              <i class="fas fa-file-alt text-5xl text-slate-300 mb-4"></i>
+              <p class="text-slate-500">공문 작성 기능은 추후 업데이트 예정입니다.</p>
+            </div>
+          </div>
+
+          <!-- API 설정 탭 -->
+          <div id="tab-content-api" class="tab-content hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">API 설정</h3>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+              <i class="fas fa-code text-5xl text-slate-300 mb-4"></i>
+              <p class="text-slate-500">API 연동 설정은 추후 업데이트 예정입니다.</p>
+            </div>
+          </div>
+
+          <!-- 상표 로고 탭 -->
+          <div id="tab-content-logo" class="tab-content hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">상표 로고</h3>
+            <form onsubmit="uploadLogo(event)" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">로고 파일</label>
+                <div class="flex items-center gap-4">
+                  <input type="file" id="logoFile" accept="image/*" onchange="previewLogo(event)"
+                         class="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                  <button type="submit" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap">
+                    <i class="fas fa-upload mr-2"></i>업로드
+                  </button>
+                </div>
+                <p class="mt-2 text-xs text-slate-500">권장 크기: 240px x 200px, 최대 2MB (PNG, JPG 형식)</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">로고 미리보기</label>
+                <div id="logoPreview" class="border-2 border-dashed border-slate-300 rounded-lg p-8 flex items-center justify-center min-h-[200px] bg-slate-50">
+                  <div class="text-center">
+                    <i class="fas fa-image text-5xl text-slate-300 mb-3"></i>
+                    <p class="text-slate-500">로고 파일을 선택하면 여기에 미리보기가 표시됩니다.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">도메인 재설정 (로고 URL)</label>
+                <input type="url" id="logoUrl" placeholder="https://example.com/logo.png"
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <p class="mt-2 text-xs text-slate-500">외부 URL로 로고를 설정할 수 있습니다.</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 탭 스타일 초기화
+    initSettingsTabStyles();
+
+  } catch (error) {
+    console.error('설정 페이지 로드 실패:', error);
+    showError(content, '설정 정보를 불러오는데 실패했습니다.');
+  }
+}
+
+// 설정 탭 전환
+function switchSettingsTab(tabName) {
+  // 탭 버튼 스타일 업데이트
+  document.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.classList.remove('active', 'text-teal-600', 'border-b-2', 'border-teal-500', 'bg-white');
+    tab.classList.add('text-slate-600');
+  });
+  const activeTab = document.querySelector(`.settings-tab[data-tab="${tabName}"]`);
+  activeTab.classList.add('active', 'text-teal-600', 'border-b-2', 'border-teal-500', 'bg-white');
+  activeTab.classList.remove('text-slate-600');
+
+  // 컨텐츠 전환
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.add('hidden');
+  });
+  document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+}
+
+// 탭 스타일 초기화
+function initSettingsTabStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .settings-tab.active {
+      color: #14b8a6;
+      border-bottom: 2px solid #14b8a6;
+      background-color: white;
+    }
+    .settings-tab {
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+    }
+    .settings-tab:hover {
+      color: #14b8a6;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// 회사 정보 저장
+async function saveBusinessInfo(e) {
+  e.preventDefault();
+
+  const data = {
+    business_name: document.getElementById('companyName').value,
+    ceo_name: document.getElementById('ceoName').value,
+    business_number: document.getElementById('businessNumber').value,
+    phone: document.getElementById('businessPhone').value,
+    address: document.getElementById('businessAddress').value,
+    fax: document.getElementById('businessFax').value
+  };
+
+  try {
+    await axios.put(`${API_BASE}/settings/business`, data);
+    showSuccess('회사 정보가 저장되었습니다.');
+  } catch (error) {
+    console.error('회사 정보 저장 실패:', error);
+    alert(error.response?.data?.error || '저장 중 오류가 발생했습니다.');
+  }
+}
+
+// 담당자 정보 저장
+async function saveProfileInfo(e) {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById('managerName').value,
+    phone: document.getElementById('managerPhone').value,
+    email: document.getElementById('managerEmail').value
+  };
+
+  try {
+    await axios.put(`${API_BASE}/settings/profile`, data);
+    showSuccess('담당자 정보가 저장되었습니다.');
+  } catch (error) {
+    console.error('담당자 정보 저장 실패:', error);
+    alert(error.response?.data?.error || '저장 중 오류가 발생했습니다.');
+  }
+}
+
+// 로고 미리보기
+function previewLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // 파일 크기 체크 (2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('파일 크기는 2MB를 초과할 수 없습니다.');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('logoPreview').innerHTML = `
+      <img src="${e.target.result}" alt="Logo Preview" class="max-h-48 rounded-lg shadow-md">
+    `;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 로고 업로드
+async function uploadLogo(e) {
+  e.preventDefault();
+
+  const fileInput = document.getElementById('logoFile');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert('로고 파일을 선택해주세요.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('logo', file);
+
+  try {
+    const response = await axios.post(`${API_BASE}/settings/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    showSuccess('로고가 업로드되었습니다.');
+    console.log('로고 URL:', response.data.data.logo_url);
+  } catch (error) {
+    console.error('로고 업로드 실패:', error);
+    alert(error.response?.data?.error || '업로드 중 오류가 발생했습니다.');
   }
 }
