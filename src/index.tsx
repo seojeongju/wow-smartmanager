@@ -476,6 +476,12 @@ app.get('/', (c: Context) => {
                         <i class="fas fa-truck-loading w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">출고 관리</span>
                     </a>
+                    
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">System</p>
+                    <a href="#" data-page="settings" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-cog w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium">설정</span>
+                    </a>
                 </nav>
                 
                 <div class="p-4 border-t border-slate-800 bg-slate-900">
