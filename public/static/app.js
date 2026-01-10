@@ -93,11 +93,56 @@ async function loadPage(page) {
       updatePageTitle('출고 관리', '출고 지시, 피킹, 패킹 및 배송 처리');
       await loadOutbound(content);
       break;
+    case 'inbound':
+      updatePageTitle('입고/발주 관리', '구매 발주 및 입고 처리');
+      await loadInbound(content);
+      break;
+    case 'invoice':
+      updatePageTitle('거래명세서 출력', '거래 명세서 조회 및 인쇄');
+      await loadInvoice(content);
+      break;
+    case 'system':
+      updatePageTitle('시스템 관리', '사용자 및 권한 관리');
+      await loadSystem(content);
+      break;
     case 'settings':
       updatePageTitle('설정', '회사 정보 및 시스템 설정');
       await loadSettings(content);
       break;
   }
+}
+
+// 입고/발주 관리 (준비 중)
+async function loadInbound(content) {
+  content.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-full text-slate-500">
+      <i class="fas fa-dolly text-6xl mb-4 text-slate-300"></i>
+      <h2 class="text-2xl font-bold mb-2">입고/발주 관리</h2>
+      <p>이 기능은 준비 중입니다.</p>
+    </div>
+  `;
+}
+
+// 거래명세서 출력 (준비 중)
+async function loadInvoice(content) {
+  content.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-full text-slate-500">
+      <i class="fas fa-file-invoice text-6xl mb-4 text-slate-300"></i>
+      <h2 class="text-2xl font-bold mb-2">거래명세서 출력</h2>
+      <p>이 기능은 다음 단계에서 구현될 예정입니다.</p>
+    </div>
+  `;
+}
+
+// 시스템 관리 (준비 중)
+async function loadSystem(content) {
+  content.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-full text-slate-500">
+      <i class="fas fa-shield-alt text-6xl mb-4 text-slate-300"></i>
+      <h2 class="text-2xl font-bold mb-2">시스템 관리</h2>
+      <p>이 기능은 준비 중입니다.</p>
+    </div>
+  `;
 }
 
 // 대시보드 로드
