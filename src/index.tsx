@@ -451,36 +451,78 @@ app.get('/', (c: Context) => {
                 </div>
 
                 <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Menu</p>
+                    <!-- 분석 및 현황 -->
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">분석 및 현황</p>
                     <a href="#" data-page="dashboard" class="nav-link active flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-chart-pie w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">대시보드</span>
+                        <i class="fas fa-chart-pie w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">대시보드</span>
                     </a>
+
+                    <!-- 영업 및 물류 -->
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">영업 및 물류</p>
                     <a href="#" data-page="sales" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-cash-register w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">판매 관리</span>
-                    </a>
-                    <a href="#" data-page="products" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-box w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">상품 관리</span>
-                    </a>
-                    <a href="#" data-page="stock" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-warehouse w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">재고 관리</span>
-                    </a>
-                    <a href="#" data-page="customers" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-users w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">고객 관리</span>
+                        <i class="fas fa-cash-register w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">판매 관리</span>
                     </a>
                     <a href="#" data-page="outbound" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-truck-loading w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">출고 관리</span>
+                        <i class="fas fa-truck-loading w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">출고 관리</span>
+                    </a>
+                    <a href="#" data-page="inbound" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-dolly w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">입고/발주 관리</span>
+                    </a>
+                    <a href="#" data-page="stock" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-warehouse w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">재고 관리</span>
+                    </a>
+                    <a href="#" data-page="invoice" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-file-invoice w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">거래명세서 출력</span>
+                    </a>
+
+                    <!-- 기준 정보 -->
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">기준 정보</p>
+                    
+                    <!-- 상품 관리 (확장 가능) -->
+                    <div class="submenu-container">
+                        <button class="nav-link w-full flex items-center justify-between px-3 py-2.5 rounded-lg group" onclick="toggleSubmenu('products-submenu')">
+                            <div class="flex items-center">
+                                <i class="fas fa-box w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                                <span class="font-medium text-sm">상품 관리</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="products-submenu-icon"></i>
+                        </button>
+                        <div id="products-submenu" class="submenu hidden ml-8 mt-1 space-y-1">
+                            <a href="#" data-page="products" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
+                                <span class="font-normal">중복 상품 관리</span>
+                            </a>
+                            <a href="#" data-page="products-brand" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
+                                <span class="font-normal">중복 브랜드 관리</span>
+                            </a>
+                            <a href="#" data-page="products-category" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
+                                <span class="font-normal">카테고리 관리</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <a href="#" data-page="customers" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-users w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">고객 관리</span>
                     </a>
                     
-                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">System</p>
+                    <!-- 시스템 -->
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">시스템</p>
+                    <a href="#" data-page="system" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
+                        <i class="fas fa-shield-alt w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">시스템 관리</span>
+                    </a>
                     <a href="#" data-page="settings" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-cog w-6 text-center text-lg mr-2 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium">설정</span>
+                        <i class="fas fa-cog w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                        <span class="font-medium text-sm">설정</span>
                     </a>
                 </nav>
                 
@@ -532,6 +574,20 @@ app.get('/', (c: Context) => {
             }
             updateTime();
             setInterval(updateTime, 1000);
+
+            // 서브메뉴 토글 함수
+            window.toggleSubmenu = function(id) {
+                const submenu = document.getElementById(id);
+                const icon = document.getElementById(id + '-icon');
+                
+                if (submenu.classList.contains('hidden')) {
+                    submenu.classList.remove('hidden');
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    submenu.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
         </script>
         <script src="/static/app.js"></script>
     </body>
