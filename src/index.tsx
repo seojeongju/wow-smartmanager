@@ -12,6 +12,7 @@ import claimsRouter from './routes/claims'
 import usersRouter from './routes/users'
 import outboundRouter from './routes/outbound'
 import authRouter from './routes/auth'
+import settingsRouter from './routes/settings'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -28,6 +29,7 @@ app.route('/api/dashboard', dashboardRouter)
 app.route('/api/claims', claimsRouter)
 app.route('/api/users', usersRouter)
 app.route('/api/outbound', outboundRouter)
+app.route('/api/settings', settingsRouter)
 
 // 로그인 페이지
 app.get('/login', (c: Context) => {
