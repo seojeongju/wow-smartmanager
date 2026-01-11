@@ -118,6 +118,7 @@ wrangler d1 migrations list wow3d-stock-sales-manager-production --local
 - 로그인/회원가입
 - **페이지네이션** (POS, 주문, Claims, 출고, 이력 등 전체 적용 완료)
 - **자동 백업 시스템** (GitHub 연동 완료)
+- **입고/발주 관리** (발주 관리 UI, Mock Data 연동 완료)
 
 ### 🚧 진행 중 / 개선 필요
 - 모달 기능 (배송, 클레임, 취소)
@@ -179,5 +180,5 @@ wrangler d1 migrations apply wow3d-stock-sales-manager-production --local
 
 ---
 
-**마지막 업데이트**: 2026-01-11 17:55  
-**다음 세션 추천**: 출고 이력 서버 사이드 페이지네이션 (작업 A) 또는 모달 기능 구현 (작업 B)
+**마지막 업데이트**: 2026-01-11 18:35  
+**다음 세션 추천**: 입고/발주 백엔드 API 구현 및 데이터베이스 연동 (또는 모달 기능 구현)
