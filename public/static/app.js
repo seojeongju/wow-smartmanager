@@ -489,6 +489,17 @@ function renderSimpleOutboundTab(container) {
         <div id="outboundProductList" class="flex-1 overflow-y-auto p-2 space-y-2 bg-slate-50/50 custom-scrollbar">
            <!-- 상품 리스트 -->
         </div>
+        
+        <!-- 페이지네이션 컨트롤 -->
+        <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white text-xs text-slate-500 shrink-0">
+             <button onclick="changeOutboundPage(-1)" id="btnObPrev" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               <i class="fas fa-chevron-left mr-1"></i>이전
+             </button>
+             <span id="obPageIndicator" class="font-mono font-medium text-slate-700">1 / 1</span>
+             <button onclick="changeOutboundPage(1)" id="btnObNext" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               다음<i class="fas fa-chevron-right ml-1"></i>
+             </button>
+        </div>
       </div>
 
       <!-- 우측: 입력 폼 -->
@@ -615,23 +626,65 @@ function renderSimpleOutboundTab(container) {
   renderOutboundProductList();
 }
 
+window.outboundPage = 1;
+window.outboundItemsPerPage = 7;
+window.filteredOutboundList = null;
+
 function filterOutboundProducts(query) {
   if (!window.products) return;
   const q = query.toLowerCase();
   const filtered = window.products.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+  window.filteredOutboundList = filtered;
+  window.outboundPage = 1; // Reset to page 1
   renderOutboundProductList(filtered);
+}
+
+function changeOutboundPage(delta) {
+  const list = window.filteredOutboundList || window.products;
+  if (!list) return;
+
+  const totalPages = Math.ceil(list.length / window.outboundItemsPerPage);
+  const newPage = window.outboundPage + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    window.outboundPage = newPage;
+    renderOutboundProductList(list);
+  }
 }
 
 function renderOutboundProductList(list = window.products) {
   const container = document.getElementById('outboundProductList');
+  const prevBtn = document.getElementById('btnObPrev');
+  const nextBtn = document.getElementById('btnObNext');
+  const indicator = document.getElementById('obPageIndicator');
+
   if (!container) return;
 
   if (!list || list.length === 0) {
     container.innerHTML = '<div class="p-6 text-center text-slate-400">검색 결과가 없습니다.</div>';
+    if (indicator) indicator.textContent = "0 / 0";
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
 
-  container.innerHTML = list.map(p => `
+  // Pagination Logic
+  const totalItems = list.length;
+  const totalPages = Math.ceil(totalItems / window.outboundItemsPerPage);
+
+  if (window.outboundPage > totalPages) window.outboundPage = totalPages;
+  if (window.outboundPage < 1) window.outboundPage = 1;
+
+  const startIdx = (window.outboundPage - 1) * window.outboundItemsPerPage;
+  const endIdx = startIdx + window.outboundItemsPerPage;
+  const pageItems = list.slice(startIdx, endIdx);
+
+  // Update Controls
+  if (indicator) indicator.textContent = `${window.outboundPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.outboundPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.outboundPage >= totalPages;
+
+  container.innerHTML = pageItems.map(p => `
         <div class="bg-white border border-slate-100 rounded p-3 flex justify-between items-center hover:border-emerald-400 group transition-all">
             <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-700 text-sm truncate">${p.name}</div>
