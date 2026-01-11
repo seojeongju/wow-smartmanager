@@ -2,7 +2,7 @@
 ALTER TABLE users ADD COLUMN tenant_id INTEGER;
 
 -- 더미 사용자 데이터 추가 (시스템 관리 예시용)
-INSERT INTO users (name, email, role, tenant_id, created_at) VALUES 
+INSERT OR IGNORE INTO users (name, email, role, tenant_id, created_at) VALUES 
 ('Test User', 'test@test.com', 'OWNER', 2, datetime('now', '-30 days')),
 ('Super Admin', 'super@wow3d.com', 'SUPER_ADMIN', 8, datetime('now', '-40 days')),
 ('System Admin', 'admin@system.com', 'SUPER_ADMIN', 5, datetime('now', '-40 days')),
