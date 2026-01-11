@@ -14,6 +14,10 @@ import outboundRouter from './routes/outbound'
 import authRouter from './routes/auth'
 import settingsRouter from './routes/settings'
 import warehousesRouter from './routes/warehouses'
+import inboundRouter from './routes/inbound'
+import suppliersRouter from './routes/suppliers'
+import optionsRouter from './routes/options'
+import pricesRouter from './routes/prices'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -32,6 +36,10 @@ app.route('/api/users', usersRouter)
 app.route('/api/outbound', outboundRouter)
 app.route('/api/settings', settingsRouter)
 app.route('/api/warehouses', warehousesRouter)
+app.route('/api/inbound', inboundRouter)
+app.route('/api/suppliers', suppliersRouter)
+app.route('/api/options', optionsRouter)
+app.route('/api/prices', pricesRouter)
 
 // 로그인 페이지
 app.get('/login', (c: Context) => {
@@ -496,18 +504,19 @@ app.get('/', (c: Context) => {
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="products-submenu-icon"></i>
                         </button>
                         <div id="products-submenu" class="submenu hidden ml-8 mt-1 space-y-1">
-                            <a href="#" data-page="products" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
-                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
-                                <span class="font-normal">중복 상품 관리</span>
-                            </a>
-                            <a href="#" data-page="products-brand" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
-                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
-                                <span class="font-normal">중복 브랜드 관리</span>
-                            </a>
-                            <a href="#" data-page="products-category" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
-                                <i class="fas fa-circle w-2 text-center mr-3 text-slate-600 group-hover:text-teal-400 transition-colors"></i>
-                                <span class="font-normal">카테고리 관리</span>
-                            </a>
+    <a href="#" data-page="products" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+        <i class="fas fa-list w-4 text-center mr-2 text-slate-500 group-hover:text-teal-400 transition-colors text-xs"></i>
+        <span class="font-medium text-slate-400 group-hover:text-white transition-colors">품목 정보 관리</span>
+    </a>
+    <a href="#" data-page="option-presets" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+        <i class="fas fa-tags w-4 text-center mr-2 text-slate-500 group-hover:text-teal-400 transition-colors text-xs"></i>
+        <span class="font-medium text-slate-400 group-hover:text-white transition-colors">옵션 프리셋 관리</span>
+    </a>
+    <a href="#" data-page="price-policies" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+        <i class="fas fa-hand-holding-usd w-4 text-center mr-2 text-slate-500 group-hover:text-teal-400 transition-colors text-xs"></i>
+        <span class="font-medium text-slate-400 group-hover:text-white transition-colors">가격 정책 관리</span>
+    </a>
+</div>                        
                         </div>
                     </div>
 

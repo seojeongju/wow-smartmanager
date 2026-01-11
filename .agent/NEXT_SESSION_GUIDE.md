@@ -104,48 +104,61 @@ wrangler d1 migrations list wow3d-stock-sales-manager-production --local
 
 ---
 
-## 📊 현재 프로젝트 상태
+## 📌 현재 프로젝트 상태 (Current Status)
 
-### ✅ 완료된 기능
-- 대시보드 (차트, 통계)
-- 상품 관리
-- 고객 관리
-- 판매 관리 (POS, 주문/배송, Claims)
-- 재고 관리
-- **출고 관리** (간편 등록, 이력 조회, 창고 관리) ⭐ 최신
-- 거래명세서 출력
-- 설정 페이지
-- 로그인/회원가입
-- **페이지네이션** (POS, 주문, Claims, 출고, 이력 등 전체 적용 완료)
-- **자동 백업 시스템** (GitHub 연동 완료)
-- **입고/발주 관리** (발주 관리 UI, Mock Data 연동 완료)
+### ✅ 완료된 기능 (Completed Features)
+- **핵심 기능**:
+  - **로그인/인증**: `super@wow3d.com` 계정, JWT 인증.
+  - **POS (판매 관리)**: 장바구니, 상품 검색, 결제 처리 UI.
+  - **입고/발주 관리**: 발주 등록/조회, **공급사 관리(Full CRUD)**.
+  - **재고 관리**: **창고별 재고 현황(Inventory Table)**, 입/출고/조정, 창고 필터링.
+  - **출고 관리**: 출고 지시, 상태 관리(배송대기/완료).
+- **데이터베이스 (Cloudflare D1)**:
+  - `products`, `sales`, `stock_movements`, `suppliers`, `warehouses`, `inventory` 테이블 구성 완료.
+  - 전체 마이그레이션 및 시딩 적용됨.
 
-### 🚧 진행 중 / 개선 필요
-- 모달 기능 (배송, 클레임, 취소)
-- 서버 사이드 필터링/페이지네이션 (대용량 데이터 대응)
+### 🚧 진행 중인 작업 (Pending)
+- **판매/출고 API - Inventory 연동**: 
+    - `inventory` 테이블이 새로 생겼으므로, 판매(`sales.ts`) 및 출고(`outbound.ts`) 로직에서도 `products.current_stock` 뿐만 아니라 `inventory` 테이블의 수량을 차감하도록 수정해야 함.
 
-### 🐛 알려진 이슈
-1. TypeScript lint error: `D1Database` 타입 정의 누락 (영향 없음)
+### ⚠️ 중요: 다음 세션 시작 전 필독
+- **재고 로직 불일치**: 현재 재고 관리 페이지는 `inventory` 테이블을 보지만, 판매(POS)는 `products` 테이블만 수정할 가능성이 높음. 이로 인해 재고 수치가 안 맞을 수 있으니 **API 수정이 최우선**임.
 
 ---
 
-## 💡 코딩 팁
+## 📅 다음 세션 추천 작업 (Next Steps)
 
-### 페이지네이션 구현 패턴
-```javascript
-// 1. 변수 초기화
-window.myPage = 1;
-window.myItemsPerPage = 10;
+### 1. 판매 및 출고 API 리팩토링 (Priority: High)
+- **목표**: 모든 재고 변동(판매, 출고)이 `inventory` 테이블(창고별 재고)에 반영되도록 수정.
+- **파일**: `src/routes/sales.ts`, `src/routes/outbound.ts`
+- **로직**:
+    - 판매 시 `warehouse_id` (기본값 1)의 `inventory` 수량 차감.
+    - 재고 부족 시 에러 처리 강화.
 
-// 2. 렌더링 함수에서 슬라이싱
-const startIdx = (window.myPage - 1) * window.myItemsPerPage;
-const endIdx = startIdx + window.myItemsPerPage;
+### 2. 창고 관리 기능 확장 (Priority: Medium)
+- 현재 창고 목록은 시딩 데이터(3개)로 고정됨.
+- 필요 시 창고 추가/수정/삭제 기능(UI 및 API) 개발.
+
+### 3. 재고 이동(Transfer) 기능 구현
+- UI에 '이동' 버튼은 있으나 '준비 중' 상태.
+- 창고 간 재고 이동(`POST /api/stock/transfer`) API 및 프론트엔드 모달 구현.
+
+### 4. 대시보드 위젯 추가
+- 재고 현황(부족 재고, 창고별 보유량)을 대시보드 차트로 시각화.
+
+---
+
+## 🛠️ 유용한 명령어
+- **DB 마이그레이션 (로컬)**: `npm run db:migrate:local`
+- **DB 스튜디오 (로컬)**: `npx wrangler d1 migrations apply DB --local` (확인용)
+- **개발 서버 실행**: `npm run dev`
+- **배포**: `npm run deploy`
+window.myItemsPerPage;
 const pageItems = allItems.slice(startIdx, endIdx);
 
 // 3. UI 업데이트
 const totalPages = Math.ceil(allItems.length / window.myItemsPerPage);
 prevBtn.disabled = (window.myPage <= 1);
-nextBtn.disabled = (window.myPage >= totalPages);
 
 // 4. 페이지 변경 함수
 function changeMyPage(delta) {
@@ -181,4 +194,5 @@ wrangler d1 migrations apply wow3d-stock-sales-manager-production --local
 ---
 
 **마지막 업데이트**: 2026-01-11 18:35  
-**다음 세션 추천**: 입고/발주 백엔드 API 구현 및 데이터베이스 연동 (또는 모달 기능 구현)
+**마지막 업데이트**: 2026-01-11 19:10  
+**다음 세션 추천**: 모달 기능 구현 (배송/클레임/취소) 또는 출고 이력 서버 사이드 페이지네이션
