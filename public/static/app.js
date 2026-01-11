@@ -1902,15 +1902,252 @@ function printInvoice() {
   window.print();
 }
 
-// 시스템 관리 (준비 중)
+// 시스템 관리
 async function loadSystem(content) {
   content.innerHTML = `
-    <div class="flex flex-col items-center justify-center h-full text-slate-500">
-      <i class="fas fa-shield-alt text-6xl mb-4 text-slate-300"></i>
-      <h2 class="text-2xl font-bold mb-2">시스템 관리</h2>
-      <p>이 기능은 준비 중입니다.</p>
+    <div class="flex flex-col h-full bg-slate-50">
+        <!-- Header -->
+        <div class="px-8 pt-8 pb-4 bg-white border-b border-slate-200">
+            <h1 class="text-2xl font-bold text-slate-800 mb-1">시스템 관리</h1>
+            <p class="text-sm text-slate-500 mb-6">전체 조직 및 사용자, 시스템 상태를 관리합니다.</p>
+            
+            <div class="flex space-x-8 overflow-x-auto">
+                <button onclick="switchSystemTab('tenants')" id="sys-tab-tenants" class="sys-tab-btn pb-3 text-sm font-bold border-b-2 text-emerald-600 border-emerald-500 transition-colors whitespace-nowrap">
+                    <i class="fas fa-building mr-2"></i>조직(Tenant) 관리
+                </button>
+                <button onclick="switchSystemTab('users')" id="sys-tab-users" class="sys-tab-btn pb-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-emerald-600 transition-colors whitespace-nowrap">
+                    <i class="fas fa-users-cog mr-2"></i>전체 사용자 관리
+                </button>
+                <button onclick="switchSystemTab('stats')" id="sys-tab-stats" class="sys-tab-btn pb-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-emerald-600 transition-colors whitespace-nowrap">
+                    <i class="fas fa-chart-line mr-2"></i>시스템 통계
+                </button>
+                <button onclick="switchSystemTab('plan-requests')" id="sys-tab-plan-requests" class="sys-tab-btn pb-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-emerald-600 transition-colors whitespace-nowrap">
+                    <i class="fas fa-file-invoice mr-2"></i>플랜 변경 요청
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div id="systemContent" class="flex-1 overflow-auto p-8">
+           <!-- Dynamic Load -->
+        </div>
     </div>
   `;
+
+  if (!window.currentSystemTab) window.currentSystemTab = 'tenants';
+  switchSystemTab(window.currentSystemTab);
+}
+
+window.switchSystemTab = async function (tab) {
+  window.currentSystemTab = tab;
+  // Update Tab UI
+  document.querySelectorAll('.sys-tab-btn').forEach(btn => {
+    btn.classList.remove('font-bold', 'text-emerald-600', 'border-emerald-500');
+    btn.classList.add('font-medium', 'text-slate-500', 'border-transparent');
+  });
+  const activeBtn = document.getElementById(`sys-tab-${tab}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('font-medium', 'text-slate-500', 'border-transparent');
+    activeBtn.classList.add('font-bold', 'text-emerald-600', 'border-emerald-500');
+  }
+
+  const container = document.getElementById('systemContent');
+  container.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-spinner fa-spin text-3xl text-emerald-500"></i></div>';
+
+  try {
+    if (tab === 'tenants') await renderSystemTenants(container);
+    else if (tab === 'users') await renderSystemUsers(container);
+    else if (tab === 'stats') await renderSystemStats(container);
+    else if (tab === 'plan-requests') await renderPlanRequests(container);
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = `<div class="bg-red-50 p-4 rounded text-red-600">데이터 로드 실패: ${e.message}</div>`;
+  }
+}
+
+async function renderSystemTenants(container) {
+  const res = await axios.get(`${API_BASE}/system/tenants`);
+  const tenants = res.data.data;
+
+  container.innerHTML = `
+        <div class="mb-4 flex justify-between items-center">
+            <h3 class="font-bold text-slate-700">등록된 조직 목록</h3>
+            <button onclick="openTenantModal()" class="bg-emerald-600 text-white px-4 py-2 rounded shadow hover:bg-emerald-700 font-bold text-sm transition-colors">
+                <i class="fas fa-plus mr-2"></i>조직 생성
+            </button>
+        </div>
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-4">ID</th>
+                        <th class="p-4">조직명</th>
+                        <th class="p-4">플랜</th>
+                        <th class="p-4">상태</th>
+                        <th class="p-4">사용자수</th>
+                        <th class="p-4">상품수</th>
+                        <th class="p-4">생성일</th>
+                        <th class="p-4 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    ${tenants.map(t => `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 text-slate-500">#${t.id}</td>
+                            <td class="p-4 font-bold text-slate-800">${t.name}</td>
+                            <td class="p-4 text-slate-600 uppercase text-xs font-mono">${t.plan}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold ${t.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}">${t.status}</span>
+                            </td>
+                            <td class="p-4 text-slate-600">${t.user_count}</td>
+                            <td class="p-4 text-slate-600">${t.product_count}</td>
+                            <td class="p-4 text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="p-4 text-center flex justify-center gap-2">
+                                <button class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded transition-colors" title="상세"><i class="fas fa-eye"></i></button>
+                                <button class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="수정"><i class="fas fa-edit"></i></button>
+                                <button class="px-2 py-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded text-xs font-bold transition-colors" title="관리"><i class="fas fa-sign-in-alt mr-1"></i>관리</button>
+                                <button class="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition-colors" title="삭제"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function renderSystemUsers(container) {
+  const res = await axios.get(`${API_BASE}/system/users`);
+  const users = res.data.data;
+
+  container.innerHTML = `
+        <div class="mb-4">
+            <h3 class="font-bold text-slate-700">전체 사용자 목록</h3>
+        </div>
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-4">이름</th>
+                        <th class="p-4">이메일</th>
+                        <th class="p-4">소속 조직</th>
+                        <th class="p-4">권한</th>
+                        <th class="p-4">가입일</th>
+                        <th class="p-4 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    ${users.map(u => `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 font-bold text-slate-800">${u.name}</td>
+                            <td class="p-4 text-slate-500">${u.email}</td>
+                            <td class="p-4 text-slate-600">${u.tenant_name || '-'}</td>
+                            <td class="p-4 uppercase text-xs font-mono text-slate-500">${u.role || 'STAFF'}</td>
+                            <td class="p-4 text-slate-400 text-xs">${new Date(u.created_at).toLocaleDateString()}</td>
+                            <td class="p-4 text-center flex justify-center gap-2">
+                                <button class="px-3 py-1 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 text-xs font-bold transition-colors">비번 초기화</button>
+                                <button class="px-3 py-1 text-emerald-600 border border-emerald-200 rounded hover:bg-emerald-50 text-xs font-bold transition-colors">권한 변경</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function renderSystemStats(container) {
+  const res = await axios.get(`${API_BASE}/system/stats`);
+  const stats = res.data.data;
+
+  container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-sm font-bold text-slate-500 mb-2">전체 소속 수</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-4xl font-bold text-slate-800">${stats.total_tenants}</span>
+                    <span class="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">정상 +</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <p class="text-sm font-bold text-slate-500 mb-2">전체 사용자 수</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-4xl font-bold text-slate-800">${stats.active_users}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function renderPlanRequests(container) {
+  const res = await axios.get(`${API_BASE}/system/plan-requests`);
+  const requests = res.data.data;
+
+  container.innerHTML = `
+        <div class="mb-4">
+            <h3 class="font-bold text-slate-700">플랜 변경 요청 목록</h3>
+            <p class="text-xs text-slate-400 mt-1">사용자들이 요청한 플랜 변경 내역입니다.</p>
+        </div>
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden min-h-[200px]">
+            ${requests.length === 0 ? `
+                <div class="flex items-center justify-center h-40 text-slate-400 text-sm">
+                    요청 내역이 없습니다.
+                </div>
+            ` : `
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-4">조직명</th>
+                        <th class="p-4">현재 플랜</th>
+                        <th class="p-4">요청 플랜</th>
+                        <th class="p-4">요청일시</th>
+                        <th class="p-4">상태</th>
+                        <th class="p-4 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    ${requests.map(r => `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 font-bold text-slate-800">${r.tenant_name || '-'}</td>
+                            <td class="p-4 text-slate-600 font-mono">${r.current_plan}</td>
+                            <td class="p-4 text-indigo-600 font-bold font-mono">${r.requested_plan}</td>
+                            <td class="p-4 text-slate-400 text-xs">${new Date(r.requested_at).toLocaleString()}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold ${r.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : (r.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}">${r.status}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                ${r.status === 'PENDING' ? `
+                                    <button onclick="processPlanRequest(${r.id}, 'approve')" class="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-bold mr-1 border border-emerald-200 transiton-colors">수락</button>
+                                    <button onclick="processPlanRequest(${r.id}, 'reject')" class="text-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold border border-rose-200 transiton-colors">거절</button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            `}
+        </div>
+    `;
+}
+
+window.openTenantModal = function () {
+  const name = prompt('조직명을 입력하세요:');
+  if (name) {
+    axios.post(`${API_BASE}/system/tenants`, { name, plan: 'FREE' })
+      .then(() => { alert('조직이 생성되었습니다.'); switchSystemTab('tenants'); })
+      .catch(e => alert(e.message));
+  }
+}
+
+window.processPlanRequest = async function (id, action) {
+  if (!confirm(`${action === 'approve' ? '수락' : '거절'} 하시겠습니까?`)) return;
+  try {
+    await axios.post(`${API_BASE}/system/plan-requests/${id}/${action}`);
+    showSuccess('처리되었습니다.'); // Assumes showSuccess exists
+    switchSystemTab('plan-requests');
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
 // 대시보드 로드

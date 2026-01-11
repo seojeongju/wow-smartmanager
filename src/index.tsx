@@ -18,6 +18,7 @@ import inboundRouter from './routes/inbound'
 import suppliersRouter from './routes/suppliers'
 import optionsRouter from './routes/options'
 import pricesRouter from './routes/prices'
+import systemRouter from './routes/system'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -40,6 +41,7 @@ app.route('/api/inbound', inboundRouter)
 app.route('/api/suppliers', suppliersRouter)
 app.route('/api/options', optionsRouter)
 app.route('/api/prices', pricesRouter)
+app.route('/api/system', systemRouter)
 
 // 로그인 페이지
 app.get('/login', (c: Context) => {
