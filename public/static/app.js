@@ -5671,6 +5671,237 @@ window.submitStockMovement = async function (e) {
 }
 
 // ---------------------------------------------------------
+// 재고 관리 (Stock Management)
+// ---------------------------------------------------------
+window.loadStock = async function (content) {
+  if (!content) content = document.getElementById('content');
+
+  // Initialize State
+  window.stockState = {
+    activeTab: 'status',
+    warehouses: [],
+    products: [],
+    inventory: [],
+    movements: []
+  };
+
+  content.innerHTML = `
+        <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+             <!-- Header -->
+             <div class="border-b border-slate-200 p-6 pb-0 bg-slate-50">
+                <div class="flex items-center gap-3 mb-6">
+                    <i class="fas fa-warehouse text-indigo-600 text-2xl"></i>
+                    <h2 class="text-xl font-bold text-slate-800">재고 관리</h2>
+                    <div class="ml-auto flex gap-2">
+                        <button onclick="openStockModal('in')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-sm flex items-center gap-2"><i class="fas fa-plus"></i> 입고</button>
+                        <button onclick="openStockModal('out')" class="bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-rose-700 shadow-sm flex items-center gap-2"><i class="fas fa-minus"></i> 출고</button>
+                        <button onclick="openStockModal('adjust')" class="bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 shadow-sm flex items-center gap-2"><i class="fas fa-sliders-h"></i> 조정</button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-8">
+                    <button onclick="switchStockTab('status')" id="tab-status" class="pb-4 text-sm font-bold border-b-2 border-indigo-600 text-indigo-700 flex items-center gap-2 transition-colors">
+                        <i class="fas fa-boxes"></i> 재고 현황
+                    </button>
+                    <button onclick="switchStockTab('movements')" id="tab-movements" class="pb-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 transition-colors">
+                        <i class="fas fa-history"></i> 수불 내역
+                    </button>
+                     <button onclick="switchStockTab('warehouses')" id="tab-warehouses" class="pb-4 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 transition-colors">
+                        <i class="fas fa-building"></i> 창고 관리
+                    </button>
+                </div>
+             </div>
+             
+             <!-- Content -->
+             <div class="flex-1 overflow-auto bg-slate-50 p-6" id="stockContentArea">
+                 <div class="flex items-center justify-center h-64 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+                 </div>
+             </div>
+        </div>
+    `;
+
+  await loadStockData();
+}
+
+window.loadStockData = async function () {
+  try {
+    const [wRes, pRes] = await Promise.all([
+      axios.get('/api/warehouses'),
+      axios.get('/api/products')
+    ]);
+    window.stockState.warehouses = wRes.data.data;
+    window.stockState.products = pRes.data.data;
+    window.products = pRes.data.data;
+    window.warehouses = wRes.data.data;
+
+    renderStockStatus();
+  } catch (e) {
+    document.getElementById('stockContentArea').innerHTML = '<div class="text-center text-rose-500 mt-10">데이터 로드 실패</div>';
+  }
+}
+
+window.switchStockTab = function (tab) {
+  window.stockState.activeTab = tab;
+  window.currentStockTab = tab;
+
+  const tabs = ['status', 'movements', 'warehouses'];
+  tabs.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (!el) return;
+    if (t === tab) {
+      el.classList.replace('border-transparent', 'border-indigo-600');
+      el.classList.replace('text-slate-500', 'text-indigo-700');
+    } else {
+      el.classList.replace('border-indigo-600', 'border-transparent');
+      el.classList.replace('text-indigo-700', 'text-slate-500');
+    }
+  });
+
+  if (tab === 'status') renderStockStatus();
+  else if (tab === 'movements') renderStockMovements();
+  else if (tab === 'warehouses') renderWarehouseManagement();
+}
+
+window.renderStockStatus = async function () {
+  const area = document.getElementById('stockContentArea');
+  area.innerHTML = '<div class="flex justify-center p-12"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
+
+  try {
+    const res = await axios.get('/api/stock');
+    const inventory = res.data.data;
+    window.stockState.inventory = inventory;
+
+    area.innerHTML = `
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="bg-slate-50 text-xs text-slate-700 uppercase font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4">상품명 / SKU</th>
+                            <th class="px-6 py-4">카테고리</th>
+                            <th class="px-6 py-4">창고</th>
+                            <th class="px-6 py-4 text-center">재고 수량</th>
+                            <th class="px-6 py-4 text-center">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        ${inventory.length ? inventory.map(item => `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-800">${item.product_name}</div>
+                                <div class="text-xs text-slate-400 font-mono">${item.sku}</div>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500">${item.category || '-'}</td>
+                            <td class="px-6 py-4 text-slate-500">${item.warehouse_name}</td>
+                            <td class="px-6 py-4 text-center font-bold text-indigo-600 text-base">${item.quantity.toLocaleString()}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold ${item.quantity > 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${item.quantity > 10 ? '정상' : '부족'}
+                                </span>
+                            </td>
+                        </tr>
+                        `).join('') : '<tr><td colspan="5" class="py-12 text-center text-slate-400">재고 데이터가 없습니다.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+  } catch (e) {
+    console.error(e);
+    area.innerHTML = '<div class="text-center text-rose-500">로드 에러</div>';
+  }
+}
+
+window.renderStockMovements = async function () {
+  const area = document.getElementById('stockContentArea');
+  area.innerHTML = '<div class="flex justify-center p-12"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
+
+  try {
+    const res = await axios.get('/api/stock/movements');
+    const movements = res.data.data;
+    window.stockState.movements = movements;
+
+    area.innerHTML = `
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="bg-slate-50 text-xs text-slate-700 uppercase font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4">일시</th>
+                            <th class="px-6 py-4">구분</th>
+                            <th class="px-6 py-4">상품명 / 창고</th>
+                            <th class="px-6 py-4 text-right">수량</th>
+                            <th class="px-6 py-4">사유/비고</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        ${movements.length ? movements.map(m => `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 text-slate-500 whitespace-nowrap">
+                                ${new Date(m.created_at).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded-md text-xs font-bold 
+                                    ${m.movement_type === '입고' ? 'bg-emerald-100 text-emerald-700' :
+        m.movement_type === '출고' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}">
+                                    ${m.movement_type}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-800">${m.product_name}</div>
+                                <div class="text-xs text-slate-400">${m.warehouse_name || '기본 창고'}</div>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono font-bold ${m.quantity > 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${m.quantity > 0 ? '+' : ''}${m.quantity.toLocaleString()}
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 text-xs">
+                                <div class="font-medium">${m.reason}</div>
+                                ${m.notes ? `<div class="text-slate-400 mt-0.5">${m.notes}</div>` : ''}
+                            </td>
+                        </tr>
+                        `).join('') : '<tr><td colspan="5" class="py-12 text-center text-slate-400">수불 내역이 없습니다.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+  } catch (e) {
+    area.innerHTML = '<div class="text-center text-rose-500">로드 에러</div>';
+  }
+}
+
+window.renderWarehouseManagement = async function () {
+  const area = document.getElementById('stockContentArea');
+  const warehouses = window.stockState.warehouses;
+
+  area.innerHTML = `
+         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div onclick="alert('창고 추가 기능은 추후 구현 예정입니다.')" class="cursor-pointer border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 hover:bg-white hover:border-indigo-300 transition-all group flex flex-col items-center justify-center h-40">
+                <i class="fas fa-plus text-slate-400 group-hover:text-indigo-500 text-2xl mb-2"></i>
+                <span class="text-slate-500 group-hover:text-indigo-600 font-bold">새 창고 등록</span>
+            </div>
+             ${warehouses.map(w => `
+             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative group">
+                 <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="text-slate-400 hover:text-indigo-600"><i class="fas fa-edit"></i></button>
+                 </div>
+                 <div class="flex items-center gap-4 mb-3">
+                     <div class="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-500 font-bold">
+                         <i class="fas fa-warehouse text-xl"></i>
+                     </div>
+                     <div>
+                         <h3 class="font-bold text-lg text-slate-800">${w.name}</h3>
+                         <p class="text-xs text-slate-500">${w.location || '위치 정보 없음'}</p>
+                     </div>
+                 </div>
+                 <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between text-xs text-slate-500">
+                    <span>등록일: ${w.created_at ? new Date(w.created_at).toLocaleDateString() : '-'}</span>
+                    <span class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded font-bold">운영중</span>
+                 </div>
+             </div>
+             `).join('')}
+         </div>
+    `;
+}
+
+// ---------------------------------------------------------
 // 옵션 관리 (Option Management)
 // ---------------------------------------------------------
 window.loadOptionPresets = async function (content) {

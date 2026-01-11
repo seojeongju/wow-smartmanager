@@ -518,7 +518,6 @@ app.get('/', (c: Context) => {
     </a>
 </div>                        
                         </div>
-                    </div>
 
                     <a href="#" data-page="customers" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
                         <i class="fas fa-users w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
