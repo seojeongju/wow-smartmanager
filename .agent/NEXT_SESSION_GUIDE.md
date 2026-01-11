@@ -24,23 +24,7 @@ wrangler d1 execute wow3d-stock-sales-manager-production --local --command "SELE
 
 ## 📋 즉시 시작 가능한 작업
 
-### A. 주문/배송 관리 탭 페이지네이션 (추천 ⭐)
-**난이도**: 쉬움  
-**소요 시간**: 30분  
-**파일**: `public/static/app.js` - `renderOrderList` 함수
-
-**작업 내용**:
-1. 페이지네이션 변수 초기화 (`window.orderPage`, `window.orderItemsPerPage`)
-2. `renderOrderList` 슬라이싱 로직 추가
-3. UI 컨트롤 추가 (이전/다음 버튼, 페이지 표시기)
-4. `changeOrderPage(delta)` 구현
-5. 검색/필터 시 1페이지로 리셋
-
-**참고**: POS/출고 상품 리스트 페이지네이션 구현 방식 동일하게 적용
-
----
-
-### B. Claims 탭 UI/UX 구현
+### A. Claims 탭 UI/UX 구현 (추천 ⭐)
 **난이도**: 중간  
 **소요 시간**: 1-2시간  
 **파일**: `public/static/app.js` - `renderClaimsTab` 함수
@@ -59,7 +43,8 @@ wrangler d1 execute wow3d-stock-sales-manager-production --local --command "SELE
 
 ---
 
-### C. 출고 이력 서버 사이드 페이지네이션
+
+### B. 출고 이력 서버 사이드 페이지네이션
 **난이도**: 중간  
 **소요 시간**: 1시간  
 **파일**: 
@@ -81,7 +66,7 @@ wrangler d1 execute wow3d-stock-sales-manager-production --local --command "SELE
 
 ---
 
-### D. Git Remote 설정 및 GitHub 백업
+### C. Git Remote 설정 및 GitHub 백업
 **난이도**: 쉬움  
 **소요 시간**: 10분
 
@@ -214,5 +199,5 @@ wrangler d1 migrations apply wow3d-stock-sales-manager-production --local
 
 ---
 
-**마지막 업데이트**: 2026-01-11 15:35  
-**다음 세션 추천**: 주문/배송 관리 탭 페이지네이션 (작업 A)
+**마지막 업데이트**: 2026-01-11 15:42  
+**다음 세션 추천**: Claims 탭 UI/UX 구현 (작업 A) 또는 출고 이력 서버 사이드 페이지네이션 (작업 B)
