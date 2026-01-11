@@ -2264,22 +2264,24 @@ async function renderPosTab(container) {
               <option value="">전체 카테고리</option>
             </select>
           </div>
-          
+
           <!-- 상품 그리드 -->
           <div id="posProductList" class="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
             <!-- 상품 카드 -->
           </div>
 
-           <!-- 페이지네이션 (간단 구현) -->
-           <div class="flex justify-center mt-2">
-             <div class="flex bg-white rounded-lg border border-slate-200 shadow-sm p-1 gap-1">
-               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"><i class="fas fa-chevron-left"></i></button>
-               <button class="w-8 h-8 flex items-center justify-center rounded bg-emerald-600 text-white font-bold">1</button>
-               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600">2</button>
-               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600">3</button>
-               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"><i class="fas fa-chevron-right"></i></button>
-             </div>
-           </div>
+          <!-- 페이지네이션 컨트롤 -->
+          <div class="flex justify-center items-center gap-4 mt-4 bg-white rounded-lg border border-slate-200 shadow-sm p-3">
+            <button id="btnPosPrev" onclick="changePosPage(-1)" 
+                    class="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+              <i class="fas fa-chevron-left"></i> 이전
+            </button>
+            <span id="posPageIndicator" class="text-sm font-bold text-slate-700 min-w-[60px] text-center">1 / 1</span>
+            <button id="btnPosNext" onclick="changePosPage(1)" 
+                    class="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+              다음 <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
 
         <!-- 오른쪽: 주문 내역 -->
@@ -3516,8 +3518,17 @@ function filterProducts() {
 
 // --- POS 관련 함수 ---
 
+// POS 페이지네이션 변수
+window.posPage = 1;
+window.posItemsPerPage = 12;
+window.filteredPosList = null;
+
 function renderPosProducts(filterText = '', filterCat = '') {
   const container = document.getElementById('posProductList');
+  const prevBtn = document.getElementById('btnPosPrev');
+  const nextBtn = document.getElementById('btnPosNext');
+  const indicator = document.getElementById('posPageIndicator');
+
   if (!container) return;
 
   let filtered = window.products || [];
@@ -3531,6 +3542,9 @@ function renderPosProducts(filterText = '', filterCat = '') {
     filtered = filtered.filter(p => p.category === filterCat);
   }
 
+  // 필터링된 결과 저장
+  window.filteredPosList = filtered;
+
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
@@ -3538,10 +3552,29 @@ function renderPosProducts(filterText = '', filterCat = '') {
         <p>검색 결과가 없습니다.</p>
       </div>
     `;
+    if (indicator) indicator.textContent = "0 / 0";
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
 
-  container.innerHTML = filtered.map(p => `
+  // 페이지네이션 로직
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / window.posItemsPerPage);
+
+  if (window.posPage > totalPages) window.posPage = totalPages;
+  if (window.posPage < 1) window.posPage = 1;
+
+  const startIdx = (window.posPage - 1) * window.posItemsPerPage;
+  const endIdx = startIdx + window.posItemsPerPage;
+  const pageItems = filtered.slice(startIdx, endIdx);
+
+  // 페이지네이션 컨트롤 업데이트
+  if (indicator) indicator.textContent = `${window.posPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.posPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.posPage >= totalPages;
+
+  container.innerHTML = pageItems.map(p => `
     <div class="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-emerald-400 transition-all cursor-pointer flex flex-col h-full group relative overflow-hidden active:scale-[0.98]"
          onclick="addToCart(${p.id})">
       
@@ -3584,7 +3617,23 @@ function renderPosProducts(filterText = '', filterCat = '') {
 function filterPosProducts() {
   const text = document.getElementById('posSearch').value;
   const cat = document.getElementById('posCategory').value;
+  window.posPage = 1; // 검색 시 1페이지로 리셋
   renderPosProducts(text, cat);
+}
+
+function changePosPage(delta) {
+  const list = window.filteredPosList || window.products;
+  if (!list) return;
+
+  const totalPages = Math.ceil(list.length / window.posItemsPerPage);
+  const newPage = window.posPage + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    window.posPage = newPage;
+    const text = document.getElementById('posSearch')?.value || '';
+    const cat = document.getElementById('posCategory')?.value || '';
+    renderPosProducts(text, cat);
+  }
 }
 
 function addToCart(productId) {
