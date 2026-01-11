@@ -274,3 +274,13 @@ export interface PackingRequest {
   courier?: string;
   tracking_number?: string;
 }
+
+export interface Warehouse {
+  id: number;
+  name: string;
+  location?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

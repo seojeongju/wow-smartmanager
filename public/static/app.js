@@ -222,8 +222,244 @@ async function switchOutboundTab(tabName) {
     renderSimpleOutboundTab(container);
   } else if (tabName === 'history') {
     await renderOutboundHistoryTab(container);
+  } else if (tabName === 'warehouse') {
+    await renderWarehouseTab(container);
+  }
+}
+
+async function renderWarehouseTab(container) {
+  try {
+    const response = await axios.get(`${API_BASE}/warehouses`);
+    const warehouses = response.data.data;
+
+    container.innerHTML = `
+            <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <!-- 헤더 영역 -->
+                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+                            <i class="fas fa-warehouse text-lg"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-800">창고 등록 및 관리</h2>
+                    </div>
+                    <button onclick="openWarehouseModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 flex items-center">
+                        <i class="fas fa-plus mr-2"></i> 창고 등록
+                    </button>
+                </div>
+
+                <!-- 테이블 영역 -->
+                <div class="flex-1 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-50 text-left">
+                        <thead class="bg-slate-50/50">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">창고명</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">위치</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">설명</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 text-center">상태</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-48 text-center">등록일</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 bg-white">
+                            ${warehouses.length > 0 ? warehouses.map(w => `
+                                <tr class="hover:bg-slate-50/80 transition-colors group">
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">${w.name}</span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap">
+                                        <span class="text-sm text-slate-600">${w.location || '-'}</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="text-sm text-slate-500 truncate max-w-xs" title="${w.description || ''}">${w.description || '-'}</div>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap text-center">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${w.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
+                                            ${w.is_active ? '사용중' : '비활성'}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap text-center">
+                                        <span class="text-xs text-slate-400 font-mono">${new Date(w.created_at).toLocaleDateString()} ${new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </td>
+                                    <td class="px-6 py-5 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button onclick="editWarehouse(${w.id})" class="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="수정">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteWarehouse(${w.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1" title="삭제">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('') : `
+                                <tr>
+                                    <td colspan="6" class="px-6 py-24 text-center text-slate-400 font-light">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <i class="fas fa-warehouse text-4xl text-slate-200"></i>
+                                            <span>등록된 창고가 없습니다.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+    // 모달 주입 (이미 있으면 skip)
+    injectWarehouseModal();
+
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
+  }
+}
+
+// 창고 관리 관련 함수들
+
+let currentEditingWarehouseId = null;
+
+function injectWarehouseModal() {
+  if (document.getElementById('warehouseModal')) return;
+
+  const modalHtml = `
+      <div id="warehouseModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 flex items-center justify-center transition-opacity opacity-0">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-all duration-200" id="warehouseModalContent">
+          <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-slate-800" id="warehouseModalTitle">창고 등록</h3>
+            <button onclick="closeWarehouseModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          <div class="p-6 space-y-5">
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-1.5">창고명 <span class="text-rose-500">*</span></label>
+              <input type="text" id="whName" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400" placeholder="예: 서울 본사 창고">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-1.5">위치</label>
+              <input type="text" id="whLocation" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400" placeholder="예: 서울 구로구...">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-1.5">설명</label>
+              <textarea id="whDescription" rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 resize-none" placeholder="창고에 대한 설명을 입력하세요"></textarea>
+            </div>
+            <div class="flex items-center">
+              <input type="checkbox" id="whActive" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer" checked>
+              <label for="whActive" class="ml-2 text-sm font-bold text-slate-700 cursor-pointer">사용 중 (활성)</label>
+            </div>
+          </div>
+          <div class="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex justify-end gap-3">
+            <button onclick="closeWarehouseModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-colors">취소</button>
+            <button onclick="submitWarehouse()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5" id="btnSaveWarehouse">저장</button>
+          </div>
+        </div>
+      </div>
+    `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function openWarehouseModal(isEdit = false, warehouse = null) {
+  const modal = document.getElementById('warehouseModal');
+  const content = document.getElementById('warehouseModalContent');
+  if (!modal) return;
+
+  // Reset form
+  document.getElementById('whName').value = '';
+  document.getElementById('whLocation').value = '';
+  document.getElementById('whDescription').value = '';
+  document.getElementById('whActive').checked = true;
+
+  if (isEdit && warehouse) {
+    currentEditingWarehouseId = warehouse.id;
+    document.getElementById('warehouseModalTitle').innerText = "창고 정보 수정";
+    document.getElementById('whName').value = warehouse.name;
+    document.getElementById('whLocation').value = warehouse.location || '';
+    document.getElementById('whDescription').value = warehouse.description || '';
+    document.getElementById('whActive').checked = warehouse.is_active;
   } else {
-    container.innerHTML = `<div class="flex items-center justify-center h-full text-slate-400">준비 중인 기능입니다.</div>`;
+    currentEditingWarehouseId = null;
+    document.getElementById('warehouseModalTitle').innerText = "창고 등록";
+  }
+
+  modal.classList.remove('hidden');
+  // Animation
+  setTimeout(() => {
+    modal.classList.remove('opacity-0');
+    content.classList.remove('scale-95');
+    content.classList.add('scale-100');
+  }, 10);
+}
+
+function closeWarehouseModal() {
+  const modal = document.getElementById('warehouseModal');
+  const content = document.getElementById('warehouseModalContent');
+  if (!modal) return;
+
+  modal.classList.add('opacity-0');
+  content.classList.remove('scale-100');
+  content.classList.add('scale-95');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 200);
+}
+
+async function submitWarehouse() {
+  const name = document.getElementById('whName').value;
+  const location = document.getElementById('whLocation').value;
+  const description = document.getElementById('whDescription').value;
+  const is_active = document.getElementById('whActive').checked;
+
+  if (!name) {
+    alert("창고명을 입력해주세요.");
+    return;
+  }
+
+  try {
+    const payload = { name, location, description, is_active };
+    let res;
+    if (currentEditingWarehouseId) {
+      res = await axios.put(`${API_BASE}/warehouses/${currentEditingWarehouseId}`, payload);
+    } else {
+      res = await axios.post(`${API_BASE}/warehouses`, payload);
+    }
+
+    if (res.data.success) {
+      closeWarehouseModal();
+      // Refresh list
+      renderWarehouseTab(document.getElementById('outboundTabContent'));
+      showSuccess(res.data.message);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("저장 실패: " + (e.response?.data?.error || e.message));
+  }
+}
+
+async function editWarehouse(id) {
+  try {
+    const res = await axios.get(`${API_BASE}/warehouses`);
+    const warehouse = res.data.data.find(w => w.id === id);
+    if (warehouse) {
+      openWarehouseModal(true, warehouse);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function deleteWarehouse(id) {
+  if (!confirm("정말 이 창고를 삭제하시겠습니까?")) return;
+  try {
+    const res = await axios.delete(`${API_BASE}/warehouses/${id}`);
+    if (res.data.success) {
+      renderWarehouseTab(document.getElementById('outboundTabContent'));
+      showSuccess("창고가 삭제되었습니다.");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("삭제 실패: " + (e.response?.data?.error || e.message));
   }
 }
 
