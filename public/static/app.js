@@ -1620,10 +1620,10 @@ async function renderOrderManagementTab(container) {
           <div class="flex justify-between items-center">
             <h3 class="font-bold text-lg text-slate-800">주문 및 배송 현황</h3>
             <div class="flex gap-2">
-              <button onclick="downloadSales()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
+              <button onclick="downloadSales()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm whitespace-nowrap">
                 <i class="fas fa-file-excel mr-2"></i>엑셀 다운로드
               </button>
-              <select id="orderStatusFilter" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-600" onchange="renderOrderList()">
+              <select id="orderStatusFilter" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-600 min-w-[120px]" onchange="renderOrderList()">
                 <option value="all">전체 주문</option>
                 <option value="completed">결제 완료</option>
                 <option value="pending_shipment">배송 준비중</option>
@@ -1636,18 +1636,18 @@ async function renderOrderManagementTab(container) {
 
           <!-- 검색 및 필터 영역 -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-             <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-2 py-1.5">
-               <input type="date" id="orderStartDate" class="text-sm border-none focus:ring-0 text-slate-600 p-0">
+             <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-2 py-1.5 shrink-0">
+               <input type="date" id="orderStartDate" class="text-sm border-none focus:ring-0 text-slate-600 p-0 bg-transparent">
                <span class="text-slate-400">~</span>
-               <input type="date" id="orderEndDate" class="text-sm border-none focus:ring-0 text-slate-600 p-0">
+               <input type="date" id="orderEndDate" class="text-sm border-none focus:ring-0 text-slate-600 p-0 bg-transparent">
              </div>
-             <div class="flex-1 relative">
+             <div class="flex-1 relative min-w-[200px]">
                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                <input type="text" id="orderSearchInput" placeholder="고객명 또는 연락처 검색" 
-                      class="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                      class="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 min-w-[200px]"
                       onkeyup="if(event.key === 'Enter') renderOrderList()">
              </div>
-             <button onclick="renderOrderList()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm">
+             <button onclick="renderOrderList()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1.5 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
                조회
              </button>
           </div>
@@ -1655,20 +1655,20 @@ async function renderOrderManagementTab(container) {
 
         <!-- 테이블 영역 -->
         <div class="overflow-auto flex-1 relative custom-scrollbar">
-          <table class="min-w-full text-sm divide-y divide-slate-100 table-fixed">
-            <thead class="bg-slate-50 sticky top-0 z-10">
+          <table class="w-full text-sm divide-y divide-slate-100">
+            <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
               <tr>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-24">주문번호</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-48">일시</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600">고객</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-32">금액</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-24">담당자</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-28">배송상태</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-40">운송장</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-600 w-64">관리</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">주문번호</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[180px]">일시</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[120px]">고객</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[120px]">금액</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">담당자</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">배송상태</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[140px]">운송장</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[240px]">관리</th>
               </tr>
             </thead>
-            <tbody id="orderTableBody" class="divide-y divide-slate-100 bg-white">
+            <tbody id="orderTableBody" class="divide-y divide-slate-50 bg-white">
               <!-- 데이터 로드됨 -->
             </tbody>
           </table>
@@ -1687,6 +1687,7 @@ async function renderOrderManagementTab(container) {
 
     // 배송 모달 주입
     injectShippingModal();
+    // 반품 모달 주입
     injectClaimModal();
 
   } catch (error) {
@@ -1737,42 +1738,46 @@ function renderOrderList() {
     let statusBadge = '';
     let statusText = getKoreanStatus(s.status);
     switch (s.status) {
-      case 'completed': statusBadge = 'bg-slate-100 text-slate-500 border border-slate-200'; statusText = '결제완료'; break;
-      case 'pending_shipment': statusBadge = 'bg-slate-100 text-slate-500 border border-slate-200'; statusText = '배송준비'; break;
-      case 'shipped': statusBadge = 'bg-blue-50 text-blue-600 border border-blue-100'; break;
-      case 'delivered': statusBadge = 'bg-emerald-50 text-emerald-600 border border-emerald-100'; break;
-      case 'cancelled': statusBadge = 'bg-rose-50 text-rose-600 border border-rose-100'; break;
+      case 'completed': statusBadge = 'bg-slate-100 text-slate-600 border border-slate-200'; statusText = '결제완료'; break;
+      case 'pending_shipment': statusBadge = 'bg-amber-50 text-amber-700 border border-amber-200'; statusText = '배송준비'; break;
+      case 'shipped': statusBadge = 'bg-blue-50 text-blue-600 border border-blue-200'; break;
+      case 'delivered': statusBadge = 'bg-emerald-50 text-emerald-600 border border-emerald-200'; break;
+      case 'cancelled': statusBadge = 'bg-rose-50 text-rose-600 border border-rose-200'; break;
       default: statusBadge = 'bg-slate-50 text-slate-600 border border-slate-200';
     }
 
+    // 결제완료지만 배송준비 전인 상태 매핑
+    if (s.status === 'completed') statusBadge = 'bg-slate-100 text-slate-500 border border-slate-200';
+    if (s.status === 'pending_shipment') statusText = '배송준비';
+
     return `
-        <tr class="hover:bg-slate-50 transition-colors group">
-          <td class="px-6 py-4 font-mono text-slate-500 text-xs">#${String(s.id).padStart(2, '0')}</td>
-          <td class="px-6 py-4 text-slate-500 text-xs tracking-tight">${formattedDate}</td>
-          <td class="px-6 py-4">
-            <div class="font-bold text-slate-800 text-sm">${s.customer_name || '비회원'}</div>
-            <div class="text-xs text-slate-400 font-mono mt-0.5">${s.customer_phone || '-'}</div>
+        <tr class="hover:bg-slate-50/80 transition-colors group border-b border-slate-50 last:border-0">
+          <td class="px-6 py-5 font-mono text-slate-500 text-xs whitespace-nowrap">#${String(s.id).padStart(2, '0')}</td>
+          <td class="px-6 py-5 text-slate-500 text-xs tracking-tight whitespace-nowrap">${formattedDate}</td>
+          <td class="px-6 py-5">
+            <div class="font-bold text-slate-800 text-sm whitespace-nowrap">${s.customer_name || '비회원'}</div>
+            <div class="text-[11px] text-slate-400 font-mono mt-0.5 whitespace-nowrap">${s.customer_phone || '-'}</div>
           </td>
-          <td class="px-6 py-4 font-bold text-slate-800 text-sm">${formatCurrency(s.final_amount)}</td>
-          <td class="px-6 py-4 text-slate-500 text-sm">김순희</td> <!-- 담당자 하드코딩 -->
-          <td class="px-6 py-4">
-            <span class="px-2.5 py-1 rounded text-xs font-medium border ${statusBadge}">
+          <td class="px-6 py-5 font-bold text-slate-800 text-sm whitespace-nowrap">${formatCurrency(s.final_amount)}</td>
+          <td class="px-6 py-5 text-slate-500 text-sm whitespace-nowrap">김순희</td>
+          <td class="px-6 py-5">
+            <span class="px-2.5 py-1.5 rounded text-xs font-semibold border ${statusBadge} whitespace-nowrap inline-block text-center min-w-[60px]">
               ${statusText}
             </span>
           </td>
-          <td class="px-6 py-4 text-slate-500 text-xs">
-             ${s.tracking_number ? `<span class="font-mono">${s.tracking_number}</span>` : '<span class="text-slate-300">출고 대기중</span>'}
+          <td class="px-6 py-5 text-slate-500 text-xs">
+             ${s.tracking_number ? `<span class="font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">${s.tracking_number}</span>` : '<span class="text-slate-300">출고 대기중</span>'}
           </td>
-          <td class="px-6 py-4">
-            <div class="flex gap-1.5 opacity-100">
-               <button onclick="openShippingModal(${s.id})" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1">
+          <td class="px-6 py-5">
+            <div class="flex gap-2 items-center opacity-100">
+               <button onclick="openShippingModal(${s.id})" class="h-8 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
                  <i class="fas fa-truck"></i> 배송조회
                </button>
-               <button onclick="openClaimModal(${s.id})" class="bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1">
+               <button onclick="openClaimModal(${s.id})" class="h-8 px-2.5 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
                  <i class="fas fa-undo"></i> 반품/교환
                </button>
                ${s.status !== 'cancelled' ? `
-               <button onclick="cancelSale(${s.id})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1">
+               <button onclick="cancelSale(${s.id})" class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
                  <i class="fas fa-times"></i> 취소
                </button>
                ` : ''}
