@@ -2427,9 +2427,9 @@ async function renderOrderManagementTab(container) {
                       class="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 min-w-[200px]"
                       onkeyup="if(event.key === 'Enter') renderOrderList()">
              </div>
-             <button onclick="renderOrderList()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1.5 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
-               조회
-             </button>
+              <button onclick="window.orderPage = 1; renderOrderList()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1.5 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
+                조회
+              </button>
           </div>
         </div>
 
@@ -2452,6 +2452,19 @@ async function renderOrderManagementTab(container) {
               <!-- 데이터 로드됨 -->
             </tbody>
           </table>
+        </div>
+
+        <!-- 페이지네이션 컨트롤 -->
+        <div class="flex justify-center items-center gap-4 p-4 bg-white border-t border-slate-100">
+          <button id="btnOrderPrev" onclick="changeOrderPage(-1)" 
+                  class="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+            <i class="fas fa-chevron-left"></i> 이전
+          </button>
+          <span id="orderPageIndicator" class="text-sm font-bold text-slate-700 min-w-[60px] text-center">1 / 1</span>
+          <button id="btnOrderNext" onclick="changeOrderPage(1)" 
+                  class="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+            다음 <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     `;
@@ -2476,8 +2489,17 @@ async function renderOrderManagementTab(container) {
   }
 }
 
+// 주문 목록 페이지네이션 변수
+window.orderPage = 1;
+window.orderItemsPerPage = 20;
+window.filteredOrderList = null;
+
 function renderOrderList() {
   const tbody = document.getElementById('orderTableBody');
+  const prevBtn = document.getElementById('btnOrderPrev');
+  const nextBtn = document.getElementById('btnOrderNext');
+  const indicator = document.getElementById('orderPageIndicator');
+
   if (!tbody || !window.allSales) return;
 
   const statusFilter = document.getElementById('orderStatusFilter').value;
@@ -2504,12 +2526,34 @@ function renderOrderList() {
     return true;
   });
 
+  // 필터링된 결과 저장
+  window.filteredOrderList = filtered;
+
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-20 text-center text-slate-400">데이터가 없습니다.</td></tr>';
+    if (indicator) indicator.textContent = "0 / 0";
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
 
-  tbody.innerHTML = filtered.map(s => {
+  // 페이지네이션 로직
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / window.orderItemsPerPage);
+
+  if (window.orderPage > totalPages) window.orderPage = totalPages;
+  if (window.orderPage < 1) window.orderPage = 1;
+
+  const startIdx = (window.orderPage - 1) * window.orderItemsPerPage;
+  const endIdx = startIdx + window.orderItemsPerPage;
+  const pageItems = filtered.slice(startIdx, endIdx);
+
+  // 페이지네이션 컨트롤 업데이트
+  if (indicator) indicator.textContent = `${window.orderPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.orderPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.orderPage >= totalPages;
+
+  tbody.innerHTML = pageItems.map(s => {
     // 날짜 포맷 (YYYY. MM. DD. HH:mm:ss)
     const date = new Date(s.created_at);
     const formattedDate = `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}. ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
@@ -2566,6 +2610,19 @@ function renderOrderList() {
         </tr>
       `;
   }).join('');
+}
+
+function changeOrderPage(delta) {
+  const list = window.filteredOrderList || window.allSales;
+  if (!list) return;
+
+  const totalPages = Math.ceil(list.length / window.orderItemsPerPage);
+  const newPage = window.orderPage + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    window.orderPage = newPage;
+    renderOrderList();
+  }
 }
 
 // 반품/교환 관리 탭 렌더링
