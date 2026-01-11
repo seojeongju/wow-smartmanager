@@ -1391,31 +1391,35 @@ async function loadStock(content) {
   }
 }
 
-// 판매 관리 로드 (탭 구조)
+// 판매 관리 로드
 async function loadSales(content) {
   content.innerHTML = `
     <div class="flex flex-col h-full">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-slate-800">
-          <i class="fas fa-shopping-cart mr-2 text-indigo-600"></i>판매 및 주문 관리
+      <!-- 헤더 -->
+      <div class="flex justify-between items-center mb-4 px-1">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+          <i class="fas fa-shopping-cart mr-3 text-emerald-600"></i>판매 및 주문 관리
         </h1>
+        <div class="text-sm text-slate-500">
+           ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+        </div>
       </div>
 
       <!-- 탭 네비게이션 -->
-      <div class="flex border-b border-slate-200 mb-6 bg-white rounded-t-xl px-4 pt-2 shadow-sm">
-        <button id="tab-pos" class="px-6 py-4 font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors flex items-center" onclick="switchSalesTab('pos')">
-          <i class="fas fa-cash-register mr-2"></i>POS (판매등록)
+      <div class="flex border-b border-slate-200 mb-4 bg-white rounded-t-xl px-4 pt-2 shadow-sm">
+        <button id="tab-pos" class="px-6 py-3 font-bold text-emerald-600 border-b-2 border-emerald-600 transition-colors flex items-center gap-2" onclick="switchSalesTab('pos')">
+          <i class="fas fa-cash-register"></i>POS (판매등록)
         </button>
-        <button id="tab-orders" class="px-6 py-4 font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center" onclick="switchSalesTab('orders')">
-          <i class="fas fa-truck mr-2"></i>주문/배송 관리
+        <button id="tab-orders" class="px-6 py-3 font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-2" onclick="switchSalesTab('orders')">
+          <i class="fas fa-truck"></i>주문/배송 관리
         </button>
-        <button id="tab-claims" class="px-6 py-4 font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center" onclick="switchSalesTab('claims')">
-          <i class="fas fa-undo mr-2"></i>반품/교환 관리
+        <button id="tab-claims" class="px-6 py-3 font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-2" onclick="switchSalesTab('claims')">
+          <i class="fas fa-undo"></i>반품/교환 관리
         </button>
       </div>
 
       <!-- 탭 컨텐츠 영역 -->
-      <div id="salesTabContent" class="flex-1 overflow-hidden flex flex-col relative">
+      <div id="salesTabContent" class="flex-1 overflow-hidden flex flex-col relative bg-slate-50 rounded-b-xl border border-slate-200 border-t-0">
         <!-- 동적 로드 -->
       </div>
     </div>
@@ -1429,14 +1433,15 @@ async function loadSales(content) {
 async function switchSalesTab(tabName) {
   // 탭 스타일 업데이트
   document.querySelectorAll('[id^="tab-"]').forEach(el => {
-    el.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600', 'font-bold');
+    el.classList.remove('text-emerald-600', 'border-b-2', 'border-emerald-600', 'font-bold');
     el.classList.add('text-slate-500', 'font-medium', 'border-transparent');
   });
   const activeTab = document.getElementById(`tab-${tabName}`);
   activeTab.classList.remove('text-slate-500', 'font-medium', 'border-transparent');
-  activeTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600', 'font-bold');
+  activeTab.classList.add('text-emerald-600', 'border-b-2', 'border-emerald-600', 'font-bold');
 
   const container = document.getElementById('salesTabContent');
+  container.innerHTML = '<div class="flex items-center justify-center h-full"><i class="fas fa-spinner fa-spin text-4xl text-emerald-500"></i></div>';
 
   switch (tabName) {
     case 'pos':
@@ -1454,89 +1459,119 @@ async function switchSalesTab(tabName) {
 // POS 탭 렌더링
 async function renderPosTab(container) {
   try {
-    const [productsRes, customersRes, salesRes] = await Promise.all([
+    const [productsRes, customersRes] = await Promise.all([
       axios.get(`${API_BASE}/products`),
-      axios.get(`${API_BASE}/customers`),
-      axios.get(`${API_BASE}/sales?limit=5`) // 최근 5건만
+      axios.get(`${API_BASE}/customers`)
     ]);
 
     window.products = productsRes.data.data;
     window.customers = customersRes.data.data;
-    const recentSales = salesRes.data.data;
 
     if (!window.cart) window.cart = [];
 
     container.innerHTML = `
-      <div class="flex flex-1 gap-6 overflow-hidden h-full pb-4">
+      <div class="flex flex-1 gap-6 overflow-hidden h-full p-6">
         <!-- 왼쪽: 상품 목록 -->
-        <div class="w-2/3 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 bg-slate-50">
-            <div class="flex gap-4">
-              <div class="relative flex-1">
-                <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
-                <input type="text" id="posSearch" placeholder="상품명 또는 SKU 검색..." 
-                       class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
-                       onkeyup="filterPosProducts()">
-              </div>
-              <select id="posCategory" class="border border-slate-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white transition-shadow"
-                      onchange="filterPosProducts()">
-                <option value="">전체 카테고리</option>
-              </select>
+        <div class="w-3/4 flex flex-col gap-4">
+          <!-- 검색 및 필터 -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 items-center">
+            <div class="relative flex-1">
+              <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="posSearch" placeholder="상품명 또는 SKU 검색..." 
+                     class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow bg-slate-50 placeholder-slate-400"
+                     onkeyup="filterPosProducts()">
             </div>
-          </div>
-          
-          <div id="posProductList" class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-start bg-slate-50/50">
-            <!-- 상품 카드 -->
-          </div>
-        </div>
-
-        <!-- 오른쪽: 장바구니 -->
-        <div class="w-1/3 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-200 bg-indigo-50/50">
-            <h3 class="font-bold text-lg text-indigo-900 mb-3 flex items-center"><i class="fas fa-receipt mr-2"></i>주문 내역</h3>
-            <select id="posCustomer" class="w-full border border-indigo-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-              <option value="">비회원 / 고객 선택</option>
-              ${window.customers.map(c => `<option value="${c.id}">${c.name} (${c.phone})</option>`).join('')}
+            <select id="posCategory" class="min-w-[180px] border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-slate-700 font-medium"
+                    onchange="filterPosProducts()">
+              <option value="">전체 카테고리</option>
             </select>
           </div>
+          
+          <!-- 상품 그리드 -->
+          <div id="posProductList" class="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
+            <!-- 상품 카드 -->
+          </div>
 
-          <div id="posCartItems" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+           <!-- 페이지네이션 (간단 구현) -->
+           <div class="flex justify-center mt-2">
+             <div class="flex bg-white rounded-lg border border-slate-200 shadow-sm p-1 gap-1">
+               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"><i class="fas fa-chevron-left"></i></button>
+               <button class="w-8 h-8 flex items-center justify-center rounded bg-emerald-600 text-white font-bold">1</button>
+               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600">2</button>
+               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600">3</button>
+               <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400"><i class="fas fa-chevron-right"></i></button>
+             </div>
+           </div>
+        </div>
 
-          <div class="p-5 bg-slate-50 border-t border-slate-200">
+        <!-- 오른쪽: 주문 내역 -->
+        <div class="w-1/4 flex flex-col bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden h-full">
+          <!-- 고객 선택 -->
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+               <div class="w-1 bg-emerald-600 h-4 rounded-full"></div>
+               주문 내역
+            </h3>
+            <div class="relative">
+              <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+              <input list="customerList" id="posCustomerInput" placeholder="회원 조회 (이름/연락처)" 
+                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm"
+                     onchange="selectCustomerFromInput(this.value)">
+              <datalist id="customerList">
+                ${window.customers.map(c => `<option value="${c.name} (${c.phone})" data-id="${c.id}">`).join('')}
+              </datalist>
+              <input type="hidden" id="posCustomer">
+            </div>
+          </div>
+
+          <!-- 장바구니 아이템 -->
+          <div id="posCartItems" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white"></div>
+
+          <!-- 결제 요약 -->
+          <div class="p-6 bg-slate-50 border-t border-slate-100">
             <div class="flex justify-between mb-2 text-sm">
-              <span class="text-slate-600">총 상품금액</span>
-              <span id="posTotalAmount" class="font-bold text-slate-800">0원</span>
+              <span class="text-slate-500">총 상품금액</span>
+              <span id="posTotalAmount" class="font-medium text-slate-700">0원</span>
             </div>
-            <div class="flex justify-between items-center mb-4 text-sm">
-              <span class="text-slate-600">할인 금액</span>
-              <input type="number" id="posDiscount" value="0" min="0" 
-                     class="w-28 text-right border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            <div class="flex justify-between items-center mb-6 text-sm">
+              <span class="text-slate-500">할인 금액</span>
+              <div class="flex items-center gap-1 bg-white border border-slate-200 rounded px-2 py-1 w-24">
+                 <input type="number" id="posDiscount" value="0" min="0" 
+                     class="w-full text-right outline-none text-slate-700 font-medium"
                      onchange="renderCart()">
-            </div>
-            <div class="flex justify-between mb-6 text-xl font-bold text-indigo-600 border-t border-slate-200 pt-4">
-              <span>최종 결제금액</span>
-              <span id="posFinalAmount">0원</span>
-            </div>
-
-            <div class="mb-6">
-              <div class="flex gap-2">
-                <label class="flex-1 cursor-pointer">
-                  <input type="radio" name="paymentMethod" value="card" checked class="peer sr-only">
-                  <div class="text-center py-2.5 border border-slate-200 rounded-lg peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 hover:bg-slate-50 transition-all font-medium text-sm">카드</div>
-                </label>
-                <label class="flex-1 cursor-pointer">
-                  <input type="radio" name="paymentMethod" value="cash" class="peer sr-only">
-                  <div class="text-center py-2.5 border border-slate-200 rounded-lg peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 hover:bg-slate-50 transition-all font-medium text-sm">현금</div>
-                </label>
-                <label class="flex-1 cursor-pointer">
-                  <input type="radio" name="paymentMethod" value="transfer" class="peer sr-only">
-                  <div class="text-center py-2.5 border border-slate-200 rounded-lg peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 hover:bg-slate-50 transition-all font-medium text-sm">이체</div>
-                </label>
+                 <span class="text-slate-400 text-xs">원</span>
               </div>
             </div>
+            
+            <div class="flex justify-between items-end mb-6 pt-4 border-t border-slate-200 dashed">
+              <span class="text-base font-bold text-emerald-800">최종 결제금액</span>
+              <span id="posFinalAmount" class="text-2xl font-extrabold text-emerald-600">0원</span>
+            </div>
 
-            <button onclick="checkout()" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all transform active:scale-[0.98]">
-              결제하기
+            <!-- 결제 수단 -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+               <label class="cursor-pointer">
+                  <input type="radio" name="paymentMethod" value="card" checked class="peer sr-only">
+                  <div class="text-center py-2 rounded-lg border border-slate-200 text-slate-600 bg-white peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all font-medium text-sm hover:bg-slate-50">
+                     카드
+                  </div>
+               </label>
+               <label class="cursor-pointer">
+                  <input type="radio" name="paymentMethod" value="cash" class="peer sr-only">
+                  <div class="text-center py-2 rounded-lg border border-slate-200 text-slate-600 bg-white peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all font-medium text-sm hover:bg-slate-50">
+                     현금
+                  </div>
+               </label>
+               <label class="cursor-pointer">
+                  <input type="radio" name="paymentMethod" value="transfer" class="peer sr-only">
+                  <div class="text-center py-2 rounded-lg border border-slate-200 text-slate-600 bg-white peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition-all font-medium text-sm hover:bg-slate-50">
+                     이체
+                  </div>
+               </label>
+            </div>
+
+            <button onclick="checkout()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+              <i class="fas fa-check"></i> 결제하기
             </button>
           </div>
         </div>
@@ -1555,6 +1590,16 @@ async function renderPosTab(container) {
       opt.textContent = c;
       catSelect.appendChild(opt);
     });
+
+    // 고객 검색 로직 (datalist workaround)
+    window.selectCustomerFromInput = (value) => {
+      const customer = window.customers.find(c => `${c.name} (${c.phone})` === value);
+      if (customer) {
+        document.getElementById('posCustomer').value = customer.id;
+      } else {
+        document.getElementById('posCustomer').value = '';
+      }
+    };
 
   } catch (error) {
     console.error('POS 로드 실패:', error);
@@ -2617,25 +2662,52 @@ function renderPosProducts(filterText = '', filterCat = '') {
     filtered = filtered.filter(p => p.category === filterCat);
   }
 
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
+        <i class="fas fa-search text-4xl mb-4 text-slate-300"></i>
+        <p>검색 결과가 없습니다.</p>
+      </div>
+    `;
+    return;
+  }
+
   container.innerHTML = filtered.map(p => `
-    <div class="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer flex flex-col h-full group relative overflow-hidden"
+    <div class="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-emerald-400 transition-all cursor-pointer flex flex-col h-full group relative overflow-hidden active:scale-[0.98]"
          onclick="addToCart(${p.id})">
-      <div class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div class="bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
-          <i class="fas fa-plus"></i>
+      
+      <!-- 카테고리 & SKU -->
+      <div class="mb-3">
+        <div class="flex items-center text-xs text-emerald-600 font-medium mb-1">
+          <span>${p.category}</span>
+          ${p.category_medium ? `<i class="fas fa-chevron-right text-[10px] mx-1 text-slate-300"></i><span>${p.category_medium}</span>` : ''}
         </div>
+        <div class="text-[10px] text-slate-400 font-mono tracking-wide">${p.sku}</div>
       </div>
-      <div class="flex justify-between items-start mb-2">
-        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">${p.category}</span>
-        <span class="text-xs text-slate-400 font-mono">${p.sku}</span>
-      </div>
-      <h4 class="font-bold text-slate-800 mb-1 line-clamp-2 flex-1">${p.name}</h4>
-      <div class="mt-auto pt-3 border-t border-slate-100 flex justify-between items-end">
-        <div>
-           <p class="text-xs text-slate-500">재고: <span class="${p.current_stock <= p.min_stock_alert ? 'text-rose-600 font-bold' : 'text-slate-700'}">${p.current_stock}</span></p>
+
+      <!-- 상품명 -->
+      <h4 class="font-bold text-slate-800 text-base mb-2 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">${p.name}</h4>
+
+      <!-- 태그 (있는 경우) -->
+      ${p.tags ? `
+        <div class="flex flex-wrap gap-1 mb-3">
+          ${p.tags.split(',').slice(0, 2).map(tag => `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px]">${tag.trim()}</span>`).join('')}
         </div>
-        <p class="text-lg font-bold text-indigo-600">${formatCurrency(p.selling_price)}</p>
+      ` : ''}
+
+      <!-- 하단 정보: 재고 및 가격 -->
+      <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between items-end">
+        <div class="flex flex-col">
+           <span class="text-xs text-slate-400 mb-0.5">재고</span>
+           <span class="font-medium ${p.current_stock <= p.min_stock_alert ? 'text-rose-500' : 'text-slate-600'}">
+             ${p.current_stock > 0 ? `${p.current_stock}개` : '<span class="text-rose-500 font-bold">품절</span>'}
+           </span>
+        </div>
+        <p class="text-lg font-bold text-emerald-600 tracking-tight">${formatCurrency(p.selling_price)}</p>
       </div>
+      
+      <!-- 오버레이 효과 (선택 시 강조) -->
+      <div class="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity"></div>
     </div>
   `).join('');
 }
@@ -2708,12 +2780,9 @@ function renderCart() {
 
   if (window.cart.length === 0) {
     container.innerHTML = `
-      <div class="text-center text-slate-400 mt-10">
-        <div class="bg-slate-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-shopping-basket text-3xl text-slate-300"></i>
-        </div>
-        <p class="font-medium">장바구니가 비어있습니다.</p>
-        <p class="text-sm mt-1">상품을 선택하여 담아주세요.</p>
+      <div class="h-full flex flex-col items-center justify-center text-slate-400 py-10">
+        <i class="fas fa-shopping-basket text-4xl text-slate-200 mb-3"></i>
+        <p class="font-medium text-slate-500">상품을 담아주세요.</p>
       </div>
     `;
     totalEl.textContent = '0원';
@@ -2726,25 +2795,28 @@ function renderCart() {
     const itemTotal = item.product.selling_price * item.quantity;
     total += itemTotal;
     return `
-      <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 group hover:border-indigo-200 transition-colors">
-        <div class="flex-1 min-w-0 mr-3">
-          <div class="font-medium text-slate-800 truncate">${item.product.name}</div>
-          <div class="text-xs text-slate-500 mt-0.5">${formatCurrency(item.product.selling_price)} x ${item.quantity}</div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="font-bold text-slate-700">${formatCurrency(itemTotal)}</div>
-          <div class="flex items-center bg-white rounded-lg border border-slate-200 shadow-sm">
-            <button onclick="updateCartQuantity(${item.product.id}, -1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-l-lg transition-colors">
-              <i class="fas fa-minus text-xs"></i>
-            </button>
-            <span class="w-8 text-center text-sm font-medium text-slate-700">${item.quantity}</span>
-            <button onclick="updateCartQuantity(${item.product.id}, 1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-r-lg transition-colors">
-              <i class="fas fa-plus text-xs"></i>
-            </button>
-          </div>
-          <button onclick="removeFromCart(${item.product.id})" class="text-slate-400 hover:text-rose-500 transition-colors ml-1">
+      <div class="flex flex-col bg-white p-3 rounded-lg border border-slate-100 shadow-sm relative group hover:border-emerald-200 transition-colors">
+        <div class="flex justify-between items-start mb-2">
+          <div class="font-bold text-slate-800 text-sm line-clamp-2 pr-6 leading-tight">${item.product.name}</div>
+          <button onclick="removeFromCart(${item.product.id})" class="text-slate-300 hover:text-rose-500 transition-colors absolute right-2 top-2 p-1">
             <i class="fas fa-times"></i>
           </button>
+        </div>
+        
+        <div class="flex justify-between items-end mt-1">
+          <div class="flex items-center bg-slate-50 rounded border border-slate-200">
+            <button onclick="updateCartQuantity(${item.product.id}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-l transition-colors">
+              <i class="fas fa-minus text-[10px]"></i>
+            </button>
+            <span class="w-8 text-center text-xs font-bold text-slate-700 select-none">${item.quantity}</span>
+            <button onclick="updateCartQuantity(${item.product.id}, 1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-r transition-colors">
+              <i class="fas fa-plus text-[10px]"></i>
+            </button>
+          </div>
+          <div class="text-right">
+             <div class="text-[10px] text-slate-400 font-mono mb-0.5">${formatCurrency(item.product.selling_price)}</div>
+             <div class="font-bold text-emerald-600 text-sm">${formatCurrency(itemTotal)}</div>
+          </div>
         </div>
       </div>
     `;
