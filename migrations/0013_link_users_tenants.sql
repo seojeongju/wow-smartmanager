@@ -1,5 +1,5 @@
 -- 사용자 테이블에 조직 ID 컬럼 추가
-ALTER TABLE users ADD COLUMN tenant_id INTEGER;
+-- ALTER TABLE users ADD COLUMN tenant_id INTEGER;
 
 -- 더미 사용자 데이터 추가 (시스템 관리 예시용)
 INSERT OR IGNORE INTO users (name, email, role, tenant_id, created_at) VALUES 
