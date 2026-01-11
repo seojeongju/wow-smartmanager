@@ -28,6 +28,20 @@ async function loadUserInfo() {
     }
   } catch (error) {
     console.error('사용자 정보 로드 실패:', error);
+    // 토큰이 만료되었거나 유효하지 않은 경우 로그인 페이지로 이동
+    if (error.response && error.response.status === 401) {
+      logout();
+    }
+  }
+}
+
+// 로그아웃
+function logout() {
+  if (confirm('로그아웃 하시겠습니까?')) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   }
 }
 

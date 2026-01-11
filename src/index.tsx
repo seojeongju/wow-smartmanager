@@ -535,6 +535,9 @@ app.get('/', (c: Context) => {
                             <p class="text-sm font-medium text-white truncate" id="user-name">Loading...</p>
                             <p class="text-xs text-slate-500 truncate" id="user-email">...</p>
                         </div>
+                        <button onclick="logout()" class="p-2 text-slate-400 hover:text-rose-500 transition-colors rounded-lg hover:bg-slate-800" title="로그아웃">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
                 </div>
             </aside>
