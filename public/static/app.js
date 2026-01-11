@@ -2320,82 +2320,297 @@ async function loadProducts(content) {
 
 // 고객 관리 로드 (간단 버전)
 async function loadCustomers(content) {
+  content.innerHTML = '<div class="flex items-center justify-center h-full"><i class="fas fa-spinner fa-spin text-4xl text-indigo-500"></i></div>';
+
   try {
     const response = await axios.get(`${API_BASE}/customers`);
-    const customers = response.data.data;
+    window.allCustomers = response.data.data;
+    window.customerState = { search: '', grade: '', page: 1 };
 
-    content.innerHTML = `
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-slate-800">
-          <i class="fas fa-users mr-2 text-indigo-600"></i>고객 관리
-        </h1>
-        <div class="flex gap-2">
-          <button onclick="downloadCustomers()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center">
-            <i class="fas fa-file-excel mr-2"></i>엑셀 다운로드
-          </button>
-          <button onclick="showCustomerModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center">
-            <i class="fas fa-plus mr-2"></i>고객 등록
-          </button>
-        </div>
+    renderCustomerPage(content);
+  } catch (error) {
+    showError(content, '고객 데이터 로드 실패');
+  }
+}
+
+function renderCustomerPage(content) {
+  const total = window.allCustomers.length;
+  const vips = window.allCustomers.filter(c => c.grade && (c.grade.includes('VIP') || c.grade === 'VVIP')).length;
+  const newCustomers = window.allCustomers.filter(c => {
+    const d = new Date(c.created_at);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  const totalSales = window.allCustomers.reduce((a, c) => a + (c.total_purchase_amount || 0), 0);
+
+  content.innerHTML = `
+      <div class="flex flex-col h-full bg-slate-50 overflow-hidden">
+          <div class="px-8 py-6 bg-white border-b border-slate-200">
+             <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+                    <i class="fas fa-users text-indigo-600 mr-2"></i>고객 관리
+                </h1>
+                <div class="flex gap-2">
+                    <button onclick="downloadCustomers()" class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 font-bold transition-colors text-sm border border-emerald-200">
+                        <i class="fas fa-file-excel mr-2"></i>엑셀
+                    </button>
+                    <button onclick="showCustomerModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-md shadow-indigo-200 transition-all hover:-translate-y-0.5 text-sm">
+                        <i class="fas fa-plus mr-2"></i>고객 등록
+                    </button>
+                </div>
+             </div>
+             
+             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center gap-4">
+                    <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center text-indigo-600 shadow-sm text-xl"><i class="fas fa-user-friends"></i></div>
+                    <div>
+                        <div class="text-xs text-indigo-500 font-bold uppercase mb-1">전체 고객</div>
+                        <div class="text-2xl font-bold text-slate-800">${total.toLocaleString()}명</div>
+                    </div>
+                </div>
+                 <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-center gap-4">
+                    <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center text-amber-500 shadow-sm text-xl"><i class="fas fa-crown"></i></div>
+                    <div>
+                        <div class="text-xs text-amber-600 font-bold uppercase mb-1">VIP / VVIP</div>
+                        <div class="text-2xl font-bold text-slate-800">${vips.toLocaleString()}명</div>
+                    </div>
+                </div>
+                 <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-4">
+                    <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center text-emerald-600 shadow-sm text-xl"><i class="fas fa-user-plus"></i></div>
+                    <div>
+                        <div class="text-xs text-emerald-600 font-bold uppercase mb-1">이달의 신규</div>
+                        <div class="text-2xl font-bold text-slate-800">${newCustomers.toLocaleString()}명</div>
+                    </div>
+                </div>
+                  <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
+                     <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center text-slate-500 shadow-sm text-xl"><i class="fas fa-coins"></i></div>
+                     <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase mb-1">총 구매액</div>
+                        <div class="text-lg font-bold text-slate-800">₩${(totalSales / 10000).toLocaleString()}만원</div>
+                     </div>
+                 </div>
+             </div>
+          </div>
+
+          <div class="px-8 py-4 bg-white border-b border-slate-200 flex flex-wrap gap-4 items-center">
+             <div class="relative flex-1 min-w-[300px]">
+                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                 <input type="text" id="custSearch" class="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-colors" 
+                        placeholder="이름, 연락처, 회사명으로 검색..." onkeyup="filterCustomers()">
+             </div>
+             <div class="flex items-center gap-2">
+                 <select id="custGrade" class="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-white text-slate-700 font-medium text-sm" onchange="filterCustomers()">
+                     <option value="">전체 등급</option>
+                     <option value="일반">일반</option>
+                     <option value="VIP">VIP</option>
+                     <option value="VVIP">VVIP</option>
+                 </select>
+             </div>
+          </div>
+
+          <div class="flex-1 overflow-auto p-8" id="customerListArea"></div>
       </div>
-      
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">이름</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">연락처</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">등급</th>
-                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">총 구매액</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">구매 횟수</th>
-                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">관리</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-slate-200">
-              ${customers.map(c => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-slate-900">${c.name}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-slate-600">${c.phone}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${c.grade === 'VIP' ? 'bg-amber-100 text-amber-700' :
-        c.grade === 'VVIP' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}">
-                      ${c.grade}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right">
-                    <div class="text-sm font-bold text-slate-700">${formatCurrency(c.total_purchase_amount)}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
-                    <div class="text-sm text-slate-600">${c.purchase_count}회</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                    <button onclick="editCustomer(${c.id})" class="text-indigo-600 hover:text-indigo-900 mr-3 transition-colors">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="deleteCustomer(${c.id})" class="text-red-500 hover:text-red-700 transition-colors">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+   `;
+
+  injectCustomerModal();
+  filterCustomers();
+}
+
+window.filterCustomers = function () {
+  const search = document.getElementById('custSearch')?.value.toLowerCase() || '';
+  const grade = document.getElementById('custGrade')?.value || '';
+
+  const filtered = window.allCustomers.filter(c => {
+    const matchSearch = c.name.toLowerCase().includes(search) || c.phone.includes(search) || (c.company || '').toLowerCase().includes(search);
+    const matchGrade = grade ? c.grade === grade : true;
+    return matchSearch && matchGrade;
+  });
+
+  renderCustomerTable(filtered);
+}
+
+function renderCustomerTable(customers) {
+  const area = document.getElementById('customerListArea');
+  if (customers.length === 0) {
+    area.innerHTML = '<div class="text-center py-20 text-slate-400"><i class="fas fa-user-slash text-4xl mb-4 text-slate-200"></i><p>조건에 맞는 고객이 없습니다.</p></div>';
+    return;
+  }
+
+  area.innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                    <tr>
+                        <th class="px-6 py-4 border-b border-slate-100">고객명</th>
+                        <th class="px-6 py-4 border-b border-slate-100">연락처/이메일</th>
+                        <th class="px-6 py-4 border-b border-slate-100 text-center">등급</th>
+                        <th class="px-6 py-4 border-b border-slate-100 text-right">총 구매액</th>
+                        <th class="px-6 py-4 border-b border-slate-100 text-center">구매횟수</th>
+                        <th class="px-6 py-4 border-b border-slate-100 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    ${customers.map(c => `
+                    <tr class="hover:bg-indigo-50/30 transition-colors group cursor-pointer" onclick="openCustomerDetail(${c.id})">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full ${['VIP', 'VVIP'].includes(c.grade) ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'} flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white">
+                                    ${c.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">${c.name}</div>
+                                    <div class="text-xs text-slate-400">${c.company || '개인고객'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-slate-600 font-mono tracking-tight"><i class="fas fa-phone-alt w-3 text-slate-300 mr-1"></i> ${c.phone}</div>
+                            ${c.email ? `<div class="text-xs text-slate-400 mt-0.5 font-mono"><i class="fas fa-envelope w-3 text-slate-300 mr-1"></i> ${c.email}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border 
+                                ${c.grade === 'VVIP' ? 'bg-purple-50 text-purple-700 border-purple-100' :
+      c.grade === 'VIP' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-slate-50 text-slate-500 border-slate-100'}">
+                                ${c.grade}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-mono font-bold text-slate-700">
+                            ₩${(c.total_purchase_amount || 0).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-sm text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded text-xs">${c.purchase_count || 0}회</span>
+                        </td>
+                        <td class="px-6 py-4 text-center" onclick="event.stopPropagation()">
+                             <div class="flex justify-center gap-1">
+                                <button onclick="editCustomer(${c.id})" class="text-slate-400 hover:text-indigo-600 p-2 transition-colors rounded hover:bg-indigo-50" title="수정"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteCustomer(${c.id})" class="text-slate-400 hover:text-rose-500 p-2 transition-colors rounded hover:bg-rose-50" title="삭제"><i class="fas fa-trash"></i></button>
+                             </div>
+                        </td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
         </div>
+    `;
+}
+
+window.openCustomerDetail = async function (id) {
+  if (!document.getElementById('customerDetailModal')) {
+    injectCustomerDetailModal();
+  }
+
+  const customer = window.allCustomers.find(c => c.id === id);
+  if (!customer) return;
+
+  const modal = document.getElementById('customerDetailModal');
+  const content = document.getElementById('customerDetailContent');
+
+  content.innerHTML = '<div class="flex justify-center p-20"><i class="fas fa-spinner fa-spin text-3xl text-indigo-500"></i></div>';
+  modal.classList.remove('hidden');
+  setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+  let purchaseHistoryHtml = '<div class="text-center py-8 text-slate-400 bg-slate-50 rounded-lg">구매 이력이 없습니다.</div>';
+  try {
+    const res = await axios.get(`${API_BASE}/customers/${id}/purchases`);
+    const purchases = res.data.data;
+    if (purchases.length > 0) {
+      purchaseHistoryHtml = `
+               <table class="w-full text-sm text-left">
+                  <thead class="bg-slate-50 text-slate-500 font-bold text-xs uppercase">
+                    <tr><th class="p-3 pl-4">날짜</th><th class="p-3">구매 상품</th><th class="p-3 text-right pr-4">금액</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${purchases.map(p => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 pl-4 text-slate-500 whitespace-nowrap font-mono text-xs">${new Date(p.created_at).toLocaleDateString()}</td>
+                            <td class="p-3 text-slate-800 font-medium">${p.items || '상품 정보 없음'}</td>
+                            <td class="p-3 pr-4 text-right font-mono font-bold text-slate-700">₩${p.total_amount.toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+                  </tbody>
+               </table>
+            `;
+    }
+  } catch (e) { console.error(e); }
+
+  content.innerHTML = `
+       <div class="flex flex-col md:flex-row gap-8">
+           <div class="w-full md:w-1/3 md:border-r md:border-slate-100 md:pr-6">
+               <div class="flex flex-col items-center mb-6">
+                   <div class="w-24 h-24 rounded-full ${['VIP', 'VVIP'].includes(customer.grade) ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'} flex items-center justify-center text-4xl font-bold mb-4 shadow-inner">
+                       ${customer.name.charAt(0)}
+                   </div>
+                   <h2 class="text-2xl font-bold text-slate-800 mb-1">${customer.name}</h2>
+                   <span class="px-3 py-1 rounded-full text-xs font-bold border ${customer.grade === 'VIP' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'}">${customer.grade} Member</span>
+                   
+                   <div class="mt-6 w-full space-y-2">
+                       <button onclick="openContractModal(null, {id: ${customer.id}, name: '${customer.name}'})" class="w-full py-2.5 border border-indigo-200 text-indigo-600 rounded-xl hover:bg-indigo-50 font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                          <i class="fas fa-file-contract"></i>계약 단가 관리
+                       </button>
+                        <button onclick="editCustomer(${customer.id}); document.getElementById('customerDetailModal').classList.add('hidden');" class="w-full py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold text-sm transition-colors">
+                          <i class="fas fa-edit mr-2"></i>정보 수정
+                       </button>
+                   </div>
+               </div>
+               
+               <div class="space-y-4 text-sm mt-8">
+                   <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                       <span class="text-slate-500"><i class="fas fa-phone mr-2 text-slate-300"></i>연락처</span> 
+                       <span class="font-medium text-slate-800 font-mono">${customer.phone}</span>
+                   </div>
+                   <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                       <span class="text-slate-500"><i class="fas fa-envelope mr-2 text-slate-300"></i>이메일</span> 
+                       <span class="font-medium text-slate-800">${customer.email || '-'}</span>
+                   </div>
+                   <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                       <span class="text-slate-500"><i class="fas fa-building mr-2 text-slate-300"></i>회사/부서</span> 
+                       <span class="font-medium text-slate-800 text-right">${customer.company || '-'}${customer.department ? ' / ' + customer.department : ''}</span>
+                   </div>
+                    <div class="flex justify-between items-center py-2">
+                       <span class="text-slate-500"><i class="fas fa-calendar mr-2 text-slate-300"></i>등록일</span> 
+                       <span class="font-medium text-slate-800 font-mono">${new Date(customer.created_at).toLocaleDateString()}</span>
+                   </div>
+               </div>
+               
+               <div class="mt-6">
+                    <h4 class="font-bold text-slate-700 mb-2 text-xs uppercase"><i class="fas fa-sticky-note mr-1 text-slate-400"></i>메모</h4>
+                    <div class="text-sm text-slate-600 bg-yellow-50/50 border border-yellow-100 p-4 rounded-xl min-h-[80px]">
+                        ${customer.notes ? customer.notes.replace(/\n/g, '<br>') : '<span class="text-slate-400 italic">등록된 메모가 없습니다.</span>'}
+                    </div>
+               </div>
+           </div>
+           
+           <div class="w-full md:w-2/3 mt-6 md:mt-0">
+               <div class="flex justify-between items-end mb-4">
+                   <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                       <i class="fas fa-history text-indigo-500"></i> 구매 이력
+                   </h3>
+                   <span class="text-xs text-slate-500">최근 30건</span>
+               </div>
+               <div class="bg-white border boundary-slate-200 rounded-xl overflow-hidden max-h-[500px] overflow-y-auto shadow-sm">
+                   ${purchaseHistoryHtml}
+               </div>
+           </div>
+       </div>
+    `;
+}
+
+function injectCustomerDetailModal() {
+  const html = `
+      <div id="customerDetailModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden transition-opacity opacity-0 flex items-center justify-center p-4" onclick="if(event.target===this) this.classList.add('hidden')">
+         <div class="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl transform transition-all scale-100 flex flex-col">
+             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50 backdrop-blur sticky top-0 bg-white/90 z-10">
+                 <h3 class="font-bold text-lg text-slate-800">고객 상세 정보</h3>
+                 <button onclick="document.getElementById('customerDetailModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                 </button>
+             </div>
+             <div class="p-8" id="customerDetailContent">
+             </div>
+         </div>
       </div>
     `;
-    // 모달 주입
-    injectCustomerModal();
-
-  } catch (error) {
-    console.error('고객 목록 로드 실패:', error);
-    showError(content, '고객 목록을 불러오는데 실패했습니다.');
-  }
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
 // 재고 관리 로드
