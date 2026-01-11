@@ -45,8 +45,16 @@ app.get('/summary', async (c) => {
     FROM customers
   `).first()
 
-  return c.json({ 
-    success: true, 
+  // Action Board Counts
+  const actionCounts = await DB.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM outbound_orders WHERE status IN ('PENDING', 'PICKING')) as outbound_pending,
+      (SELECT COUNT(*) FROM outbound_orders WHERE status = 'SHIPPED' AND created_at >= date('now', '-7 days')) as shipping_count,
+      (SELECT COUNT(*) FROM claims WHERE status = 'requested') as claim_count
+  `).first()
+
+  return c.json({
+    success: true,
     data: {
       today_revenue: todaySales?.today_revenue || 0,
       today_sales_count: todaySales?.today_sales_count || 0,
@@ -57,7 +65,12 @@ app.get('/summary', async (c) => {
       total_stock_value: stockInfo?.total_stock_value || 0,
       low_stock_count: stockInfo?.low_stock_count || 0,
       total_customers: customerInfo?.total_customers || 0,
-      vip_customers: customerInfo?.vip_customers || 0
+      vip_customers: customerInfo?.vip_customers || 0,
+
+      // Action Board
+      outbound_pending: actionCounts?.outbound_pending || 0,
+      shipping_count: actionCounts?.shipping_count || 0,
+      claim_count: actionCounts?.claim_count || 0
     }
   })
 })
@@ -141,6 +154,22 @@ app.get('/recent-sales', async (c) => {
     WHERE s.status = 'completed'
     GROUP BY s.id
     ORDER BY s.created_at DESC
+    LIMIT ?
+  `).bind(limit).all()
+
+  return c.json({ success: true, data: results })
+})
+
+// 최근 등록 상품
+app.get('/recent-products', async (c) => {
+  const { DB } = c.env
+  const limit = parseInt(c.req.query('limit') || '5')
+
+  const { results } = await DB.prepare(`
+    SELECT id, name, sku, category, selling_price, current_stock, image_url
+    FROM products
+    WHERE is_active = 1
+    ORDER BY created_at DESC
     LIMIT ?
   `).bind(limit).all()
 

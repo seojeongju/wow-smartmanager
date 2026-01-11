@@ -819,302 +819,317 @@ async function loadSystem(content) {
 async function loadDashboard(content) {
   try {
     // 병렬 데이터 로드
-    const [summaryRes, salesChartRes, categoryStatsRes, bestsellersRes, lowStockRes, vipRes] = await Promise.all([
+    const [summaryRes, salesChartRes, categoryStatsRes, recentProductsRes, recentSalesRes, lowStockRes] = await Promise.all([
       axios.get(`${API_BASE}/dashboard/summary`),
-      axios.get(`${API_BASE}/dashboard/sales-chart?days=7`),
+      axios.get(`${API_BASE}/dashboard/sales-chart?days=30`),
       axios.get(`${API_BASE}/dashboard/category-stats`),
-      axios.get(`${API_BASE}/dashboard/bestsellers?limit=5`),
-      axios.get(`${API_BASE}/dashboard/low-stock-alerts`),
-      axios.get(`${API_BASE}/dashboard/vip-customers?limit=5`)
+      axios.get(`${API_BASE}/dashboard/recent-products?limit=5`),
+      axios.get(`${API_BASE}/dashboard/recent-sales?limit=5`),
+      axios.get(`${API_BASE}/dashboard/low-stock-alerts?limit=5`)
     ]);
 
-    const data = summaryRes.data.data;
-    const chartData = salesChartRes.data.data;
-    const categoryStats = categoryStatsRes.data.data;
-    const bestsellers = bestsellersRes.data.data;
-    const lowStockAlerts = lowStockRes.data.data;
-    const vipCustomers = vipRes.data.data;
+    const summary = summaryRes.data.data;
+    const salesData = salesChartRes.data.data;
+    const categoryData = categoryStatsRes.data.data;
+    const recentProducts = recentProductsRes.data.data;
+    const recentSales = recentSalesRes.data.data;
+    const lowStock = lowStockRes.data.data;
 
     content.innerHTML = `
-      <!-- 주요 지표 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-slate-500 text-sm font-medium">오늘의 매출</p>
-              <p class="text-2xl font-bold text-slate-800 mt-2">${formatCurrency(data.today_revenue)}</p>
-              <p class="text-sm text-slate-400 mt-1 flex items-center">
-                <i class="fas fa-receipt mr-1.5"></i>${data.today_sales_count}건
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-xl">
-              <i class="fas fa-dollar-sign"></i>
-            </div>
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-bold text-slate-900">오늘의 업무</h1>
+          <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md">Action Board</span>
+        </div>
+        <div class="text-slate-500 text-sm flex items-center bg-slate-100 px-3 py-1.5 rounded-lg">
+           <i class="far fa-clock mr-2"></i> ${new Date().toLocaleString()}
+        </div>
+      </div>
+
+      <!-- Action Board Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- 출고 대기 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition-shadow group cursor-pointer" onclick="loadPage('outbound')">
+          <div>
+            <p class="text-slate-500 text-sm font-semibold mb-1 group-hover:text-emerald-600 transition-colors">출고 대기</p>
+            <div class="text-3xl font-bold text-slate-800 mb-2">${summary.outbound_pending}</div>
+            <p class="text-xs text-slate-400">건의 주문 처리 필요</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+            <i class="fas fa-boxes text-xl"></i>
           </div>
         </div>
-        
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-slate-500 text-sm font-medium">이번 달 매출</p>
-              <p class="text-2xl font-bold text-slate-800 mt-2">${formatCurrency(data.month_revenue)}</p>
-              <p class="text-sm text-slate-400 mt-1 flex items-center">
-                <i class="fas fa-calendar mr-1.5"></i>${data.month_sales_count}건
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 text-xl">
-              <i class="fas fa-chart-bar"></i>
-            </div>
+
+        <!-- 배송 중 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition-shadow group">
+          <div>
+            <p class="text-slate-500 text-sm font-semibold mb-1 group-hover:text-blue-600 transition-colors">배송 중</p>
+            <div class="text-3xl font-bold text-slate-800 mb-2">${summary.shipping_count}</div>
+            <p class="text-xs text-slate-400">건이 배송되고 있습니다</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+            <i class="fas fa-truck text-xl"></i>
           </div>
         </div>
-        
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-slate-500 text-sm font-medium">총 재고 가치</p>
-              <p class="text-2xl font-bold text-slate-800 mt-2">${formatCurrency(data.total_stock_value)}</p>
-              <p class="text-sm text-slate-400 mt-1 flex items-center">
-                <i class="fas fa-box mr-1.5"></i>${data.total_products}개 상품
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl">
-              <i class="fas fa-warehouse"></i>
-            </div>
+
+        <!-- 반품/교환 요청 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition-shadow group">
+          <div>
+            <p class="text-slate-500 text-sm font-semibold mb-1 group-hover:text-amber-600 transition-colors">반품/교환 요청</p>
+            <div class="text-3xl font-bold text-slate-800 mb-2">${summary.claim_count}</div>
+            <p class="text-xs text-slate-400">건의 클레임 확인</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-100 transition-colors">
+            <i class="fas fa-undo text-xl"></i>
           </div>
         </div>
-        
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-slate-500 text-sm font-medium">총 고객 수</p>
-              <p class="text-2xl font-bold text-slate-800 mt-2">${data.total_customers}</p>
-              <p class="text-sm text-slate-400 mt-1 flex items-center">
-                <i class="fas fa-crown mr-1.5 text-amber-500"></i>VIP ${data.vip_customers}명
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center text-sky-600 text-xl">
-              <i class="fas fa-users"></i>
-            </div>
+
+        <!-- 재고 부족 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition-shadow group cursor-pointer" onclick="loadPage('stock')">
+          <div>
+            <p class="text-slate-500 text-sm font-semibold mb-1 group-hover:text-rose-600 transition-colors">재고 부족</p>
+            <div class="text-3xl font-bold text-rose-500 mb-2">${summary.low_stock_count}</div>
+            <p class="text-xs text-slate-400">건의 상품 발주 필요</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+            <i class="fas fa-exclamation-triangle text-xl"></i>
           </div>
         </div>
       </div>
-      
-      <!-- 차트 영역 -->
+
+      <!-- Charts Section -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- 매출 추이 (2칸 차지) -->
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-          <div class="flex items-center mb-6">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center">
-              <i class="fas fa-chart-line text-indigo-500 mr-2"></i>최근 7일 매출 추이
-            </h2>
+        <!-- 매출 분석 차트 (2칸 차지) -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-2">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-slate-800 flex items-center">
+              <i class="fas fa-chart-line mr-2 text-indigo-500"></i>매출 및 순익 분석
+            </h3>
+            <div class="flex bg-slate-50 rounded-lg p-1">
+              <button class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200">일별</button>
+              <button class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700">월별</button>
+            </div>
           </div>
-          <div class="h-72">
+          <div class="h-[300px]">
             <canvas id="salesChart"></canvas>
           </div>
         </div>
 
-        <!-- 카테고리별 판매 비중 (1칸 차지) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-          <div class="flex items-center mb-6">
-            <h2 class="text-lg font-bold text-slate-800 flex items-center">
-              <i class="fas fa-chart-pie text-emerald-500 mr-2"></i>카테고리별 판매 비중
-            </h2>
-          </div>
-          <div class="h-72">
+        <!-- 카테고리별 비중 (1칸 차지) -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <h3 class="font-bold text-slate-800 mb-6 flex items-center">
+            <i class="fas fa-chart-pie mr-2 text-emerald-500"></i>카테고리별 판매 비중
+          </h3>
+          <div class="h-[300px] flex items-center justify-center">
             <canvas id="categoryChart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- 하단 정보 그리드 -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- 베스트셀러 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center mb-4">
-            <div class="bg-indigo-100 rounded-lg p-2 mr-3">
-              <i class="fas fa-trophy text-indigo-600"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800">베스트셀러 TOP 5</h2>
-          </div>
-          <div class="space-y-3">
-            ${bestsellers.map((item, index) => `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:shadow-md transition">
-                <div class="flex items-center">
-                  <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold mr-3">
-                    ${index + 1}
-                  </div>
-                  <div>
-                    <p class="font-semibold text-gray-800 text-sm">${item.name}</p>
-                    <p class="text-xs text-gray-500">${item.category}</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="font-bold text-blue-600 text-sm">${item.total_sold}개</p>
-                  <p class="text-xs text-gray-500">${formatCurrency(item.total_revenue)}</p>
-                </div>
+      <!-- Lists Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 최근 상품 목록 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full">
+          <div class="p-5 border-b border-slate-50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                <i class="fas fa-box"></i>
               </div>
-            `).join('')}
+              최근 상품 목록
+            </h3>
+          </div>
+          <div class="p-4 flex-1">
+            <ul class="space-y-4">
+              ${recentProducts.length > 0 ? recentProducts.map(p => `
+                <li class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                  <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden flex-shrink-0 border border-slate-200">
+                    ${p.image_url ? `<img src="${p.image_url}" class="w-full h-full object-cover">` : '<i class="fas fa-image"></i>'}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-800 text-sm truncate">${p.name}</p>
+                    <p class="text-xs text-slate-500 truncate">${p.category} > ${p.sku}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-emerald-600 text-sm">${formatCurrency(p.selling_price)}</p>
+                    <p class="text-xs text-slate-400">재고: ${p.current_stock}</p>
+                  </div>
+                </li>
+              `).join('') : '<li class="text-center text-slate-400 py-8 text-sm">등록된 상품이 없습니다.</li>'}
+            </ul>
+          </div>
+          <div class="p-4 border-t border-slate-50 text-center">
+             <button onclick="loadPage('products')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center justify-center w-full py-1">
+                전체보기 <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
+             </button>
           </div>
         </div>
 
-        <!-- VIP 고객 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center mb-4">
-            <div class="bg-yellow-100 rounded-lg p-2 mr-3">
-              <i class="fas fa-crown text-yellow-600"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800">우수 고객 TOP 5</h2>
+        <!-- 최근 판매 현황 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full">
+          <div class="p-5 border-b border-slate-50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800 flex items-center">
+              <i class="fas fa-shopping-cart mr-2 text-emerald-500"></i>최근 판매 현황
+            </h3>
           </div>
-          <div class="space-y-3">
-            ${vipCustomers.map((c, index) => `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:shadow-md transition">
-                <div class="flex items-center">
-                  <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
-                    <i class="fas fa-user"></i>
-                  </div>
+          <div class="p-4 flex-1">
+            <ul class="space-y-4">
+              ${recentSales.length > 0 ? recentSales.map(s => `
+                <li class="flex items-center justify-between">
                   <div>
-                    <p class="font-semibold text-gray-800 text-sm">${c.name}</p>
-                    <p class="text-xs text-gray-500">${c.grade}</p>
+                    <p class="font-semibold text-slate-800 text-sm">${s.customer_name || '비회원'}</p>
+                    <p class="text-xs text-slate-500">${new Date(s.created_at).toLocaleDateString()}</p>
                   </div>
-                </div>
-                <div class="text-right">
-                  <p class="font-bold text-gray-800 text-sm">${formatCurrency(c.total_purchase_amount)}</p>
-                  <p class="text-xs text-gray-500">${c.purchase_count}회 구매</p>
-                </div>
-              </div>
-            `).join('')}
+                  <div class="text-right">
+                    <p class="font-bold text-slate-800 text-sm">${formatCurrency(s.final_amount)}</p>
+                    <span class="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">완료</span>
+                  </div>
+                </li>
+              `).join('') : '<li class="text-center text-slate-400 py-4 text-sm">판매 내역이 없습니다.</li>'}
+            </ul>
+          </div>
+          <div class="p-3 border-t border-slate-50 text-center">
+             <button onclick="loadPage('sales')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors">전체보기 <i class="fas fa-chevron-right ml-1"></i></button>
           </div>
         </div>
 
-        <!-- 재고 부족 경고 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center mb-4">
-            <div class="bg-red-100 rounded-lg p-2 mr-3">
-              <i class="fas fa-exclamation-triangle text-red-600"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800">재고 부족 알림</h2>
+        <!-- 재고 부족 알림 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full">
+          <div class="p-5 border-b border-slate-50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800 flex items-center">
+              <i class="fas fa-exclamation-circle mr-2 text-rose-500"></i>재고 부족 알림
+            </h3>
           </div>
-          <div class="space-y-3 overflow-y-auto max-h-[300px]">
-            ${lowStockAlerts.length > 0 ? lowStockAlerts.map(item => `
-              <div class="p-3 bg-red-50 border border-red-100 rounded-lg">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <p class="font-semibold text-gray-800 text-sm">${item.name}</p>
-                    <p class="text-xs text-gray-500">${item.sku}</p>
+          <div class="p-4 flex-1">
+            <ul class="space-y-3">
+              ${lowStock.length > 0 ? lowStock.map(p => `
+                <li class="bg-rose-50/50 rounded-lg p-3 border border-rose-100">
+                  <div class="flex justify-between items-start mb-1">
+                    <p class="font-semibold text-slate-800 text-sm truncate flex-1 mr-2">${p.name}</p>
+                    <span class="bg-rose-100 text-rose-600 text-[10px] font-bold px-1.5 py-0.5 rounded">${p.current_stock}개 남음</span>
                   </div>
-                  <span class="px-2 py-1 bg-red-200 text-red-800 text-xs font-bold rounded">
-                    ${item.current_stock}개 남음
-                  </span>
-                </div>
-                <div class="mt-2 w-full bg-red-200 rounded-full h-1.5">
-                  <div class="bg-red-500 h-1.5 rounded-full" style="width: ${(item.current_stock / item.min_stock_alert) * 100}%"></div>
-                </div>
-                <p class="text-xs text-red-600 mt-1 text-right">최소 유지: ${item.min_stock_alert}</p>
-              </div>
-            `).join('') : `
-              <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-check-circle text-3xl text-green-500 mb-2"></i>
-                <p>재고 부족 상품이 없습니다.</p>
-              </div>
-            `}
+                  <div class="flex justify-between text-xs text-slate-500">
+                     <span>${p.sku}</span>
+                     <span>최소 유지: ${p.min_stock_alert}</span>
+                  </div>
+                </li>
+              `).join('') : '<li class="text-center text-slate-400 py-4 text-sm">재고 부족 상품이 없습니다.</li>'}
+            </ul>
+          </div>
+          <div class="p-3 border-t border-slate-50 text-center">
+             <button onclick="loadPage('stock')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors">전체보기 <i class="fas fa-chevron-right ml-1"></i></button>
           </div>
         </div>
       </div>
     `;
 
-    // 차트 렌더링
-    renderCharts(chartData, categoryStats);
+    // 차트 초기화 전 기존 차트 제거
+    const chartStatus = Chart.getChart("salesChart");
+    if (chartStatus != undefined) chartStatus.destroy();
+    const catChartStatus = Chart.getChart("categoryChart");
+    if (catChartStatus != undefined) catChartStatus.destroy();
+
+    // 매출 차트 (Line)
+    const ctx = document.getElementById('salesChart').getContext('2d');
+
+    // 그라데이션 효과
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)'); // Indigo
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: salesData.map(d => d.date.substring(5)), // 월-일
+        datasets: [{
+          label: '매출액',
+          data: salesData.map(d => d.revenue),
+          borderColor: '#6366f1', // Indigo 500
+          backgroundColor: gradient,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#6366f1',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: (context) => formatCurrency(context.raw)
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { borderDash: [4, 4], color: '#f1f5f9' },
+            ticks: {
+              callback: value => formatCurrency(value).replace('₩', '')
+            }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+
+    // 카테고리별 차트 (Doughnut)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+      type: 'doughnut',
+      data: {
+        labels: categoryData.map(d => d.category),
+        datasets: [{
+          data: categoryData.map(d => d.total_revenue),
+          backgroundColor: [
+            '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1'
+          ],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              boxWidth: 8,
+              font: { size: 11, family: 'Inter' }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const value = context.raw;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100) + '%';
+                return ` ${context.label}: ${percentage}`;
+              }
+            }
+          }
+        },
+        cutout: '75%'
+      }
+    });
 
   } catch (error) {
     console.error('대시보드 로드 실패:', error);
-    showError(content, '대시보드를 불러오는데 실패했습니다.');
+    showError(content, '대시보드 정보를 불러오는데 실패했습니다.');
   }
-}
-
-function renderCharts(salesData, categoryData) {
-  // 매출 추이 차트 (Line)
-  const salesCtx = document.getElementById('salesChart').getContext('2d');
-  new Chart(salesCtx, {
-    type: 'line',
-    data: {
-      labels: salesData.map(d => d.date),
-      datasets: [{
-        label: '일별 매출',
-        data: salesData.map(d => d.revenue),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#3b82f6',
-        pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return formatCurrency(context.raw);
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: { borderDash: [2, 4] },
-          ticks: {
-            callback: value => formatCurrency(value).replace('₩', '')
-          }
-        },
-        x: {
-          grid: { display: false }
-        }
-      }
-    }
-  });
-
-  // 카테고리별 판매 비중 차트 (Doughnut)
-  const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-  new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-      labels: categoryData.map(d => d.category),
-      datasets: [{
-        data: categoryData.map(d => d.total_revenue),
-        backgroundColor: [
-          '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1'
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: { boxWidth: 12, font: { size: 11 } }
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const value = context.raw;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((value / total) * 100) + '%';
-              return `${context.label}: ${formatCurrency(value)} (${percentage})`;
-            }
-          }
-        }
-      },
-      cutout: '70%'
-    }
-  });
 }
 
 // 상품 관리 로드
