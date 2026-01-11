@@ -47,18 +47,15 @@ wrangler d1 execute wow3d-stock-sales-manager-production --local --command "SELE
 
 ---
 
-### B. Git Remote 설정 및 GitHub 백업
-**난이도**: 쉬움  
-**소요 시간**: 10분
+### B. 모달 기능 구현
+**난이도**: 중간  
+**소요 시간**: 1-2시간  
+**파일**: `public/static/app.js`
 
 **작업 내용**:
-1. GitHub에서 새 리포지토리 생성
-2. Remote 추가:
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/wow-smartmanager.git
-git branch -M master
-git push -u origin master
-```
+1. 배송 정보 모달 (`openShippingModal`)
+2. 클레임 모달 (`openClaimModal`)
+3. 판매 취소 모달 (`cancelSale`)
 
 ---
 
@@ -75,8 +72,11 @@ npm run build
 # Cloudflare Pages 배포
 npm run deploy
 
-# 로컬 D1 마이그레이션
-wrangler d1 migrations apply wow3d-stock-sales-manager-production --local
+# GitHub 백업 (main 브랜치)
+npm run backup
+
+# 배포 + 백업 (한 번에!)
+npm run deploy-all
 ```
 
 ### Git 관리
@@ -116,16 +116,15 @@ wrangler d1 migrations list wow3d-stock-sales-manager-production --local
 - 거래명세서 출력
 - 설정 페이지
 - 로그인/회원가입
+- **페이지네이션** (POS, 주문, Claims, 출고, 이력 등 전체 적용 완료)
+- **자동 백업 시스템** (GitHub 연동 완료)
 
 ### 🚧 진행 중 / 개선 필요
-- POS 상품 목록 페이지네이션
-- 주문 목록 페이지네이션  
-- Claims 탭 UI/UX
-- 서버 사이드 필터링/페이지네이션
+- 모달 기능 (배송, 클레임, 취소)
+- 서버 사이드 필터링/페이지네이션 (대용량 데이터 대응)
 
 ### 🐛 알려진 이슈
 1. TypeScript lint error: `D1Database` 타입 정의 누락 (영향 없음)
-2. Git remote 미설정
 
 ---
 
@@ -180,5 +179,5 @@ wrangler d1 migrations apply wow3d-stock-sales-manager-production --local
 
 ---
 
-**마지막 업데이트**: 2026-01-11 15:50  
-**다음 세션 추천**: 출고 이력 서버 사이드 페이지네이션 (작업 A)
+**마지막 업데이트**: 2026-01-11 17:55  
+**다음 세션 추천**: 출고 이력 서버 사이드 페이지네이션 (작업 A) 또는 모달 기능 구현 (작업 B)
