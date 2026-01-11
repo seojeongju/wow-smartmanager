@@ -8,9 +8,6 @@ const router = new Hono<{ Bindings: Bindings }>()
 // 회사 정보 조회
 router.get('/company', async (c) => {
     const { DB } = c.env
-    const result = await DB.prepare(`
-        SELECT * FROM settings WHERE key = 'company_info' LIMIT 1
-    `).first<any>()
 
     const defaultData = {
         company_name: '(주)와우쓰리디',
@@ -24,10 +21,32 @@ router.get('/company', async (c) => {
         logo_url: ''
     }
 
-    return c.json({
-        success: true,
-        data: result?.value ? JSON.parse(result.value) : defaultData
-    })
+    try {
+        // Try to create table if it doesn't exist
+        await DB.prepare(`
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `).run()
+
+        const result = await DB.prepare(`
+            SELECT * FROM settings WHERE key = 'company_info' LIMIT 1
+        `).first<any>()
+
+        return c.json({
+            success: true,
+            data: result?.value ? JSON.parse(result.value) : defaultData
+        })
+    } catch (error) {
+        // If DB operation fails, just return default data
+        console.error('Settings table error:', error)
+        return c.json({
+            success: true,
+            data: defaultData
+        })
+    }
 })
 
 // 회사 정보 수정
