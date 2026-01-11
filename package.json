@@ -8,7 +8,7 @@
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
     "deploy:prod": "npm run build && wrangler pages deploy dist --project-name webapp",
-    "backup": "git push origin master",
+    "backup": "git push origin main",
     "deploy-all": "npm run deploy && npm run backup",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:migrate:local": "wrangler d1 migrations apply wow3d-stock-sales-manager-production --local",
