@@ -880,7 +880,11 @@ async function submitSimpleOutbound() {
   }
 }
 
-// 기존 출고 목록 뷰 (2번째 탭)
+// 출고 이력 페이지네이션 변수
+window.outboundHistoryPage = 1;
+window.outboundHistoryItemsPerPage = 20;
+window.filteredOutboundHistory = null;
+
 // 기존 출고 목록 뷰 (2번째 탭)
 async function renderOutboundHistoryTab(container) {
   const startDate = document.getElementById('obsStartDate')?.value || '';
@@ -914,8 +918,20 @@ async function renderOutboundHistoryTab(container) {
       orders = orders.filter(o => o.status === statusFilter);
     }
 
-    // 엑셀 다운로드를 위해 전역 변수에 저장
-    window.currentOutboundOrders = orders;
+    // 필터링된 결과 저장
+    window.filteredOutboundHistory = orders;
+    window.currentOutboundOrders = orders; // 엑셀 다운로드용
+
+    // 페이지네이션 계산
+    const totalItems = orders.length;
+    const totalPages = Math.ceil(totalItems / window.outboundHistoryItemsPerPage);
+
+    if (window.outboundHistoryPage > totalPages) window.outboundHistoryPage = totalPages;
+    if (window.outboundHistoryPage < 1) window.outboundHistoryPage = 1;
+
+    const startIdx = (window.outboundHistoryPage - 1) * window.outboundHistoryItemsPerPage;
+    const endIdx = startIdx + window.outboundHistoryItemsPerPage;
+    const pageItems = orders.slice(startIdx, endIdx);
 
     container.innerHTML = `
           <!-- 검색 필터 영역 -->
@@ -924,7 +940,7 @@ async function renderOutboundHistoryTab(container) {
              <!-- 검색어 입력 -->
              <div class="relative flex-1 min-w-[200px] max-w-sm">
                  <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                 <input type="text" id="obsSearch" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-sm" placeholder="주문번호, 받는분, 상품명 검색" value="${document.getElementById('obsSearch')?.value || ''}">
+                 <input type="text" id="obsSearch" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-sm" placeholder="주문번호, 받는분, 상품명 검색" value="${searchQuery}">
              </div>
 
              <!-- 상태 필터 -->
@@ -944,7 +960,7 @@ async function renderOutboundHistoryTab(container) {
              </div>
 
              <!-- 조회 버튼 -->
-             <button onclick="renderOutboundHistoryTab(document.getElementById('outboundTabContent'))" class="bg-teal-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 whitespace-nowrap">
+             <button onclick="window.outboundHistoryPage = 1; renderOutboundHistoryTab(document.getElementById('outboundTabContent'))" class="bg-teal-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 whitespace-nowrap">
                 <i class="fas fa-search mr-1.5"></i> 조회
              </button>
 
@@ -956,9 +972,9 @@ async function renderOutboundHistoryTab(container) {
 
           <!-- 테이블 영역 -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col min-h-[600px]">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto flex-1">
               <table class="min-w-full divide-y divide-slate-50 text-left">
-                <thead class="bg-white">
+                <thead class="bg-white sticky top-0 z-10">
                   <tr>
                     <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-36 pl-8">출고번호</th>
                     <th class="px-4 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-24">상태</th>
@@ -970,7 +986,7 @@ async function renderOutboundHistoryTab(container) {
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
-                  ${orders.length > 0 ? orders.map(o => `
+                  ${pageItems.length > 0 ? pageItems.map(o => `
                     <tr class="hover:bg-slate-50/80 transition-colors group">
                       <td class="px-6 py-6 whitespace-nowrap pl-8">
                         <span class="font-mono text-sm text-slate-500 font-medium group-hover:text-slate-700 transition-colors">#${o.order_number}</span>
@@ -1013,17 +1029,53 @@ async function renderOutboundHistoryTab(container) {
                 </tbody>
               </table>
             </div>
+
+            <!-- 페이지네이션 컨트롤 -->
+            <div class="flex justify-between items-center gap-4 p-4 bg-slate-50 border-t border-slate-100">
+              <div class="text-sm text-slate-600">
+                총 <span class="font-bold text-teal-600">${totalItems}</span>건 (${totalPages}페이지 중 ${window.outboundHistoryPage}페이지)
+              </div>
+              <div class="flex items-center gap-3">
+                <button id="btnOutboundHistoryPrev" onclick="changeOutboundHistoryPage(-1)" 
+                        class="px-4 py-2 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+                        ${window.outboundHistoryPage <= 1 ? 'disabled' : ''}>
+                  <i class="fas fa-chevron-left"></i> 이전
+                </button>
+                <span id="outboundHistoryPageIndicator" class="text-sm font-bold text-slate-700 min-w-[60px] text-center">${window.outboundHistoryPage} / ${totalPages}</span>
+                <button id="btnOutboundHistoryNext" onclick="changeOutboundHistoryPage(1)" 
+                        class="px-4 py-2 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+                        ${window.outboundHistoryPage >= totalPages ? 'disabled' : ''}>
+                  다음 <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
         `;
 
     // 엔터 키로 조회
     document.getElementById('obsSearch')?.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
+      if (e.key === 'Enter') {
+        window.outboundHistoryPage = 1;
+        renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
+      }
     });
 
   } catch (e) {
     console.error(e);
     container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
+  }
+}
+
+function changeOutboundHistoryPage(delta) {
+  const list = window.filteredOutboundHistory;
+  if (!list) return;
+
+  const totalPages = Math.ceil(list.length / window.outboundHistoryItemsPerPage);
+  const newPage = window.outboundHistoryPage + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    window.outboundHistoryPage = newPage;
+    renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
   }
 }
 
