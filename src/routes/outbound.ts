@@ -11,7 +11,11 @@ app.get('/', async (c) => {
     let query = `
     SELECT o.*, 
            (SELECT COUNT(*) FROM outbound_items WHERE outbound_order_id = o.id) as item_count,
-           (SELECT SUM(quantity_ordered) FROM outbound_items WHERE outbound_order_id = o.id) as total_quantity
+           (SELECT SUM(quantity_ordered) FROM outbound_items WHERE outbound_order_id = o.id) as total_quantity,
+           (SELECT GROUP_CONCAT(p.name, ', ') 
+            FROM outbound_items oi 
+            JOIN products p ON oi.product_id = p.id 
+            WHERE oi.outbound_order_id = o.id) as product_names
     FROM outbound_orders o
   `
     const params: any[] = []

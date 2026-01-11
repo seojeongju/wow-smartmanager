@@ -596,45 +596,72 @@ async function submitSimpleOutbound() {
 async function renderOutboundHistoryTab(container) {
   const startDate = document.getElementById('obsStartDate')?.value || '';
   const endDate = document.getElementById('obsEndDate')?.value || '';
+  const searchQuery = document.getElementById('obsSearch')?.value?.toLowerCase() || '';
+  const statusFilter = document.getElementById('obsStatus')?.value || '';
 
   try {
-    // 날짜 필터가 있으면 쿼리 파라미터 추가
     let query = `${API_BASE}/outbound`;
-    if (startDate || endDate) {
-      // API가 지원한다면 query param 추가. 현재는 backend 지원 확인 필요하지만, 
-      // 일단 모든 데이터를 가져와서 프론트에서 필터링하거나, 추후 API 수정.
-      // 여기서는 UI 구현에 집중하되, 검색 버튼 동작 시 리로드하도록 함.
-    }
 
     const response = await axios.get(query);
     let orders = response.data.data;
 
-    // 프론트엔드 날짜 필터링 (API 파라미터 미지원 시 대비)
+    // 프론트엔드 필터링
     if (startDate) {
       orders = orders.filter(o => new Date(o.created_at) >= new Date(startDate));
     }
     if (endDate) {
-      // 종료일은 해당일의 23:59:59까지 포함해야 함
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
       orders = orders.filter(o => new Date(o.created_at) <= end);
     }
+    if (searchQuery) {
+      orders = orders.filter(o =>
+        (o.order_number && o.order_number.toLowerCase().includes(searchQuery)) ||
+        (o.destination_name && o.destination_name.toLowerCase().includes(searchQuery)) ||
+        (o.product_names && o.product_names.toLowerCase().includes(searchQuery))
+      );
+    }
+    if (statusFilter) {
+      orders = orders.filter(o => o.status === statusFilter);
+    }
+
+    // 엑셀 다운로드를 위해 전역 변수에 저장
+    window.currentOutboundOrders = orders;
 
     container.innerHTML = `
           <!-- 검색 필터 영역 -->
-          <div class="flex justify-between items-center mb-6 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-             <div class="flex items-center gap-3">
-                 <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                    <input type="date" id="obsStartDate" class="bg-transparent border-none text-sm text-slate-600 focus:outline-none font-mono" value="${startDate}">
-                    <span class="mx-2 text-slate-400">~</span>
-                    <input type="date" id="obsEndDate" class="bg-transparent border-none text-sm text-slate-600 focus:outline-none font-mono" value="${endDate}">
-                 </div>
-                 <button onclick="renderOutboundHistoryTab(document.getElementById('outboundTabContent'))" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-0.5">
-                    조회
-                 </button>
+          <div class="flex flex-wrap items-center gap-3 mb-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+             
+             <!-- 검색어 입력 -->
+             <div class="relative flex-1 min-w-[200px] max-w-sm">
+                 <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                 <input type="text" id="obsSearch" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-sm" placeholder="주문번호, 받는분, 상품명 검색" value="${document.getElementById('obsSearch')?.value || ''}">
              </div>
-             <button onclick="switchOutboundTab('simple')" class="bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all flex items-center hover:-translate-y-0.5">
-                <i class="fas fa-plus mr-2"></i> 신규 출고 등록
+
+             <!-- 상태 필터 -->
+             <select id="obsStatus" class="border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-600 focus:outline-none focus:border-emerald-500 shadow-sm bg-white min-w-[120px]">
+                <option value="">전체 상태</option>
+                <option value="PENDING" ${statusFilter === 'PENDING' ? 'selected' : ''}>대기</option>
+                <option value="PICKING" ${statusFilter === 'PICKING' ? 'selected' : ''}>피킹중</option>
+                <option value="PACKING" ${statusFilter === 'PACKING' ? 'selected' : ''}>패킹중</option>
+                <option value="SHIPPED" ${statusFilter === 'SHIPPED' ? 'selected' : ''}>출고완료</option>
+             </select>
+
+             <!-- 날짜 필터 -->
+             <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 shadow-sm hover:border-emerald-500 transition-colors">
+                <input type="date" id="obsStartDate" class="border-none text-sm text-slate-600 focus:outline-none p-0 font-mono bg-transparent" value="${startDate}">
+                <span class="text-slate-400">~</span>
+                <input type="date" id="obsEndDate" class="border-none text-sm text-slate-600 focus:outline-none p-0 font-mono bg-transparent" value="${endDate}">
+             </div>
+
+             <!-- 조회 버튼 -->
+             <button onclick="renderOutboundHistoryTab(document.getElementById('outboundTabContent'))" class="bg-teal-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 whitespace-nowrap">
+                <i class="fas fa-search mr-1.5"></i> 조회
+             </button>
+
+             <!-- 엑셀 다운로드 버튼 -->
+             <button onclick="downloadOutboundExcel()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-emerald-100 hover:bg-emerald-700 transition-all hover:-translate-y-0.5 whitespace-nowrap ml-auto">
+                <i class="fas fa-file-excel mr-1.5"></i> 엑셀 다운로드
              </button>
           </div>
 
@@ -644,49 +671,53 @@ async function renderOutboundHistoryTab(container) {
               <table class="min-w-full divide-y divide-slate-50 text-left">
                 <thead class="bg-white">
                   <tr>
-                    <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-40">출고번호</th>
-                    <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-32">상태</th>
-                    <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">배송지 INFO</th>
-                    <th class="px-6 py-5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider w-32">품목수</th>
-                    <th class="px-6 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-40">등록일</th>
-                    <th class="px-8 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-32">관리</th>
+                    <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-36 pl-8">출고번호</th>
+                    <th class="px-4 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-24">상태</th>
+                    <th class="px-4 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider min-w-[200px]">상품명 (대표)</th>
+                    <th class="px-4 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider min-w-[200px]">배송지 INFO</th>
+                    <th class="px-4 py-5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider w-24">품목수</th>
+                    <th class="px-4 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-32">등록일</th>
+                    <th class="px-6 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-24 pr-8">관리</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                   ${orders.length > 0 ? orders.map(o => `
                     <tr class="hover:bg-slate-50/80 transition-colors group">
-                      <td class="px-8 py-6 whitespace-nowrap">
-                        <span class="font-mono text-sm text-slate-400 font-medium group-hover:text-slate-600 transition-colors">#${o.order_number}</span>
+                      <td class="px-6 py-6 whitespace-nowrap pl-8">
+                        <span class="font-mono text-sm text-slate-500 font-medium group-hover:text-slate-700 transition-colors">#${o.order_number}</span>
                       </td>
-                      <td class="px-6 py-6 whitespace-nowrap">
-                        <span class="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide border ${getOutboundStatusColor(o.status)}">
+                      <td class="px-4 py-6 whitespace-nowrap">
+                        <span class="px-2.5 py-1.5 rounded-md text-[11px] font-bold tracking-wide border ${getOutboundStatusColor(o.status)}">
                           ${o.status}
                         </span>
                       </td>
-                      <td class="px-6 py-6">
-                          <div class="flex flex-col gap-1">
-                              <div class="font-bold text-slate-800 text-[15px]">${o.destination_name}</div>
-                              <div class="text-xs text-slate-400 truncate max-w-[300px] font-light">${o.destination_address || '-'}</div>
+                      <td class="px-4 py-6">
+                          <div class="text-sm text-slate-700 font-medium line-clamp-2" title="${o.product_names || ''}">${o.product_names || '-'}</div>
+                      </td>
+                      <td class="px-4 py-6">
+                          <div class="flex flex-col gap-0.5">
+                              <div class="font-bold text-slate-800 text-[14px]">${o.destination_name}</div>
+                              <div class="text-xs text-slate-400 truncate max-w-[250px] font-light">${o.destination_address || '-'}</div>
                           </div>
                       </td>
-                      <td class="px-6 py-6 whitespace-nowrap text-right">
-                          <span class="text-[15px] font-bold text-indigo-600">${o.total_quantity}개</span> 
-                          <span class="text-xs text-slate-400 font-light ml-1">(${o.item_count}종)</span>
+                      <td class="px-4 py-6 whitespace-nowrap text-right">
+                          <span class="text-[14px] font-bold text-indigo-600">${o.total_quantity}</span>
+                          <span class="text-xs text-slate-400 font-light ml-0.5">(${o.item_count}종)</span>
                       </td>
-                      <td class="px-6 py-6 whitespace-nowrap text-center">
-                        <span class="text-sm text-slate-500 font-light">${formatDateClean(o.created_at)}</span>
+                      <td class="px-4 py-6 whitespace-nowrap text-center">
+                        <span class="text-sm text-slate-500 font-light tracking-tight">${formatDateClean(o.created_at)}</span>
                       </td>
-                      <td class="px-8 py-6 whitespace-nowrap text-center">
-                        <button onclick="openOutboundDetail(${o.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 px-4 py-2 rounded-lg text-xs font-bold transition-colors">
+                      <td class="px-6 py-6 whitespace-nowrap text-center pr-8">
+                        <button onclick="openOutboundDetail(${o.id})" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded transition-colors">
                           상세
                         </button>
                       </td>
                     </tr>
                   `).join('') : `
-                    <tr><td colspan="6" class="px-6 py-24 text-center text-slate-400 font-light">
+                    <tr><td colspan="7" class="px-6 py-24 text-center text-slate-400 font-light">
                         <div class="flex flex-col items-center gap-3">
-                            <i class="fas fa-box-open text-4xl text-slate-200"></i>
-                            <span>조회된 출고 내역이 없습니다.</span>
+                            <i class="fas fa-search text-4xl text-slate-200"></i>
+                            <span>조건에 맞는 출고 내역이 없습니다.</span>
                         </div>
                     </td></tr>
                   `}
@@ -696,16 +727,63 @@ async function renderOutboundHistoryTab(container) {
           </div>
         `;
 
-    // 날짜 인풋 이벤트 리스너 재설정 (렌더링 후)
-    const dateInputs = container.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-      // 값이 변경될 때가 아니라 조회 버튼을 눌렀을 때만 동작하도록 함 (UX상)
+    // 엔터 키로 조회
+    document.getElementById('obsSearch')?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
     });
 
   } catch (e) {
     console.error(e);
     container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
   }
+}
+
+function downloadOutboundExcel() {
+  if (!window.currentOutboundOrders || window.currentOutboundOrders.length === 0) {
+    alert("다운로드할 데이터가 없습니다.");
+    return;
+  }
+
+  const orders = window.currentOutboundOrders;
+  // CSV 헤더
+  let csvContent = "출고번호,상태,상품명,수령인,배송지주소,연락처,품목수,총수량,등록일,운송장번호\n";
+
+  orders.forEach(o => {
+    const escapeCsv = (val) => {
+      if (!val) return "";
+      const str = String(val).replace(/"/g, '""');
+      if (str.search(/("|,|\n)/g) >= 0) return `"${str}"`;
+      return str;
+    };
+
+    const row = [
+      o.order_number,
+      o.status,
+      o.product_names,
+      o.destination_name,
+      o.destination_address,
+      o.destination_phone,
+      o.item_count,
+      o.total_quantity,
+      new Date(o.created_at).toLocaleDateString(),
+      o.tracking_number
+    ].map(escapeCsv).join(",");
+
+    csvContent += row + "\n";
+  });
+
+  // BOM (한글 깨짐 방지)
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  link.setAttribute("download", `출고이력_${dateStr}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function formatDateClean(dateStr) {
