@@ -176,6 +176,12 @@ npm run test
 
 # 빌드 후 미리보기
 npm run preview
+
+# GitHub 백업 (자동 push)
+npm run backup
+
+# 배포 + 백업 (한 번에)
+npm run deploy-all
 ```
 
 ## 📈 현재 완료된 기능
