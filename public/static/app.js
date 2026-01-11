@@ -592,81 +592,134 @@ async function submitSimpleOutbound() {
 }
 
 // 기존 출고 목록 뷰 (2번째 탭)
+// 기존 출고 목록 뷰 (2번째 탭)
 async function renderOutboundHistoryTab(container) {
+  const startDate = document.getElementById('obsStartDate')?.value || '';
+  const endDate = document.getElementById('obsEndDate')?.value || '';
+
   try {
-    const response = await axios.get(`${API_BASE}/outbound`);
-    const orders = response.data.data;
+    // 날짜 필터가 있으면 쿼리 파라미터 추가
+    let query = `${API_BASE}/outbound`;
+    if (startDate || endDate) {
+      // API가 지원한다면 query param 추가. 현재는 backend 지원 확인 필요하지만, 
+      // 일단 모든 데이터를 가져와서 프론트에서 필터링하거나, 추후 API 수정.
+      // 여기서는 UI 구현에 집중하되, 검색 버튼 동작 시 리로드하도록 함.
+    }
+
+    const response = await axios.get(query);
+    let orders = response.data.data;
+
+    // 프론트엔드 날짜 필터링 (API 파라미터 미지원 시 대비)
+    if (startDate) {
+      orders = orders.filter(o => new Date(o.created_at) >= new Date(startDate));
+    }
+    if (endDate) {
+      // 종료일은 해당일의 23:59:59까지 포함해야 함
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      orders = orders.filter(o => new Date(o.created_at) <= end);
+    }
 
     container.innerHTML = `
-          <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-             <div class="flex gap-2">
-                 <input type="date" class="border border-slate-200 rounded px-2 py-1 text-sm text-slate-600">
-                 <span class="text-slate-400">~</span>
-                 <input type="date" class="border border-slate-200 rounded px-2 py-1 text-sm text-slate-600">
-                 <button class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">조회</button>
+          <!-- 검색 필터 영역 -->
+          <div class="flex justify-between items-center mb-6 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+             <div class="flex items-center gap-3">
+                 <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                    <input type="date" id="obsStartDate" class="bg-transparent border-none text-sm text-slate-600 focus:outline-none font-mono" value="${startDate}">
+                    <span class="mx-2 text-slate-400">~</span>
+                    <input type="date" id="obsEndDate" class="bg-transparent border-none text-sm text-slate-600 focus:outline-none font-mono" value="${endDate}">
+                 </div>
+                 <button onclick="renderOutboundHistoryTab(document.getElementById('outboundTabContent'))" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-0.5">
+                    조회
+                 </button>
              </div>
-             <button onclick="switchOutboundTab('simple')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-emerald-700 transition-colors">
-                <i class="fas fa-plus mr-1"></i>신규 출고 등록
+             <button onclick="switchOutboundTab('simple')" class="bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all flex items-center hover:-translate-y-0.5">
+                <i class="fas fa-plus mr-2"></i> 신규 출고 등록
              </button>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden h-full flex flex-col">
-            <div class="overflow-auto flex-1">
-              <table class="min-w-full divide-y divide-slate-100">
-                <thead class="bg-slate-50 sticky top-0 z-10">
+          <!-- 테이블 영역 -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col min-h-[600px]">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-50 text-left">
+                <thead class="bg-white">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">출고번호</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">상태</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">배송지 Info</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">품목수</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">등록일</th>
-                    <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">관리</th>
+                    <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-40">출고번호</th>
+                    <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider w-32">상태</th>
+                    <th class="px-6 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">배송지 INFO</th>
+                    <th class="px-6 py-5 text-right text-xs font-bold text-slate-400 uppercase tracking-wider w-32">품목수</th>
+                    <th class="px-6 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-40">등록일</th>
+                    <th class="px-8 py-5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-32">관리</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody class="divide-y divide-slate-50">
                   ${orders.length > 0 ? orders.map(o => `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                      <td class="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-500">#${o.order_number}</td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${getOutboundStatusColor(o.status)}">
+                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                      <td class="px-8 py-6 whitespace-nowrap">
+                        <span class="font-mono text-sm text-slate-400 font-medium group-hover:text-slate-600 transition-colors">#${o.order_number}</span>
+                      </td>
+                      <td class="px-6 py-6 whitespace-nowrap">
+                        <span class="px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide border ${getOutboundStatusColor(o.status)}">
                           ${o.status}
                         </span>
                       </td>
-                      <td class="px-6 py-4">
-                          <div class="font-bold text-slate-800 text-sm">${o.destination_name}</div>
-                          <div class="text-xs text-slate-400 truncate max-w-[250px]">${o.destination_address || '-'}</div>
+                      <td class="px-6 py-6">
+                          <div class="flex flex-col gap-1">
+                              <div class="font-bold text-slate-800 text-[15px]">${o.destination_name}</div>
+                              <div class="text-xs text-slate-400 truncate max-w-[300px] font-light">${o.destination_address || '-'}</div>
+                          </div>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-700">
-                          <span class="font-bold text-indigo-600">${o.total_quantity}</span>개 <span class="text-slate-400 text-xs">(${o.item_count}종)</span>
+                      <td class="px-6 py-6 whitespace-nowrap text-right">
+                          <span class="text-[15px] font-bold text-indigo-600">${o.total_quantity}개</span> 
+                          <span class="text-xs text-slate-400 font-light ml-1">(${o.item_count}종)</span>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">${new Date(o.created_at).toLocaleDateString()}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <button onclick="openOutboundDetail(${o.id})" class="text-indigo-600 hover:text-indigo-900 font-medium text-xs bg-indigo-50 px-3 py-1.5 rounded hover:bg-indigo-100 transition-colors">
+                      <td class="px-6 py-6 whitespace-nowrap text-center">
+                        <span class="text-sm text-slate-500 font-light">${formatDateClean(o.created_at)}</span>
+                      </td>
+                      <td class="px-8 py-6 whitespace-nowrap text-center">
+                        <button onclick="openOutboundDetail(${o.id})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 px-4 py-2 rounded-lg text-xs font-bold transition-colors">
                           상세
                         </button>
                       </td>
                     </tr>
                   `).join('') : `
-                    <tr><td colspan="6" class="px-6 py-20 text-center text-slate-400">출고 내역이 없습니다.</td></tr>
+                    <tr><td colspan="6" class="px-6 py-24 text-center text-slate-400 font-light">
+                        <div class="flex flex-col items-center gap-3">
+                            <i class="fas fa-box-open text-4xl text-slate-200"></i>
+                            <span>조회된 출고 내역이 없습니다.</span>
+                        </div>
+                    </td></tr>
                   `}
                 </tbody>
               </table>
             </div>
           </div>
         `;
+
+    // 날짜 인풋 이벤트 리스너 재설정 (렌더링 후)
+    const dateInputs = container.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+      // 값이 변경될 때가 아니라 조회 버튼을 눌렀을 때만 동작하도록 함 (UX상)
+    });
+
   } catch (e) {
     console.error(e);
     container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
   }
 }
 
+function formatDateClean(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
+}
+
 function getOutboundStatusColor(status) {
   switch (status) {
-    case 'PENDING': return 'bg-slate-100 text-slate-600';
-    case 'PICKING': return 'bg-amber-50 text-amber-700 border border-amber-100';
-    case 'PACKING': return 'bg-blue-50 text-blue-700 border border-blue-100';
-    case 'SHIPPED': return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-    default: return 'bg-gray-100 text-gray-700';
+    case 'PENDING': return 'bg-slate-50 text-slate-500 border-slate-100'; // 대기
+    case 'PICKING': return 'bg-amber-50 text-amber-600 border-amber-100'; // 피킹중
+    case 'PACKING': return 'bg-blue-50 text-blue-600 border-blue-100'; // 패킹중
+    case 'SHIPPED': return 'bg-emerald-50 text-emerald-600 border-emerald-100'; // 출고완료
+    default: return 'bg-gray-50 text-gray-500 border-gray-100';
   }
 }
 
