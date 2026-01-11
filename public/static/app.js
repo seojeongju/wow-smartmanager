@@ -2629,67 +2629,244 @@ function changeOrderPage(delta) {
 async function renderClaimsTab(container) {
   try {
     const response = await axios.get(`${API_BASE}/claims`);
-    const claims = response.data.data;
+    window.allClaims = response.data.data || []; // 전체 데이터 저장
 
     container.innerHTML = `
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
-        <div class="p-4 border-b border-slate-200 bg-slate-50">
-          <h3 class="font-bold text-slate-800">반품 및 교환 요청 내역</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col h-full">
+        <!-- 상단 헤더 & 컨트롤 -->
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col gap-4 bg-white">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-lg text-slate-800">반품 및 교환 관리</h3>
+            <div class="flex gap-2">
+              <select id="claimTypeFilter" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-600 min-w-[120px]" onchange="renderClaimList()">
+                <option value="all">전체 구분</option>
+                <option value="return">반품</option>
+                <option value="exchange">교환</option>
+              </select>
+              <select id="claimStatusFilter" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-600 min-w-[120px]" onchange="renderClaimList()">
+                <option value="all">전체 상태</option>
+                <option value="requested">요청됨</option>
+                <option value="approved">승인됨</option>
+                <option value="rejected">거절됨</option>
+                <option value="completed">처리완료</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 검색 영역 -->
+          <div class="flex gap-2 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <div class="flex-1 relative">
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="claimSearchInput" placeholder="주문번호 또는 상품명 검색" 
+                     class="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                     onkeyup="if(event.key === 'Enter') window.claimPage = 1; renderClaimList()">
+            </div>
+            <button onclick="window.claimPage = 1; renderClaimList()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-1.5 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
+              조회
+            </button>
+          </div>
         </div>
-        <div class="overflow-auto flex-1">
-          <table class="min-w-full text-sm divide-y divide-slate-200">
-            <thead class="bg-slate-50 sticky top-0 z-10">
+
+        <!-- 테이블 영역 -->
+        <div class="overflow-auto flex-1 relative custom-scrollbar">
+          <table class="w-full text-sm divide-y divide-slate-100">
+            <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
               <tr>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">요청일시</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">구분</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">원주문</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">상품</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">사유</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">상태</th>
-                <th class="px-6 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider">관리</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">요청번호</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[180px]">요청일시</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[80px]">구분</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">원주문</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[200px]">상품정보</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[150px]">사유</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">상태</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[180px]">관리</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200 bg-white">
-              ${claims.length > 0 ? claims.map(c => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                  <td class="px-6 py-4 text-slate-600">${new Date(c.created_at).toLocaleString()}</td>
-                  <td class="px-6 py-4">
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold ${c.type === 'return' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-                      ${c.type === 'return' ? '반품' : '교환'}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 text-slate-600 font-mono">#${c.sale_id}</td>
-                  <td class="px-6 py-4">
-                    <div class="font-medium text-slate-900">${c.product_name}</div>
-                    <div class="text-xs text-slate-500">${c.quantity}개 <span class="text-slate-400">|</span> ${c.condition || '상태미상'}</div>
-                  </td>
-                  <td class="px-6 py-4 text-slate-600">${c.reason || '-'}</td>
-                  <td class="px-6 py-4">
-                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold 
-                      ${c.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-        c.status === 'rejected' ? 'bg-red-100 text-red-700' :
-          c.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}">
-                      ${getKoreanStatus(c.status)}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4">
-                    ${c.status === 'requested' ? `
-                      <button onclick="updateClaimStatus(${c.id}, 'approved')" class="text-emerald-600 hover:text-emerald-800 mr-2 font-medium text-xs bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors">승인</button>
-                      <button onclick="updateClaimStatus(${c.id}, 'rejected')" class="text-rose-600 hover:text-rose-800 font-medium text-xs bg-rose-50 px-2 py-1 rounded hover:bg-rose-100 transition-colors">거절</button>
-                    ` : '-'}
-                  </td>
-                </tr>
-              `).join('') : `
-                <tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">요청 내역이 없습니다.</td></tr>
-              `}
+            <tbody id="claimTableBody" class="divide-y divide-slate-50 bg-white">
+              <!-- 데이터 로드됨 -->
             </tbody>
           </table>
         </div>
+
+        <!-- 페이지네이션 컨트롤 -->
+        <div class="flex justify-center items-center gap-4 p-4 bg-white border-t border-slate-100">
+          <button id="btnClaimPrev" onclick="changeClaimPage(-1)" 
+                  class="px-4 py-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+            <i class="fas fa-chevron-left"></i> 이전
+          </button>
+          <span id="claimPageIndicator" class="text-sm font-bold text-slate-700 min-w-[60px] text-center">1 / 1</span>
+          <button id="btnClaimNext" onclick="changeClaimPage(1)" 
+                  class="px-4 py-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed font-medium flex items-center gap-2">
+            다음 <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     `;
+
+    renderClaimList();
   } catch (error) {
-    console.error('클레임 목록 로드 실패:', error);
-    showError(container, '클레임 목록을 불러오는데 실패했습니다.');
+    console.error('Claims 로드 실패:', error);
+    showError(container, '반품/교환 내역을 불러오는데 실패했습니다.');
+  }
+}
+
+// Claims 목록 페이지네이션 변수
+window.claimPage = 1;
+window.claimItemsPerPage = 15;
+window.filteredClaimList = null;
+
+function renderClaimList() {
+  const tbody = document.getElementById('claimTableBody');
+  const prevBtn = document.getElementById('btnClaimPrev');
+  const nextBtn = document.getElementById('btnClaimNext');
+  const indicator = document.getElementById('claimPageIndicator');
+
+  if (!tbody || !window.allClaims) return;
+
+  const typeFilter = document.getElementById('claimTypeFilter').value;
+  const statusFilter = document.getElementById('claimStatusFilter').value;
+  const searchText = document.getElementById('claimSearchInput').value.toLowerCase();
+
+  const filtered = window.allClaims.filter(c => {
+    // 타입 필터
+    if (typeFilter !== 'all' && c.type !== typeFilter) return false;
+
+    // 상태 필터
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+
+    // 검색어 필터
+    if (searchText) {
+      const searchMatch =
+        `#${c.sale_id}`.toLowerCase().includes(searchText) ||
+        (c.product_name || '').toLowerCase().includes(searchText) ||
+        (c.reason || '').toLowerCase().includes(searchText);
+      if (!searchMatch) return false;
+    }
+
+    return true;
+  });
+
+  // 필터링된 결과 저장
+  window.filteredClaimList = filtered;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-20 text-center text-slate-400">검색 결과가 없습니다.</td></tr>';
+    if (indicator) indicator.textContent = "0 / 0";
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    return;
+  }
+
+  // 페이지네이션 로직
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / window.claimItemsPerPage);
+
+  if (window.claimPage > totalPages) window.claimPage = totalPages;
+  if (window.claimPage < 1) window.claimPage = 1;
+
+  const startIdx = (window.claimPage - 1) * window.claimItemsPerPage;
+  const endIdx = startIdx + window.claimItemsPerPage;
+  const pageItems = filtered.slice(startIdx, endIdx);
+
+  // 페이지네이션 컨트롤 업데이트
+  if (indicator) indicator.textContent = `${window.claimPage} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = window.claimPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.claimPage >= totalPages;
+
+  tbody.innerHTML = pageItems.map(c => {
+    // 날짜 포맷
+    const date = new Date(c.created_at);
+    const formattedDate = `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}. ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+    // 구분 뱃지
+    const typeBadge = c.type === 'return'
+      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+      : 'bg-blue-50 text-blue-700 border border-blue-200';
+    const typeText = c.type === 'return' ? '반품' : '교환';
+
+    // 상태 뱃지 및 텍스트
+    let statusBadge = '';
+    let statusText = '';
+    switch (c.status) {
+      case 'requested':
+        statusBadge = 'bg-amber-50 text-amber-700 border border-amber-200';
+        statusText = '요청됨';
+        break;
+      case 'approved':
+        statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        statusText = '승인됨';
+        break;
+      case 'rejected':
+        statusBadge = 'bg-red-50 text-red-700 border border-red-200';
+        statusText = '거절됨';
+        break;
+      case 'completed':
+        statusBadge = 'bg-blue-50 text-blue-700 border border-blue-200';
+        statusText = '처리완료';
+        break;
+      default:
+        statusBadge = 'bg-slate-50 text-slate-600 border border-slate-200';
+        statusText = c.status;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition-colors group border-b border-slate-50 last:border-0">
+        <td class="px-6 py-5 font-mono text-slate-500 text-xs whitespace-nowrap">#${String(c.id).padStart(3, '0')}</td>
+        <td class="px-6 py-5 text-slate-500 text-xs tracking-tight whitespace-nowrap">${formattedDate}</td>
+        <td class="px-6 py-5">
+          <span class="px-2.5 py-1.5 rounded text-xs font-semibold border ${typeBadge} whitespace-nowrap inline-block text-center min-w-[50px]">
+            ${typeText}
+          </span>
+        </td>
+        <td class="px-6 py-5 font-mono text-slate-500 text-xs whitespace-nowrap">#${String(c.sale_id).padStart(2, '0')}</td>
+        <td class="px-6 py-5">
+          <div class="font-bold text-slate-800 text-sm">${c.product_name || '-'}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">수량: ${c.quantity}개 <span class="text-slate-300">|</span> 상태: ${c.condition || '미확인'}</div>
+        </td>
+        <td class="px-6 py-5 text-slate-600 text-xs max-w-xs">
+          <div class="line-clamp-2" title="${c.reason || '-'}">${c.reason || '-'}</div>
+        </td>
+        <td class="px-6 py-5">
+          <span class="px-2.5 py-1.5 rounded text-xs font-semibold border ${statusBadge} whitespace-nowrap inline-block text-center min-w-[60px]">
+            ${statusText}
+          </span>
+        </td>
+        <td class="px-6 py-5">
+          <div class="flex gap-2 items-center">
+            ${c.status === 'requested' ? `
+              <button onclick="updateClaimStatus(${c.id}, 'approved')" 
+                      class="h-8 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-check"></i> 승인
+              </button>
+              <button onclick="updateClaimStatus(${c.id}, 'rejected')" 
+                      class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-times"></i> 거절
+              </button>
+            ` : c.status === 'approved' ? `
+              <button onclick="updateClaimStatus(${c.id}, 'completed')" 
+                      class="h-8 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-check-double"></i> 처리완료
+              </button>
+            ` : `
+              <span class="text-slate-400 text-xs">-</span>
+            `}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function changeClaimPage(delta) {
+  const list = window.filteredClaimList || window.allClaims;
+  if (!list) return;
+
+  const totalPages = Math.ceil(list.length / window.claimItemsPerPage);
+  const newPage = window.claimPage + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    window.claimPage = newPage;
+    renderClaimList();
   }
 }
 
