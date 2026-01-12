@@ -35,36 +35,7 @@ export async function loadStock(content) {
   switchStockTab(window.currentStockTab); // 초기 탭 로드
 }
 
-// 탭 전환 함수
-export  function switchStockTab (tabName) {
-  window.currentStockTab = tabName;
 
-  // 버튼 스타일 업데이트
-  document.querySelectorAll('.stock-tab-btn').forEach(btn => {
-    btn.className = 'stock-tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-emerald-600 hover:border-slate-200 transition-colors';
-  });
-  const activeBtn = document.getElementById(`tab-stock-${tabName}`);
-  if (activeBtn) {
-    activeBtn.className = 'stock-tab-btn pb-3 text-sm font-bold border-b-2 border-emerald-500 text-emerald-600';
-  }
-
-  const container = document.getElementById('stockTabContent');
-  if (!container) return;
-
-  if (tabName === 'status') {
-    renderStockStatus(container);
-  } else if (tabName === 'movements') {
-    renderStockMovements(container);
-  } else if (tabName === 'warehouse') {
-    // 기존 창고 목록 로직이 있다면 활용, 우선 플레이스홀더
-    container.innerHTML = `
-            <div class="bg-white rounded-xl shadow-sm p-12 text-center text-slate-400">
-                <i class="fas fa-warehouse text-4xl mb-4 text-slate-200"></i>
-                <p>창고 관리 시스템 준비 중...</p>
-            </div>
-        `;
-  }
-}
 
 // 판매 관리 로드
 
@@ -72,130 +43,7 @@ export  function switchStockTab (tabName) {
 
 // 설정 페이지 로드
 
-export async  function renderStockStatus (container = null) {
-  if (!container) container = document.getElementById('stockTabContent');
-  if (!container) return;
 
-  container.innerHTML = `
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 min-h-[600px]">
-        <!-- 헤더 & 컨트롤 -->
-        <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
-            <h2 class="text-xl font-bold text-slate-800">창고별 재고 현황</h2>
-            
-            <div class="flex items-center gap-2">
-                <button onclick="openStockModal('in')" class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1 shadow-emerald-100">
-                    <i class="fas fa-plus"></i> 입고
-                </button>
-                <button onclick="openStockModal('out')" class="bg-rose-500 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-rose-600 transition-colors shadow-sm flex items-center gap-1 shadow-rose-100">
-                    <i class="fas fa-minus"></i> 출고
-                </button>
-                <button onclick="alert('준비 중')" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1 shadow-blue-100">
-                    <i class="fas fa-exchange-alt"></i> 이동
-                </button>
-                <button onclick="openStockModal('adjust')" class="bg-orange-500 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-orange-600 transition-colors shadow-sm flex items-center gap-1 shadow-orange-100">
-                    <i class="fas fa-sliders-h"></i> 조정
-                </button>
-                <button onclick="renderStockStatus()" class="bg-slate-700 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-1">
-                    <i class="fas fa-sync"></i> 동기화
-                </button>
-                
-                <div class="w-px h-6 bg-slate-200 mx-2"></div>
-
-                <div class="relative">
-                    <select id="warehouseFilter" class="appearance-none border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:border-indigo-500 bg-white">
-                        <option value="">전체 창고</option>
-                    </select>
-                    <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- 테이블 -->
-        <div class="overflow-hidden border rounded-lg border-slate-100">
-            <table class="min-w-full divide-y divide-slate-100">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">창고명</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">상품명</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">SKU</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">카테고리</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">재고수량</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">최근 업데이트</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">관리</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50 bg-white" id="stockStatusBody">
-                    <tr><td colspan="7" class="py-20 text-center"><i class="fas fa-spinner fa-spin text-3xl text-emerald-500"></i></td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- 페이지네이션 -->
-        <div class="mt-4 flex justify-between items-center" id="stockPagination"></div>
-    </div>
-  `;
-
-  try {
-    if (!window.warehouses) {
-      try {
-        const wRes = await axios.get('/api/warehouses');
-        window.warehouses = wRes.data.data;
-      } catch (e) { window.warehouses = []; }
-    }
-
-    const select = document.getElementById('warehouseFilter');
-    if (select && window.warehouses) {
-      const currentVal = window.lastWarehouseFilter || '';
-      select.innerHTML = `<option value="">전체 창고</option>` +
-        window.warehouses.map(w => `<option value="${w.id}" ${w.id == currentVal ? 'selected' : ''}>${w.name}</option>`).join('');
-
-      select.onchange = function () {
-        window.lastWarehouseFilter = this.value;
-        renderStockStatus();
-      };
-    }
-
-    const filterId = window.lastWarehouseFilter || '';
-    const res = await axios.get(`/api/stock?warehouse_id=${filterId}`);
-    const list = res.data.data;
-
-    const tbody = document.getElementById('stockStatusBody');
-    if (!tbody) return;
-
-    if (!list || list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="py-20 text-center text-slate-400">데이터가 없습니다.</td></tr>`;
-      document.getElementById('stockPagination').innerHTML = '';
-      return;
-    }
-
-    tbody.innerHTML = list.map(item => `
-        <tr class="hover:bg-slate-50 transition-colors group">
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">${item.warehouse_name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">${item.product_name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-400 font-mono">${item.sku}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${item.category}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold ${item.quantity <= 0 ? 'text-rose-500' : 'text-emerald-600'}">
-                ${item.quantity.toLocaleString()}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-xs text-slate-400 font-mono">
-                ${item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">
-                <button class="text-rose-300 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-full">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-
-    document.getElementById('stockPagination').innerHTML = `<div class="text-xs text-slate-400">총 ${list.length}개 항목</div>`;
-
-  } catch (e) {
-    console.error(e);
-    const tbody = document.getElementById('stockStatusBody');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-rose-500">로드 실패: ${e.message}</td></tr>`;
-  }
-}
 
 // Global State for Movements
 window.stockMovementPage = 1;
@@ -207,91 +55,9 @@ window.stockMovementFilters = {
   end_date: ''
 };
 
-export async  function renderStockMovements (container = null) {
-  if (!container) container = document.getElementById('stockTabContent');
-  if (!container) return;
 
-  // Ensure warehouses are loaded
-  if (!window.warehouses) {
-    try { const r = await axios.get('/api/warehouses'); window.warehouses = r.data.data; } catch (e) { }
-  }
 
-  container.innerHTML = `
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 min-h-[600px]">
-        <!-- Header & Filters -->
-        <div class="flex flex-col space-y-4 mb-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-slate-800">입출고 내역</h2>
-            </div>
-            
-            <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <div class="relative">
-                    <input type="text" id="mvSearch" placeholder="상품명/SKU 검색" class="pl-10 pr-4 py-2 border border-slate-300 rounded hover:border-slate-400 focus:outline-none focus:border-emerald-500 w-64 text-sm transition-colors bg-white">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
-                </div>
-                
-                <select id="mvType" class="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 bg-white min-w-[100px]">
-                    <option value="">전체 구분</option>
-                    <option value="입고">입고</option>
-                    <option value="출고">출고</option>
-                    <option value="이동">이동</option>
-                    <option value="조정">조정</option>
-                </select>
-                
-                <select id="mvWarehouse" class="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 bg-white min-w-[120px]">
-                    <option value="">전체 창고</option>
-                    ${(window.warehouses || []).map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
-                </select>
-                
-                <div class="flex items-center gap-2 bg-white px-2 py-1 rounded border border-slate-300">
-                    <input type="date" id="mvStartDate" class="border-none text-sm focus:outline-none text-slate-600">
-                    <span class="text-slate-400">~</span>
-                    <input type="date" id="mvEndDate" class="border-none text-sm focus:outline-none text-slate-600">
-                </div>
-                
-                <button onclick="searchStockMovements()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm ml-auto flex items-center gap-1">
-                    <i class="fas fa-search"></i> 조회
-                </button>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="overflow-hidden border rounded-lg border-slate-200 mb-4">
-            <table class="min-w-full divide-y divide-slate-200">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">일시</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">구분</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">상품정보</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">수량</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">창고</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">사유/비고</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">담당자</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">관리</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 bg-white" id="mvTableBody">
-                    <tr><td colspan="8" class="py-20 text-center"><i class="fas fa-spinner fa-spin text-3xl text-emerald-500"></i></td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div id="mvPagination" class="flex justify-between items-center mt-4 px-2"></div>
-    </div>
-  `;
-
-  const searchInput = document.getElementById('mvSearch');
-  if (searchInput) {
-    searchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') searchStockMovements();
-    });
-  }
-
-  await loadStockMovementsData();
-}
-
-export  function searchStockMovements () {
+export function searchStockMovements() {
   window.stockMovementPage = 1;
   window.stockMovementFilters = {
     search: document.getElementById('mvSearch').value,
@@ -303,7 +69,7 @@ export  function searchStockMovements () {
   loadStockMovementsData();
 }
 
-export async  function loadStockMovementsData () {
+export async function loadStockMovementsData() {
   const tbody = document.getElementById('mvTableBody');
   const pagination = document.getElementById('mvPagination');
   if (!tbody) return;
@@ -405,7 +171,7 @@ export async  function loadStockMovementsData () {
 }
 
 // 재고 모달 UI 주입 (창고 선택 추가)
-export  function injectStockModal () {
+export function injectStockModal() {
   if (document.getElementById('stockModal')) return;
 
   const modalHtml = `
@@ -492,7 +258,7 @@ export  function injectStockModal () {
   });
 }
 
-export async  function openStockModal (type) {
+export async function openStockModal(type) {
   let modal = document.getElementById('stockModal');
   if (!modal) {
     injectStockModal();
@@ -546,11 +312,11 @@ export async  function openStockModal (type) {
   modal.classList.remove('hidden');
 }
 
-export  function closeStockModal () {
+export function closeStockModal() {
   document.getElementById('stockModal').classList.add('hidden');
 }
 
-export async  function submitStockMovement (e) {
+export async function submitStockMovement(e) {
   e.preventDefault();
 
   const type = document.getElementById('stockMovementType').value;
@@ -596,7 +362,7 @@ export async  function submitStockMovement (e) {
 // ---------------------------------------------------------
 // 재고 관리 (Stock Management)
 // ---------------------------------------------------------
-export async  function loadStock (content) {
+export async function loadStock(content) {
   if (!content) content = document.getElementById('content');
 
   // Initialize State
@@ -647,7 +413,7 @@ export async  function loadStock (content) {
   await loadStockData();
 }
 
-export async  function loadStockData () {
+export async function loadStockData() {
   try {
     const [wRes, pRes] = await Promise.all([
       axios.get('/api/warehouses'),
@@ -664,7 +430,7 @@ export async  function loadStockData () {
   }
 }
 
-export  function switchStockTab (tab) {
+export function switchStockTab(tab) {
   window.stockState.activeTab = tab;
   window.currentStockTab = tab;
 
@@ -686,7 +452,7 @@ export  function switchStockTab (tab) {
   else if (tab === 'warehouses') renderWarehouseManagement();
 }
 
-export async  function renderStockStatus () {
+export async function renderStockStatus() {
   const area = document.getElementById('stockContentArea');
   area.innerHTML = '<div class="flex justify-center p-12"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
 
@@ -734,7 +500,7 @@ export async  function renderStockStatus () {
   }
 }
 
-export async  function renderStockMovements () {
+export async function renderStockMovements() {
   const area = document.getElementById('stockContentArea');
   area.innerHTML = '<div class="flex justify-center p-12"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
 
@@ -790,7 +556,7 @@ export async  function renderStockMovements () {
   }
 }
 
-export async  function renderWarehouseManagement () {
+export async function renderWarehouseManagement() {
   const area = document.getElementById('stockContentArea');
   const warehouses = window.stockState.warehouses;
 
@@ -827,7 +593,7 @@ export async  function renderWarehouseManagement () {
 // ---------------------------------------------------------
 // 옵션 관리 (Option Management)
 // ---------------------------------------------------------
-export async  function loadOptionPresets (content) {
+export async function loadOptionPresets(content) {
   if (!content) content = document.getElementById('content');
 
   content.innerHTML = `
@@ -854,7 +620,7 @@ export async  function loadOptionPresets (content) {
   await fetchAndRenderOptionGroups();
 }
 
-export async  function fetchAndRenderOptionGroups () {
+export async function fetchAndRenderOptionGroups() {
   const list = document.getElementById('optionGroupList');
   if (!list) return;
 
@@ -903,7 +669,7 @@ export async  function fetchAndRenderOptionGroups () {
   }
 }
 
-export async  function openOptionGroupModal (id = null) {
+export async function openOptionGroupModal(id = null) {
   let modal = document.getElementById('optModal');
   if (!modal) {
     document.body.insertAdjacentHTML('beforeend', `
@@ -966,7 +732,7 @@ export async  function openOptionGroupModal (id = null) {
   }, 10);
 }
 
-export  function closeOptionGroupModal () {
+export function closeOptionGroupModal() {
   const modal = document.getElementById('optModal');
   const content = document.getElementById('optModalContent');
   if (content) {
@@ -976,7 +742,7 @@ export  function closeOptionGroupModal () {
   setTimeout(() => modal.classList.add('hidden'), 200);
 }
 
-export  function addOptionValueRow (name = '', price = 0) {
+export function addOptionValueRow(name = '', price = 0) {
   const container = document.getElementById('optValuesContainer');
   const div = document.createElement('div');
   div.className = 'flex gap-3 items-center group animate-fade-in-up';
@@ -993,7 +759,7 @@ export  function addOptionValueRow (name = '', price = 0) {
   container.appendChild(div);
 }
 
-export async  function saveOptionGroup () {
+export async function saveOptionGroup() {
   const id = document.getElementById('optGroupId').value;
   const name = document.getElementById('optGroupName').value;
 
@@ -1022,7 +788,7 @@ export async  function saveOptionGroup () {
   }
 }
 
-export async  function deleteOptionGroup (id) {
+export async function deleteOptionGroup(id) {
   if (!confirm('정말 삭제하시겠습니까?')) return;
   try {
     await axios.delete(`/api/options/${id}`);
@@ -1035,7 +801,7 @@ export async  function deleteOptionGroup (id) {
 // ---------------------------------------------------------
 // 가격 정책 관리 (Price Policy Management)
 // ---------------------------------------------------------
-export async  function loadPricePolicies (content) {
+export async function loadPricePolicies(content) {
   if (!content) content = document.getElementById('content');
 
   // Manage Global State
@@ -1101,7 +867,7 @@ export async  function loadPricePolicies (content) {
   await loadPriceData();
 }
 
-export async  function loadPriceData () {
+export async function loadPriceData() {
   try {
     const [pRes, gRes, cRes] = await Promise.all([
       axios.get('/api/products'),
@@ -1119,7 +885,7 @@ export async  function loadPriceData () {
   }
 }
 
-export  function renderPriceTable () {
+export function renderPriceTable() {
   const { activeTab, products, gradePrices } = window.pricePolicyState;
   const content = document.getElementById('priceContentArea');
   const footer = document.getElementById('priceFooter');
@@ -1240,7 +1006,7 @@ export  function renderPriceTable () {
   }
 }
 
-export  function switchPriceTab (tab) {
+export function switchPriceTab(tab) {
   window.pricePolicyState.activeTab = tab;
 
   // Update Tab UI
@@ -1262,11 +1028,11 @@ export  function switchPriceTab (tab) {
   renderPriceTable();
 }
 
-export  function filterPriceTable () {
+export function filterPriceTable() {
   renderPriceTable();
 }
 
-export async  function savePriceChanges () {
+export async function savePriceChanges() {
   const { activeTab } = window.pricePolicyState;
   // Customer tab saves via Modal, so this button should be hidden in customer tab anyway.
   if (activeTab !== 'grade') return;
@@ -1316,7 +1082,7 @@ window.productPageState = {
   list: []
 };
 
-export async  function loadProducts (content) {
+export async function loadProducts(content) {
   if (!content) content = document.getElementById('content');
 
   // Categories fetch
@@ -1392,14 +1158,14 @@ export async  function loadProducts (content) {
   await searchProducts();
 }
 
-export async  function searchProducts () {
+export async function searchProducts() {
   window.productPageState.search = document.getElementById('prodSearch').value;
   window.productPageState.category = document.getElementById('prodCategory').value;
   window.productPageState.page = 1;
   await fetchAndRenderProducts();
 }
 
-export async  function fetchAndRenderProducts () {
+export async function fetchAndRenderProducts() {
   const tbody = document.getElementById('prodTableBody');
   if (!tbody) return;
 
@@ -1419,7 +1185,7 @@ export async  function fetchAndRenderProducts () {
   }
 }
 
-export  function renderProductList () {
+export function renderProductList() {
   const { list, page, limit } = window.productPageState;
   const tbody = document.getElementById('prodTableBody');
   const pagination = document.getElementById('prodPagination');
@@ -1498,7 +1264,7 @@ export  function renderProductList () {
 }
 
 // Modal Logic
-export  function openProductModal (id = null) {
+export function openProductModal(id = null) {
   let modal = document.getElementById('prodModal');
   if (!modal) {
     document.body.insertAdjacentHTML('beforeend', `
@@ -1654,7 +1420,7 @@ export  function openProductModal (id = null) {
   }, 10);
 }
 
-export  function closeProductModal () {
+export function closeProductModal() {
   const modal = document.getElementById('prodModal');
   const content = document.getElementById('prodModalContent');
   content.classList.remove('scale-100');
@@ -1664,7 +1430,7 @@ export  function closeProductModal () {
   }, 200);
 }
 
-export  function toggleSkuInput (auto) {
+export function toggleSkuInput(auto) {
   const input = document.getElementById('prodSku');
   const btn = document.getElementById('btnGenSku');
   if (auto) {
@@ -1682,14 +1448,14 @@ export  function toggleSkuInput (auto) {
   }
 }
 
-export  function generateSku () {
+export function generateSku() {
   const d = new Date();
   const dateStr = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
   const random = Math.floor(1000 + Math.random() * 9000);
   document.getElementById('prodSku').value = `PRD-${dateStr}-${random}`;
 }
 
-export async  function saveProduct () {
+export async function saveProduct() {
   const id = document.getElementById('prodId').value;
   const sku = document.getElementById('prodSku').value;
   const name = document.getElementById('prodName').value;
@@ -1733,7 +1499,7 @@ export async  function saveProduct () {
   }
 }
 
-export async  function deleteProduct (id) {
+export async function deleteProduct(id) {
   if (!confirm('정말 삭제하시겠습니까?')) return;
   try {
     await axios.delete(`/api/products/${id}`);
@@ -1746,7 +1512,7 @@ export async  function deleteProduct (id) {
 // ---------------------------------------------------------
 // Customer Contract Modal Logic
 // ---------------------------------------------------------
-export async  function openContractModal (customerId = null) {
+export async function openContractModal(customerId = null) {
   let modal = document.getElementById('contractModal');
   if (!modal) {
     document.body.insertAdjacentHTML('beforeend', `
@@ -1866,7 +1632,7 @@ export async  function openContractModal (customerId = null) {
   });
 }
 
-export  function closeContractModal () {
+export function closeContractModal() {
   const modal = document.getElementById('contractModal');
   const content = document.getElementById('contractModalContent');
   if (content) {
@@ -1876,7 +1642,7 @@ export  function closeContractModal () {
   setTimeout(() => modal.classList.add('hidden'), 200);
 }
 
-export  function resetContractCust () {
+export function resetContractCust() {
   document.getElementById('contractCustSelect').value = '';
   document.getElementById('contractCustSelectContainer').classList.remove('hidden');
   document.getElementById('contractCustDisplay').classList.add('hidden');
@@ -1885,7 +1651,7 @@ export  function resetContractCust () {
   renderContractItemsList();
 }
 
-export  function confirmContractCust (name) {
+export function confirmContractCust(name) {
   document.getElementById('contractCustSelectContainer').classList.add('hidden');
   const display = document.getElementById('contractCustDisplay');
   display.classList.remove('hidden');
@@ -1893,14 +1659,14 @@ export  function confirmContractCust (name) {
   document.getElementById('contractCustName').innerText = name;
 }
 
-export  function resetContractForm () {
+export function resetContractForm() {
   document.getElementById('contractProdId').value = '';
   document.getElementById('contractProdSearch').value = '';
   document.getElementById('contractProdPrice').value = '';
   document.getElementById('contractNewPrice').value = '';
 }
 
-export async  function loadContractItems (customerId) {
+export async function loadContractItems(customerId) {
   if (!customerId) return;
   const cust = window.pricePolicyState.customers.find(c => c.id == customerId);
   if (cust) confirmContractCust(cust.name);
@@ -1924,7 +1690,7 @@ export async  function loadContractItems (customerId) {
   }
 }
 
-export  function searchContractProduct (query) {
+export function searchContractProduct(query) {
   const dropdown = document.getElementById('contractProdDropdown');
 
   if (!query) {
@@ -1955,7 +1721,7 @@ export  function searchContractProduct (query) {
   dropdown.classList.remove('hidden');
 }
 
-export  function selectContractProduct (pid) {
+export function selectContractProduct(pid) {
   const p = window.pricePolicyState.products.find(x => x.id === pid);
   if (p) {
     document.getElementById('contractProdId').value = p.id;
@@ -1966,7 +1732,7 @@ export  function selectContractProduct (pid) {
   document.getElementById('contractProdDropdown').classList.add('hidden');
 }
 
-export  function addContractItem () {
+export function addContractItem() {
   const pid = document.getElementById('contractProdId').value;
   const price = parseInt(document.getElementById('contractNewPrice').value);
 
@@ -1995,12 +1761,12 @@ export  function addContractItem () {
   resetContractForm();
 }
 
-export  function removeContractItem (pid) {
+export function removeContractItem(pid) {
   window.pricePolicyState.modalPendingItems = window.pricePolicyState.modalPendingItems.filter(x => x.product_id != pid);
   renderContractItemsList();
 }
 
-export  function renderContractItemsList () {
+export function renderContractItemsList() {
   const items = window.pricePolicyState.modalPendingItems;
   const list = document.getElementById('contractItemsList');
   const count = document.getElementById('contractItemCount');
@@ -2045,7 +1811,7 @@ export  function renderContractItemsList () {
     `).join('');
 }
 
-export async  function saveContractItems () {
+export async function saveContractItems() {
   const custId = document.getElementById('contractCustSelect').value;
   if (!custId) { alert('고객사를 선택해주세요.'); return; }
 
@@ -2076,14 +1842,14 @@ export async  function saveContractItems () {
 
 // === Settings Page ===
 
-    const res = await axios.get(`${API_BASE}/warehouses`);
-    const warehouse = res.data.data.find(w => w.id === id);
-    if (warehouse) {
-      openWarehouseModal(true, warehouse);
-    }
+const res = await axios.get(`${API_BASE}/warehouses`);
+const warehouse = res.data.data.find(w => w.id === id);
+if (warehouse) {
+  openWarehouseModal(true, warehouse);
+}
   } catch (e) {
-    console.error(e);
-  }
+  console.error(e);
+}
 }
 
 export async function deleteWarehouse(id) {
