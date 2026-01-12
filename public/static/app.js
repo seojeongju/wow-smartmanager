@@ -2083,6 +2083,16 @@ async function renderPlanRequests(container) {
   const res = await axios.get(`${API_BASE}/system/plan-requests`);
   const requests = res.data.data;
 
+  // 전역 변수에 요청 데이터 저장 (ID로 접근 가능)
+  window._planRequests = {};
+  requests.forEach(r => {
+    window._planRequests[r.id] = {
+      tenantName: r.tenant_name,
+      currentPlan: r.current_plan,
+      requestedPlan: r.requested_plan
+    };
+  });
+
   container.innerHTML = `
         <div class="mb-4">
             <h3 class="font-bold text-slate-700">플랜 변경 요청 목록</h3>
@@ -2117,8 +2127,8 @@ async function renderPlanRequests(container) {
                             </td>
                             <td class="p-4 text-center">
                                 ${r.status === 'PENDING' ? `
-                                    <button onclick="processPlanRequest(${r.id}, 'approve', '${r.tenant_name}', '${r.current_plan}', '${r.requested_plan}')" class="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-bold mr-1 border border-emerald-200 transition-colors">수락</button>
-                                    <button onclick="processPlanRequest(${r.id}, 'reject', '${r.tenant_name}', '${r.current_plan}', '${r.requested_plan}')" class="text-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold border border-rose-200 transition-colors">거절</button>
+                                    <button onclick="processPlanRequest(${r.id}, 'approve')" class="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-bold mr-1 border border-emerald-200 transition-colors">수락</button>
+                                    <button onclick="processPlanRequest(${r.id}, 'reject')" class="text-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold border border-rose-200 transition-colors">거절</button>
                                 ` : '-'}
                             </td>
                         </tr>
@@ -2425,7 +2435,13 @@ window.manageTenant = function (tenantId) {
 }
 
 // 플랜 변경 요청 처리 (수락/거절)
-window.processPlanRequest = async function (id, action, tenantName, currentPlan, requestedPlan) {
+window.processPlanRequest = async function (id, action) {
+  // 전역 변수에서 요청 정보 가져오기
+  const requestData = window._planRequests?.[id];
+  const tenantName = requestData?.tenantName || '';
+  const currentPlan = requestData?.currentPlan || '';
+  const requestedPlan = requestData?.requestedPlan || '';
+
   // 상세한 확인 메시지
   const actionText = action === 'approve' ? '수락' : '거절';
   const actionIcon = action === 'approve' ? '✅' : '❌';
