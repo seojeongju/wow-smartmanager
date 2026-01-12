@@ -347,7 +347,7 @@ export async function loadSettings(content) {
   }, 100);
 }
 
-export async  function switchSettingsTab (tab) {
+export async function switchSettingsTab(tab) {
   window.currentSettingsTab = tab;
 
   document.querySelectorAll('[id^="tab-"]').forEach(btn => {
@@ -424,23 +424,17 @@ export function renderCompanySettings(container, data) {
   `;
 }
 
-export function renderTeamSettings(container) {
-  container.innerHTML = '<p class="text-slate-500">팀 설정 기능 준비 중...</p>';
-}
 
-export function renderPlanSettings(container) {
-  container.innerHTML = '<p class="text-slate-500">플랜 설정 기능 준비 중...</p>';
-}
 
-export function renderApiSettings(container) {
-  container.innerHTML = '<p class="text-slate-500">API 설정 기능 준비 중...</p>';
-}
+
+
+
 
 export function renderSecuritySettings(container) {
   container.innerHTML = '<p class="text-slate-500">보안 설정 기능 준비 중...</p>';
 }
 
-export async  function saveCompanyInfo (e) {
+export async function saveCompanyInfo(e) {
   e.preventDefault();
   const data = {
     ceo_name: document.getElementById('ceoName').value,
@@ -531,7 +525,7 @@ export async function renderTeamSettings(container) {
   }
 }
 
-export  function inviteTeamMember () {
+export function inviteTeamMember() {
   const email = prompt('초대할 팀원의 이메일을 입력하세요:');
   if (!email) return;
 
@@ -547,7 +541,7 @@ export  function inviteTeamMember () {
     });
 }
 
-export  function removeTeamMember (memberId, memberName) {
+export function removeTeamMember(memberId, memberName) {
   if (!confirm(`'${memberName}' 팀원을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
 
   // TODO: Backend에 DELETE 엔드포인트 추가 필요
@@ -673,7 +667,7 @@ export async function renderPlanSettings(container) {
   }
 }
 
-export async  function requestPlanChange (planId, planName) {
+export async function requestPlanChange(planId, planName) {
   if (!confirm(`${planName} 플랜으로 변경 요청하시겠습니까?\n\n승인 후 즉시 적용됩니다.`)) {
     return;
   }
@@ -817,7 +811,7 @@ export async function renderApiSettings(container) {
 
 window.apiKeyVisible = false;
 
-export  function toggleApiKeyVisibility () {
+export function toggleApiKeyVisibility() {
   window.apiKeyVisible = !window.apiKeyVisible;
   const input = document.getElementById('smartParcelApiKey');
   input.type = window.apiKeyVisible ? 'text' : 'password';
@@ -826,7 +820,7 @@ export  function toggleApiKeyVisibility () {
   icon.className = window.apiKeyVisible ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 
-export async  function saveApiKey () {
+export async function saveApiKey() {
   const apiKey = document.getElementById('smartParcelApiKey').value.trim();
 
   if (!apiKey) {
@@ -848,7 +842,7 @@ export async  function saveApiKey () {
   }
 }
 
-export async  function testApiKey () {
+export async function testApiKey() {
   const apiKey = document.getElementById('smartParcelApiKey').value.trim();
 
   if (!apiKey) {
@@ -998,7 +992,7 @@ export async function renderWarehouseSettings(container) {
   }
 }
 
-export  function openWarehouseModal (warehouseData) {
+export function openWarehouseModal(warehouseData) {
   const modal = document.getElementById('warehouseModal');
   const title = document.getElementById('modalTitle');
 
@@ -1021,11 +1015,11 @@ export  function openWarehouseModal (warehouseData) {
   modal.classList.remove('hidden');
 }
 
-export  function closeWarehouseModal () {
+export function closeWarehouseModal() {
   document.getElementById('warehouseModal').classList.add('hidden');
 }
 
-export async  function saveWarehouse (e) {
+export async function saveWarehouse(e) {
   e.preventDefault();
 
   const id = document.getElementById('warehouseId').value;
@@ -1053,7 +1047,7 @@ export async  function saveWarehouse (e) {
   }
 }
 
-export async  function editWarehouse (id) {
+export async function editWarehouse(id) {
   try {
     const res = await axios.get(`${API_BASE}/warehouses`);
     const warehouse = res.data.data.find(w => w.id === id);
@@ -1065,7 +1059,7 @@ export async  function editWarehouse (id) {
   }
 }
 
-export async  function deleteWarehouse (id, name) {
+export async function deleteWarehouse(id, name) {
   if (!confirm(`'${name}' 창고를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
     return;
   }
@@ -1080,7 +1074,7 @@ export async  function deleteWarehouse (id, name) {
   }
 }
 
-export async  function syncWarehouseStock () {
+export async function syncWarehouseStock() {
   if (!confirm('모든 창고의 재고 데이터를 동기화하시겠습니까?\n\n이 작업은 몇 분이 소요될 수 있습니다.')) {
     return;
   }
