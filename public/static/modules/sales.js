@@ -820,41 +820,69 @@ export function renderPosProducts(filterText = '', filterCat = '') {
   if (nextBtn) nextBtn.disabled = window.posPage >= totalPages;
 
   container.innerHTML = pageItems.map(p => `
-    <div class="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-emerald-400 transition-all cursor-pointer flex flex-col h-full group relative overflow-hidden active:scale-[0.98]"
+    <div class="bg-white border-2 border-slate-200 rounded-xl hover:shadow-xl hover:border-emerald-400 transition-all duration-200 cursor-pointer flex flex-col overflow-hidden group active:scale-[0.98]"
          onclick="addToCart(${p.id})">
       
-      <!-- 카테고리 & SKU -->
-      <div class="mb-3">
-        <div class="flex items-center text-xs text-emerald-600 font-medium mb-1">
-          <span>${p.category}</span>
-          ${p.category_medium ? `<i class="fas fa-chevron-right text-[10px] mx-1 text-slate-300"></i><span>${p.category_medium}</span>` : ''}
+      <!-- 카테고리 헤더 -->
+      <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 px-4 py-2.5 border-b border-emerald-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center text-xs text-emerald-700 font-semibold">
+            <i class="fas fa-tag text-[10px] mr-1.5"></i>
+            <span class="truncate max-w-[120px]">${p.category}</span>
+            ${p.category_medium ? `<i class="fas fa-chevron-right text-[8px] mx-1.5 opacity-50"></i><span class="truncate max-w-[80px]">${p.category_medium}</span>` : ''}
+          </div>
+          <div class="text-[10px] text-emerald-600/60 font-mono">${p.sku}</div>
         </div>
-        <div class="text-[10px] text-slate-400 font-mono tracking-wide">${p.sku}</div>
       </div>
 
-      <!-- 상품명 -->
-      <h4 class="font-bold text-slate-800 text-base mb-2 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">${p.name}</h4>
+      <!-- 상품 내용 -->
+      <div class="p-4 flex-1 flex flex-col">
+        <!-- 상품명 (2줄 제한) -->
+        <h4 class="font-bold text-slate-800 text-sm mb-3 leading-snug group-hover:text-emerald-700 transition-colors"
+            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5rem;">
+          ${p.name}
+        </h4>
 
-      <!-- 태그 (있는 경우) -->
-      ${p.tags ? `
-        <div class="flex flex-wrap gap-1 mb-3">
-          ${p.tags.split(',').slice(0, 2).map(tag => `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px]">${tag.trim()}</span>`).join('')}
-        </div>
-      ` : ''}
+        <!-- 태그 (있는 경우) -->
+        ${p.tags ? `
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            ${p.tags.split(',').slice(0, 2).map(tag => `
+              <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-medium">
+                ${tag.trim()}
+              </span>
+            `).join('')}
+          </div>
+        ` : '<div class="mb-3"></div>'}
 
-      <!-- 하단 정보: 재고 및 가격 -->
-      <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between items-end">
-        <div class="flex flex-col">
-           <span class="text-xs text-slate-400 mb-0.5">재고</span>
-           <span class="font-medium ${p.current_stock <= p.min_stock_alert ? 'text-rose-500' : 'text-slate-600'}">
-             ${p.current_stock > 0 ? `${p.current_stock}개` : '<span class="text-rose-500 font-bold">품절</span>'}
-           </span>
+        <!-- 하단 정보: 재고 및 가격 -->
+        <div class="mt-auto pt-3 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wide">재고</span>
+              <span class="px-2 py-0.5 rounded-md text-xs font-bold ${p.current_stock <= 0
+      ? 'bg-rose-100 text-rose-700'
+      : p.current_stock <= (p.min_stock_alert || 10)
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-emerald-100 text-emerald-700'
+    }">
+                ${p.current_stock > 0 ? `${p.current_stock}개` : '품절'}
+              </span>
+            </div>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <span class="text-xs text-slate-500">판매가</span>
+            <p class="text-xl font-bold text-emerald-600">${formatCurrency(p.selling_price)}</p>
+          </div>
         </div>
-        <p class="text-lg font-bold text-emerald-600 tracking-tight">${formatCurrency(p.selling_price)}</p>
+      </div>
+
+      <!-- 호버 인디케이터 -->
+      <div class="absolute top-2 right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+        <i class="fas fa-plus text-white text-sm"></i>
       </div>
       
-      <!-- 오버레이 효과 (선택 시 강조) -->
-      <div class="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-10 pointer-events-none transition-opacity"></div>
+      <!-- 오버레이 효과 -->
+      <div class="absolute inset-0 bg-gradient-to-b from-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"></div>
     </div>
   `).join('');
 }
