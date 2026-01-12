@@ -1,5 +1,14 @@
-// API Base URL
-const API_BASE = '/api';
+import { API_BASE, STATUS, ROLES } from './utils/constants.js';
+import { formatDate, formatCurrency, formatNumber, formatDateClean } from './utils/formatters.js';
+import { API } from './utils/api.js';
+import { Modal } from './components/Modal.js';
+
+// 전역 유틸리티 노출 (구버전 호환용)
+window.formatDate = formatDate;
+window.formatCurrency = formatCurrency;
+window.formatNumber = formatNumber;
+window.formatDateClean = formatDateClean;
+
 
 // 현재 페이지 상태
 let currentPage = 'dashboard';
@@ -1395,10 +1404,7 @@ function downloadOutboundExcel() {
   document.body.removeChild(link);
 }
 
-function formatDateClean(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
-}
+
 
 function getOutboundStatusColor(status) {
   switch (status) {
@@ -8839,3 +8845,126 @@ window.syncWarehouseStock = async function () {
     alert('동기화 실패: ' + (e.response?.data?.message || e.message));
   }
 }
+
+// Expose functions to global scope for HTML event handlers
+window.loadUserInfo = loadUserInfo;
+window.logout = logout;
+window.setupNavigation = setupNavigation;
+window.updatePageTitle = updatePageTitle;
+window.loadPage = loadPage;
+window.loadInbound = loadInbound;
+window.updateInboundTime = updateInboundTime;
+window.getInboundStatusBadge = getInboundStatusBadge;
+window.loadOutbound = loadOutbound;
+window.switchOutboundTab = switchOutboundTab;
+window.renderWarehouseTab = renderWarehouseTab;
+window.injectWarehouseModal = injectWarehouseModal;
+window.openWarehouseModal = openWarehouseModal;
+window.closeWarehouseModal = closeWarehouseModal;
+window.submitWarehouse = submitWarehouse;
+window.editWarehouse = editWarehouse;
+window.deleteWarehouse = deleteWarehouse;
+window.renderSimpleOutboundTab = renderSimpleOutboundTab;
+window.filterOutboundProducts = filterOutboundProducts;
+window.changeOutboundPage = changeOutboundPage;
+window.renderOutboundProductList = renderOutboundProductList;
+window.addToOutboundCart = addToOutboundCart;
+window.renderOutboundCart = renderOutboundCart;
+window.updateOutboundQty = updateOutboundQty;
+window.removeOutboundItem = removeOutboundItem;
+window.clearOutboundCart = clearOutboundCart;
+window.fillOutboundCustomer = fillOutboundCustomer;
+window.copyBuyerToReceiver = copyBuyerToReceiver;
+window.submitSimpleOutbound = submitSimpleOutbound;
+window.renderOutboundHistoryTab = renderOutboundHistoryTab;
+window.changeOutboundHistoryPage = changeOutboundHistoryPage;
+window.downloadOutboundExcel = downloadOutboundExcel;
+window.getOutboundStatusColor = getOutboundStatusColor;
+window.injectOutboundDetailModal = injectOutboundDetailModal;
+window.openOutboundDetail = openOutboundDetail;
+window.savePicking = savePicking;
+window.performPacking = performPacking;
+window.confirmShipment = confirmShipment;
+window.loadInvoice = loadInvoice;
+window.injectInvoiceModal = injectInvoiceModal;
+window.openInvoiceModal = openInvoiceModal;
+window.printInvoice = printInvoice;
+window.loadSystem = loadSystem;
+window.renderSystemTenants = renderSystemTenants;
+window.renderSystemUsers = renderSystemUsers;
+window.renderSystemStats = renderSystemStats;
+window.renderPlanRequests = renderPlanRequests;
+window.loadDashboard = loadDashboard;
+window.loadProducts = loadProducts;
+window.loadCustomers = loadCustomers;
+window.renderCustomerPage = renderCustomerPage;
+window.renderCustomerTable = renderCustomerTable;
+window.injectCustomerDetailModal = injectCustomerDetailModal;
+window.loadStock = loadStock;
+window.loadSales = loadSales;
+window.switchSalesTab = switchSalesTab;
+window.renderPosTab = renderPosTab;
+window.renderOrderManagementTab = renderOrderManagementTab;
+window.renderOrderList = renderOrderList;
+window.changeOrderPage = changeOrderPage;
+window.renderClaimsTab = renderClaimsTab;
+window.renderClaimList = renderClaimList;
+window.changeClaimPage = changeClaimPage;
+window.getKoreanStatus = getKoreanStatus;
+window.showError = showError;
+window.showSuccess = showSuccess;
+window.downloadCSV = downloadCSV;
+window.downloadProducts = downloadProducts;
+window.downloadCustomers = downloadCustomers;
+window.downloadSales = downloadSales;
+window.injectProductModal = injectProductModal;
+window.toggleSkuInput = toggleSkuInput;
+window.generateAutoSku = generateAutoSku;
+window.switchProductTab = switchProductTab;
+window.handleImageUpload = handleImageUpload;
+window.updateImagePreview = updateImagePreview;
+window.removeImage = removeImage;
+window.showProductModal = showProductModal;
+window.editProduct = editProduct;
+window.closeProductModal = closeProductModal;
+window.submitProduct = submitProduct;
+window.fillCategoryDatalist = fillCategoryDatalist;
+window.injectCustomerModal = injectCustomerModal;
+window.toggleGradeInput = toggleGradeInput;
+window.showCustomerModal = showCustomerModal;
+window.editCustomer = editCustomer;
+window.closeCustomerModal = closeCustomerModal;
+window.submitCustomer = submitCustomer;
+window.deleteCustomer = deleteCustomer;
+window.loadCategories = loadCategories;
+window.filterProducts = filterProducts;
+window.renderPosProducts = renderPosProducts;
+window.filterPosProducts = filterPosProducts;
+window.changePosPage = changePosPage;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.updateCartQuantity = updateCartQuantity;
+window.renderCart = renderCart;
+window.checkout = checkout;
+window.cancelSale = cancelSale;
+window.injectShippingModal = injectShippingModal;
+window.openShippingModal = openShippingModal;
+window.submitShipping = submitShipping;
+window.injectClaimModal = injectClaimModal;
+window.openClaimModal = openClaimModal;
+window.submitClaim = submitClaim;
+window.updateClaimStatus = updateClaimStatus;
+window.loadSettings = loadSettings;
+window.switchSettingsTab = switchSettingsTab;
+window.initSettingsTabStyles = initSettingsTabStyles;
+window.saveBusinessInfo = saveBusinessInfo;
+window.saveProfileInfo = saveProfileInfo;
+window.previewLogo = previewLogo;
+window.uploadLogo = uploadLogo;
+window.renderCompanySettings = renderCompanySettings;
+window.renderTeamSettings = renderTeamSettings;
+window.renderPlanSettings = renderPlanSettings;
+window.renderApiSettings = renderApiSettings;
+window.renderSecuritySettings = renderSecuritySettings;
+window.renderWarehouseSettings = renderWarehouseSettings;
+

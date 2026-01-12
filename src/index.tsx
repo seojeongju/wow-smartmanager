@@ -604,7 +604,7 @@ app.get('/', (c: Context) => {
                 }
             }
         </script>
-        <script src="/static/app.js?v=${Date.now()}"></script>
+        <script type="module" src="/static/app.js?v=${Date.now()}"></script>
     </body>
     </html>
   `)
