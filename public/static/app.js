@@ -2117,8 +2117,8 @@ async function renderPlanRequests(container) {
                             </td>
                             <td class="p-4 text-center">
                                 ${r.status === 'PENDING' ? `
-                                    <button onclick="processPlanRequest(${r.id}, 'approve')" class="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-bold mr-1 border border-emerald-200 transiton-colors">수락</button>
-                                    <button onclick="processPlanRequest(${r.id}, 'reject')" class="text-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold border border-rose-200 transiton-colors">거절</button>
+                                    <button onclick="processPlanRequest(${r.id}, 'approve', '${r.tenant_name}', '${r.current_plan}', '${r.requested_plan}')" class="text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs font-bold mr-1 border border-emerald-200 transition-colors">수락</button>
+                                    <button onclick="processPlanRequest(${r.id}, 'reject', '${r.tenant_name}', '${r.current_plan}', '${r.requested_plan}')" class="text-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold border border-rose-200 transition-colors">거절</button>
                                 ` : '-'}
                             </td>
                         </tr>
@@ -2424,14 +2424,59 @@ window.manageTenant = function (tenantId) {
   viewTenantDetail(tenantId);
 }
 
-window.processPlanRequest = async function (id, action) {
-  if (!confirm(`${action === 'approve' ? '수락' : '거절'} 하시겠습니까?`)) return;
+// 플랜 변경 요청 처리 (수락/거절)
+window.processPlanRequest = async function (id, action, tenantName, currentPlan, requestedPlan) {
+  // 상세한 확인 메시지
+  const actionText = action === 'approve' ? '수락' : '거절';
+  const actionIcon = action === 'approve' ? '✅' : '❌';
+
+  let confirmMessage = `${actionIcon} 플랜 변경 요청을 ${actionText}하시겠습니까?\n\n`;
+
+  if (tenantName) {
+    confirmMessage += `📌 조직: ${tenantName}\n`;
+    confirmMessage += `📊 현재 플랜: ${currentPlan}\n`;
+    confirmMessage += `🔄 요청 플랜: ${requestedPlan}\n\n`;
+  }
+
+  if (action === 'approve') {
+    confirmMessage += `✓ 수락 시 해당 조직의 플랜이 즉시 변경됩니다.`;
+  } else {
+    confirmMessage += `✗ 거절 시 요청이 취소되며 플랜은 변경되지 않습니다.`;
+  }
+
+  if (!confirm(confirmMessage)) return;
+
   try {
-    await axios.post(`${API_BASE}/system/plan-requests/${id}/${action}`);
-    showSuccess('처리되었습니다.'); // Assumes showSuccess exists
-    switchSystemTab('plan-requests');
+    const response = await axios.post(`${API_BASE}/system/plan-requests/${id}/${action}`);
+
+    if (response.data.success) {
+      // 성공 메시지
+      let successMsg = '';
+      if (action === 'approve') {
+        successMsg = `✅ 플랜 변경 요청이 승인되었습니다.\n`;
+        if (tenantName) {
+          successMsg += `\n"${tenantName}" 조직의 플랜이 ${currentPlan} → ${requestedPlan}(으)로 변경되었습니다.`;
+        }
+      } else {
+        successMsg = `❌ 플랜 변경 요청이 거절되었습니다.`;
+      }
+
+      showSuccess(successMsg);
+      setTimeout(() => switchSystemTab('plan-requests'), 500);
+    }
   } catch (e) {
-    alert(e.message);
+    const errorMsg = e.response?.data?.error || e.message;
+    let displayMsg = `플랜 변경 요청 ${actionText} 실패\n\n`;
+
+    if (errorMsg.includes('not found')) {
+      displayMsg += '요청을 찾을 수 없습니다.';
+    } else if (errorMsg.includes('already processed')) {
+      displayMsg += '이미 처리된 요청입니다.';
+    } else {
+      displayMsg += `오류: ${errorMsg}`;
+    }
+
+    alert(displayMsg);
   }
 }
 
