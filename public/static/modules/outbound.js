@@ -1458,7 +1458,7 @@ export async function renderSimpleOutboundTab(container) {
     </div>
   `;
 
-  renderOutboundProductList();
+  filterOutboundProducts();
 }
 
 window.outboundPage = 1;
