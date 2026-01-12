@@ -120,7 +120,7 @@ export async function renderWarehouseTab(container) {
                            <p class="text-xs text-slate-400 mt-0.5">물류 거점별 창고를 등록하고 상태를 관리합니다.</p>
                         </div>
                     </div>
-                    <button onclick="openWarehouseModal()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all hover:-translate-y-1 flex items-center gap-2">
+                    <button onclick="openObWarehouseModal()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all hover:-translate-y-1 flex items-center gap-2">
                         <i class="fas fa-plus"></i> 창고 등록
                     </button>
                 </div>
@@ -163,10 +163,10 @@ export async function renderWarehouseTab(container) {
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-center">
                                         <div class="flex items-center justify-center gap-3">
-                                            <button onclick="editWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="수정">
+                                            <button onclick="editObWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="수정">
                                                 <i class="fas fa-edit text-sm"></i>
                                             </button>
-                                            <button onclick="deleteWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all" title="삭제">
+                                            <button onclick="deleteObWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all" title="삭제">
                                                 <i class="fas fa-trash-alt text-sm"></i>
                                             </button>
                                         </div>
@@ -201,14 +201,14 @@ export async function renderWarehouseTab(container) {
 
 // 창고 관리 관련 함수들
 
-export function editWarehouse(id) {
+export function editObWarehouse(id) {
   const warehouse = window.warehouses?.find(w => w.id === id);
   if (warehouse) {
-    openWarehouseModal(true, warehouse);
+    openObWarehouseModal(true, warehouse);
   }
 }
 
-export async function deleteWarehouse(id) {
+export async function deleteObWarehouse(id) {
   if (!confirm('정말 이 창고를 삭제하시겠습니까?')) return;
 
   try {
@@ -234,7 +234,7 @@ export function injectWarehouseModal() {
               <h3 class="text-xl font-extrabold text-slate-800" id="warehouseModalTitle">창고 등록</h3>
               <p class="text-xs text-slate-400 mt-1">창고 정보를 정확히 입력해주세요.</p>
             </div>
-            <button onclick="closeWarehouseModal()" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
+            <button onclick="closeObWarehouseModal()" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
               <i class="fas fa-times text-xl"></i>
             </button>
           </div>
@@ -264,8 +264,8 @@ export function injectWarehouseModal() {
             </label>
           </div>
           <div class="p-8 border-t border-slate-100 bg-white flex justify-end gap-3">
-            <button onclick="closeWarehouseModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">취소</button>
-            <button onclick="submitWarehouse()" class="px-8 py-3.5 rounded-2xl text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2" id="btnSaveWarehouse">
+            <button onclick="closeObWarehouseModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">취소</button>
+            <button onclick="submitObWarehouse()" class="px-8 py-3.5 rounded-2xl text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2" id="btnSaveWarehouse">
                <i class="fas fa-save"></i> 저장하기
             </button>
           </div>
@@ -275,7 +275,7 @@ export function injectWarehouseModal() {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-export function openWarehouseModal(isEdit = false, warehouse = null) {
+export function openObWarehouseModal(isEdit = false, warehouse = null) {
   const modal = document.getElementById('warehouseModal');
   const content = document.getElementById('warehouseModalContent');
   if (!modal) return;
@@ -307,7 +307,7 @@ export function openWarehouseModal(isEdit = false, warehouse = null) {
   }, 10);
 }
 
-export function closeWarehouseModal() {
+export function closeObWarehouseModal() {
   const modal = document.getElementById('warehouseModal');
   const content = document.getElementById('warehouseModalContent');
   if (!modal) return;
@@ -320,7 +320,7 @@ export function closeWarehouseModal() {
   }, 200);
 }
 
-export async function submitWarehouse() {
+export async function submitObWarehouse() {
   const name = document.getElementById('whName').value;
   const location = document.getElementById('whLocation').value;
   const description = document.getElementById('whDescription').value;
@@ -341,7 +341,7 @@ export async function submitWarehouse() {
     }
 
     if (res.data.success) {
-      closeWarehouseModal();
+      closeObWarehouseModal();
       // Refresh list
       renderWarehouseTab(document.getElementById('outboundTabContent'));
       showSuccess(res.data.message);
@@ -1657,11 +1657,11 @@ window.switchOutboundTab = switchOutboundTab;
 window.renderSimpleOutboundTab = renderSimpleOutboundTab;
 window.renderOutboundHistoryTab = renderOutboundHistoryTab;
 window.renderWarehouseTab = renderWarehouseTab;
-window.editWarehouse = editWarehouse;
-window.deleteWarehouse = deleteWarehouse;
-window.openWarehouseModal = openWarehouseModal;
-window.closeWarehouseModal = closeWarehouseModal;
-window.submitWarehouse = submitWarehouse;
+window.editObWarehouse = editObWarehouse;
+window.deleteObWarehouse = deleteObWarehouse;
+window.openObWarehouseModal = openObWarehouseModal;
+window.closeObWarehouseModal = closeObWarehouseModal;
+window.submitObWarehouse = submitObWarehouse;
 window.addToOutboundCart = addToOutboundCart;
 window.updateOutboundQty = updateOutboundQty;
 window.setOutboundQty = setOutboundQty;
