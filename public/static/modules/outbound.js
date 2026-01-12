@@ -1317,7 +1317,21 @@ export function printInvoice() {
 
 // 재고 관리 로드
 
-export function renderSimpleOutboundTab(container) {
+export async function renderSimpleOutboundTab(container) {
+  // 창고 정보가 없으면 로드
+  if (!window.warehouses || window.warehouses.length === 0) {
+    try {
+      const res = await axios.get(`${API_BASE}/warehouses`);
+      window.warehouses = res.data.data;
+    } catch (e) {
+      console.error('창고 로드 실패:', e);
+    }
+  }
+
+  const warehouseOptions = (window.warehouses || []).map(w =>
+    `<option value="${w.id}">${w.name}</option>`
+  ).join('') || '<option value="">등록된 창고 없음</option>';
+
   container.innerHTML = `
     <div class="flex flex-col lg:flex-row h-full gap-4">
       <!-- 1. 좌측: 상품 선택 -->
@@ -1381,9 +1395,8 @@ export function renderSimpleOutboundTab(container) {
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1">출고 창고 <span class="text-rose-500">*</span></label>
-                        <select class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                             <option>기본 창고</option>
-                             <option>2창고</option>
+                        <select id="obWarehouseId" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                             ${warehouseOptions}
                         </select>
                     </div>
                     <div>
@@ -1503,6 +1516,60 @@ export function changeOutboundPage(delta) {
   if (newPage >= 1 && newPage <= totalPages) {
     window.outboundPage = newPage;
     renderOutboundProductList(list);
+  }
+}
+
+// 6. 출고 상세 등록 및 전송
+export async function submitSimpleOutbound() {
+  if (!window.outboundCart || window.outboundCart.length === 0) {
+    alert('출고할 상품을 선택해주세요.');
+    return;
+  }
+
+  const warehouse_id = document.getElementById('obWarehouseId').value;
+  const buyer_name = document.getElementById('obBuyerName').value;
+  const buyer_phone = document.getElementById('obBuyerPhone').value;
+  const receiver_name = document.getElementById('obReceiverName').value;
+  const receiver_phone = document.getElementById('obReceiverPhone').value;
+  const address = document.getElementById('obAddress').value;
+  const courier = document.getElementById('obCourier').value;
+  const tracking = document.getElementById('obTracking').value;
+  const notes = document.getElementById('obNotes').value;
+
+  if (!warehouse_id) return alert('출고 창고를 선택해주세요.');
+  if (!receiver_name || !address) return alert('수령인과 주소를 입력해주세요.');
+
+  try {
+    // 1. 먼저 판매(Sales) 레코드를 생성하여 sale_id 획득
+    const salesRes = await axios.post(`${API_BASE}/sales`, {
+      customer_name: buyer_name || receiver_name,
+      customer_phone: buyer_phone || receiver_phone,
+      shipping_address: address,
+      items: window.outboundCart.map(item => ({
+        product_id: item.id,
+        quantity: item.qty
+      })),
+      payment_method: '출고(단순)',
+      status: 'pending_shipment',
+      notes: notes
+    });
+
+    const sale_id = salesRes.data.data.id;
+
+    // 2. 출고 지시서(Outbound Order) 생성
+    await axios.post(`${API_BASE}/outbound/create`, {
+      sale_ids: [sale_id],
+      warehouse_id: parseInt(warehouse_id),
+      notes: notes
+    });
+
+    // 3. 만약 송장 정보가 이미 있다면 패킹/확정까지 자동 진행 가능 (여기서는 등록만)
+    showSuccess('출고 등록이 완료되었습니다.');
+    clearOutboundCart();
+    switchOutboundTab('history');
+  } catch (e) {
+    console.error(e);
+    alert('출고 등록 실패: ' + (e.response?.data?.error || e.message));
   }
 }
 

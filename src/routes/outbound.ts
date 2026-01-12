@@ -100,14 +100,15 @@ app.post('/create', async (c) => {
 
         // 1. 출고 지시서 생성
         const insertOrder = DB.prepare(`
-      INSERT INTO outbound_orders (order_number, destination_name, destination_address, destination_phone, status, notes)
-      VALUES (?, ?, ?, ?, 'PENDING', ?)
+      INSERT INTO outbound_orders (order_number, destination_name, destination_address, destination_phone, status, notes, warehouse_id)
+      VALUES (?, ?, ?, ?, 'PENDING', ?, ?)
     `).bind(
             orderNumber,
             firstSale.customer_name || '비회원',
             firstSale.shipping_address || '주소 미입력',
             firstSale.customer_phone || '',
-            body.notes || null
+            body.notes || null,
+            body.warehouse_id || null
         )
 
         // 실행하여 ID 획득 필요 -> D1은 last_row_id를 반환하지만 batch에서는 까다로움.

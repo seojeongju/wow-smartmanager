@@ -1,0 +1,44 @@
+﻿
+ ⛅️ wrangler 4.45.3 (update available 4.58.0)
+─────────────────────────────────────────────
+Resource location: remote 
+
+🌀 Executing on remote database wow3d-stock-sales-manager-production (463de385-2845-4930-b64e-c0c4e872e01a):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 1 command in 0.228ms
+[
+  {
+    "results": [
+      {
+        "sql": "CREATE TABLE sales (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  customer_id INTEGER,\n  total_amount REAL NOT NULL,\n  discount_amount REAL DEFAULT 0,\n  final_amount REAL NOT NULL,\n  payment_method TEXT NOT NULL,\n  notes TEXT,\n  status TEXT DEFAULT 'completed',\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, shipping_address TEXT, tracking_number TEXT, courier TEXT, tenant_id INTEGER REFERENCES tenants(id), warehouse_id INTEGER REFERENCES warehouses(id), created_by INTEGER REFERENCES users(id),\n  FOREIGN KEY (customer_id) REFERENCES customers(id)\n)"
+      },
+      {
+        "sql": "CREATE TABLE outbound_orders (\r\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\r\n    order_number TEXT NOT NULL UNIQUE,\r\n    destination_name TEXT,\r\n    destination_address TEXT,\r\n    destination_phone TEXT,\r\n    status TEXT DEFAULT 'PENDING', \n    notes TEXT,\r\n    created_at TEXT DEFAULT CURRENT_TIMESTAMP,\r\n    updated_at TEXT DEFAULT CURRENT_TIMESTAMP\r\n, tenant_id INTEGER REFERENCES tenants(id), created_by INTEGER REFERENCES users(id), purchase_path TEXT, warehouse_id INTEGER REFERENCES warehouses(id))"
+      },
+      {
+        "sql": "CREATE TABLE outbound_items (\r\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\r\n    outbound_order_id INTEGER NOT NULL,\r\n    product_id INTEGER NOT NULL,\r\n    quantity_ordered INTEGER NOT NULL,\r\n    quantity_picked INTEGER DEFAULT 0,\r\n    quantity_packed INTEGER DEFAULT 0,\r\n    status TEXT DEFAULT 'PENDING', \n    FOREIGN KEY (outbound_order_id) REFERENCES outbound_orders(id),\r\n    FOREIGN KEY (product_id) REFERENCES products(id)\r\n)"
+      },
+      {
+        "sql": "CREATE TABLE warehouses (\r\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\r\n  tenant_id INTEGER REFERENCES tenants(id),\r\n  name TEXT NOT NULL,\r\n  location TEXT,\r\n  description TEXT,\r\n  is_active INTEGER DEFAULT 1,\r\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\r\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\r\n)"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "IAD",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.228
+      },
+      "duration": 0.228,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 962560,
+      "rows_read": 86,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

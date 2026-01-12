@@ -258,6 +258,7 @@ export interface OutboundPackage {
 export interface CreateOutboundRequest {
   sale_ids: number[];
   notes?: string;
+  warehouse_id?: number;
 }
 
 export interface PickingRequest {
