@@ -896,7 +896,7 @@ window.posPage = 1;
 window.posItemsPerPage = 12;
 window.filteredPosList = null;
 
-export function renderPosProducts(filterText = '', filterCat = '') {
+export function renderPosProducts(overriddenList = null) {
   const container = document.getElementById('posProductList');
   const prevBtn = document.getElementById('btnPosPrev');
   const nextBtn = document.getElementById('btnPosNext');
@@ -904,16 +904,7 @@ export function renderPosProducts(filterText = '', filterCat = '') {
 
   if (!container) return;
 
-  let filtered = window.products || [];
-  if (filterText) {
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(filterText.toLowerCase()) ||
-      p.sku.toLowerCase().includes(filterText.toLowerCase())
-    );
-  }
-  if (filterCat) {
-    filtered = filtered.filter(p => p.category === filterCat);
-  }
+  let filtered = overriddenList || window.filteredPosList || window.products || [];
 
   // 필터링된 결과 저장
   window.filteredPosList = filtered;
@@ -1057,7 +1048,7 @@ export function filterPosProducts() {
   }
 
   window.filteredPosList = filtered;
-  renderPosProducts(text, cat);
+  renderPosProducts(filtered);
 }
 
 // 빠른 필터 로직
