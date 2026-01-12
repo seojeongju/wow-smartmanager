@@ -110,68 +110,76 @@ export async function renderWarehouseTab(container) {
     container.innerHTML = `
             <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <!-- 헤더 영역 -->
-                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-indigo-50 p-2 rounded-lg text-indigo-600">
-                            <i class="fas fa-warehouse text-lg"></i>
+                <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-emerald-50 w-12 h-12 rounded-xl flex items-center justify-center text-emerald-600 shadow-sm">
+                            <i class="fas fa-warehouse text-xl"></i>
                         </div>
-                        <h2 class="text-lg font-bold text-slate-800">창고 등록 및 관리</h2>
+                        <div>
+                           <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">창고 등록 및 관리</h2>
+                           <p class="text-xs text-slate-400 mt-0.5">물류 거점별 창고를 등록하고 상태를 관리합니다.</p>
+                        </div>
                     </div>
-                    <button onclick="openWarehouseModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 flex items-center">
-                        <i class="fas fa-plus mr-2"></i> 창고 등록
+                    <button onclick="openWarehouseModal()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus"></i> 창고 등록
                     </button>
                 </div>
 
                 <!-- 테이블 영역 -->
-                <div class="flex-1 overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-50 text-left">
+                <div class="flex-1 overflow-x-auto custom-scrollbar">
+                    <table class="min-w-full divide-y divide-slate-100 text-left">
                         <thead class="bg-slate-50/50">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">창고명</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">위치</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">설명</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 text-center">상태</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-48 text-center">등록일</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 text-center">관리</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">창고명</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">위치</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">설명</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">상태</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">등록일</th>
+                                <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">관리</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 bg-white">
                             ${warehouses.length > 0 ? warehouses.map(w => `
-                                <tr class="hover:bg-slate-50/80 transition-colors group">
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">${w.name}</span>
+                                <tr class="hover:bg-emerald-50/30 transition-colors group">
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        <div class="flex items-center gap-3">
+                                           <div class="w-2 h-2 rounded-full ${w.is_active ? 'bg-emerald-500' : 'bg-slate-300'}"></div>
+                                           <span class="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">${w.name}</span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
-                                        <span class="text-sm text-slate-600">${w.location || '-'}</span>
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        <span class="text-sm text-slate-600 font-medium">${w.location || '-'}</span>
                                     </td>
-                                    <td class="px-6 py-5">
-                                        <div class="text-sm text-slate-500 truncate max-w-xs" title="${w.description || ''}">${w.description || '-'}</div>
+                                    <td class="px-8 py-6">
+                                        <div class="text-sm text-slate-400 truncate max-w-xs" title="${w.description || ''}">${w.description || '-'}</div>
                                     </td>
-                                    <td class="px-6 py-5 whitespace-nowrap text-center">
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${w.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
+                                    <td class="px-8 py-6 whitespace-nowrap text-center">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold ${w.is_active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
                                             ${w.is_active ? '사용중' : '비활성'}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-5 whitespace-nowrap text-center">
-                                        <span class="text-xs text-slate-400 font-mono">${new Date(w.created_at).toLocaleDateString()} ${new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <td class="px-8 py-6 whitespace-nowrap text-center">
+                                        <span class="text-[11px] text-slate-400 font-medium">${formatDateClean(w.created_at)}</span>
                                     </td>
-                                    <td class="px-6 py-5 whitespace-nowrap text-center">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <button onclick="editWarehouse(${w.id})" class="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="수정">
-                                                <i class="fas fa-edit"></i>
+                                    <td class="px-8 py-6 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-3">
+                                            <button onclick="editWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="수정">
+                                                <i class="fas fa-edit text-sm"></i>
                                             </button>
-                                            <button onclick="deleteWarehouse(${w.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1" title="삭제">
-                                                <i class="fas fa-trash-alt"></i>
+                                            <button onclick="deleteWarehouse(${w.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all" title="삭제">
+                                                <i class="fas fa-trash-alt text-sm"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             `).join('') : `
                                 <tr>
-                                    <td colspan="6" class="px-6 py-24 text-center text-slate-400 font-light">
-                                        <div class="flex flex-col items-center gap-3">
-                                            <i class="fas fa-warehouse text-4xl text-slate-200"></i>
-                                            <span>등록된 창고가 없습니다.</span>
+                                    <td colspan="6" class="px-8 py-32 text-center">
+                                        <div class="flex flex-col items-center gap-4">
+                                            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                                               <i class="fas fa-warehouse text-4xl"></i>
+                                            </div>
+                                            <span class="text-slate-400 font-medium">등록된 창고 정보가 없습니다.</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -220,34 +228,46 @@ export function injectWarehouseModal() {
 
   const modalHtml = `
       <div id="warehouseModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 flex items-center justify-center transition-opacity opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-all duration-200" id="warehouseModalContent">
-          <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-            <h3 class="text-lg font-bold text-slate-800" id="warehouseModalTitle">창고 등록</h3>
-            <button onclick="closeWarehouseModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md transform scale-95 transition-all duration-300 overflow-hidden" id="warehouseModalContent">
+          <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+              <h3 class="text-xl font-extrabold text-slate-800" id="warehouseModalTitle">창고 등록</h3>
+              <p class="text-xs text-slate-400 mt-1">창고 정보를 정확히 입력해주세요.</p>
+            </div>
+            <button onclick="closeWarehouseModal()" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
               <i class="fas fa-times text-xl"></i>
             </button>
           </div>
-          <div class="p-6 space-y-5">
+          <div class="p-8 space-y-6">
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-1.5">창고명 <span class="text-rose-500">*</span></label>
-              <input type="text" id="whName" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400" placeholder="예: 서울 본사 창고">
-            </div>
-            <div>
-              <label class="block text-sm font-bold text-slate-700 mb-1.5">위치</label>
-              <input type="text" id="whLocation" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400" placeholder="예: 서울 구로구...">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">창고명 <span class="text-rose-500">*</span></label>
+              <input type="text" id="whName" class="w-full px-5 py-3.5 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder-slate-300 font-medium" placeholder="예: 구미 물류 센터">
             </div>
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-1.5">설명</label>
-              <textarea id="whDescription" rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 resize-none" placeholder="창고에 대한 설명을 입력하세요"></textarea>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">위치 (도시/지역)</label>
+              <input type="text" id="whLocation" class="w-full px-5 py-3.5 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder-slate-300 font-medium" placeholder="예: 경북 구미시">
             </div>
-            <div class="flex items-center">
-              <input type="checkbox" id="whActive" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer" checked>
-              <label for="whActive" class="ml-2 text-sm font-bold text-slate-700 cursor-pointer">사용 중 (활성)</label>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">상세 설명</label>
+              <textarea id="whDescription" rows="3" class="w-full px-5 py-3.5 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder-slate-300 font-medium resize-none" placeholder="비고 및 관리 사유를 입력하세요"></textarea>
             </div>
+            <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer group hover:bg-emerald-50/50 transition-colors border border-slate-100">
+              <div class="relative w-12 h-6">
+                <input type="checkbox" id="whActive" class="peer sr-only" checked>
+                <div class="w-full h-full bg-slate-300 rounded-full peer-checked:bg-emerald-500 transition-colors"></div>
+                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:left-7"></div>
+              </div>
+              <div>
+                <span class="block text-sm font-bold text-slate-700">창고 활성화</span>
+                <span class="block text-[10px] text-slate-400 uppercase tracking-tighter">활성화 시 즉시 출고 가능 목록에 노출됩니다.</span>
+              </div>
+            </label>
           </div>
-          <div class="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex justify-end gap-3">
-            <button onclick="closeWarehouseModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-colors">취소</button>
-            <button onclick="submitWarehouse()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5" id="btnSaveWarehouse">저장</button>
+          <div class="p-8 border-t border-slate-100 bg-white flex justify-end gap-3">
+            <button onclick="closeWarehouseModal()" class="px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">취소</button>
+            <button onclick="submitWarehouse()" class="px-8 py-3.5 rounded-2xl text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2" id="btnSaveWarehouse">
+               <i class="fas fa-save"></i> 저장하기
+            </button>
           </div>
         </div>
       </div>
