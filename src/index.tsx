@@ -520,13 +520,13 @@ app.get('/', (c: Context) => {
                     
                     <!-- 상품 관리 (확장 가능) -->
                     <div class="submenu-container">
-                        <button class="nav-link w-full flex items-center justify-between px-3 py-2.5 rounded-lg group" onclick="toggleSubmenu('products-submenu')">
+                        <a href="#" data-page="products" class="nav-link w-full flex items-center justify-between px-3 py-2.5 rounded-lg group" onclick="handleProductsMenuClick(event)">
                             <div class="flex items-center">
                                 <i class="fas fa-box w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
                                 <span class="font-medium text-sm">상품 관리</span>
                             </div>
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="products-submenu-icon"></i>
-                        </button>
+                        </a>
                         <div id="products-submenu" class="submenu hidden ml-8 mt-1 space-y-1">
     <a href="#" data-page="products" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
         <i class="fas fa-list w-4 text-center mr-2 text-slate-500 group-hover:text-teal-400 transition-colors text-xs"></i>
@@ -632,6 +632,15 @@ app.get('/', (c: Context) => {
                 toggleSubmenu('sales-submenu');
                 
                 // 기본 네비게이션 동작은 그대로 실행 (data-page, data-tab 사용)
+                // setupNavigation() 함수가 처리하도록 함
+            }
+
+            // 상품 관리 메뉴 클릭 핸들러
+            window.handleProductsMenuClick = function(event) {
+                // 서브메뉴 토글
+                toggleSubmenu('products-submenu');
+                
+                // 기본 네비게이션 동작은 그대로 실행 (data-page 사용)
                 // setupNavigation() 함수가 처리하도록 함
             }
         </script>
