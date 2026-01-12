@@ -1318,19 +1318,24 @@ export function printInvoice() {
 // 재고 관리 로드
 
 export async function renderSimpleOutboundTab(container) {
-  // 창고 정보가 없으면 로드
-  if (!window.warehouses || window.warehouses.length === 0) {
-    try {
-      const res = await axios.get(`${API_BASE}/warehouses`);
-      window.warehouses = res.data.data;
-    } catch (e) {
-      console.error('창고 로드 실패:', e);
-    }
+  // 창고 정보 강제 새로고침 (중복 방지 및 최신화)
+  try {
+    const res = await axios.get(`${API_BASE}/warehouses`);
+    window.warehouses = res.data.data;
+  } catch (e) {
+    console.error('창고 로드 실패:', e);
   }
 
-  const warehouseOptions = (window.warehouses || []).map(w =>
-    `<option value="${w.id}">${w.name}</option>`
-  ).join('') || '<option value="">등록된 창고 없음</option>';
+  // 이름 기준 중복 제거 및 옵션 생성
+  const seenNames = new Set();
+  const warehouseOptions = (window.warehouses || [])
+    .filter(w => {
+      if (seenNames.has(w.name)) return false;
+      seenNames.add(w.name);
+      return true;
+    })
+    .map(w => `<option value="${w.id}">${w.name}</option>`)
+    .join('') || '<option value="">등록된 창고 없음</option>';
 
   container.innerHTML = `
     <div class="flex flex-col lg:flex-row h-full gap-4">
