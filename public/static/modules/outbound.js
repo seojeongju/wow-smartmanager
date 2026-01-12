@@ -472,94 +472,9 @@ export function copyBuyerToReceiver() {
   }
 }
 
-export async function submitSimpleOutbound() {
-  if (window.outboundCart.length === 0) {
-    alert("출고할 상품을 선택해주세요.");
-    return;
-  }
-  const buyerName = document.getElementById('obBuyerName').value;
-  if (!buyerName) {
-    alert("구매자 정보를 입력해주세요.");
-    return;
-  }
 
-  const btn = document.getElementById('btnSubmitOutbound');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
-  btn.disabled = true;
+// 6. 출고 상세 등록 및 전송 (이후 1591라인 근처에 정의됨)
 
-  try {
-    // 1. 고객 ID 찾기
-    let customerId = null;
-    const buyerPhone = document.getElementById('obBuyerPhone').value;
-    if (buyerName && window.customers) {
-      // 이름과 전화번호로 매칭 (전화번호 뒷자리만 매칭하거나, 정확히 매칭)
-      // 여기서는 정확한 매칭을 시도
-      const match = window.customers.find(c => c.name === buyerName && (!buyerPhone || c.phone === buyerPhone));
-      if (match) customerId = match.id;
-    }
-
-    // 2. 판매(Sales) 생성
-    const receiverName = document.getElementById('obReceiverName').value;
-    const receiverPhone = document.getElementById('obReceiverPhone').value;
-    const address = document.getElementById('obAddress').value;
-    const notes = document.getElementById('obNotes').value;
-
-    // 메모에 수령인 정보 병합
-    const combinedNotes = `[출고등록] ${notes} / 수령인: ${receiverName} (${receiverPhone})`;
-
-    const salePayload = {
-      items: window.outboundCart.map(i => ({ product_id: i.id, quantity: i.qty })),
-      customer_id: customerId,
-      payment_method: 'card',
-      notes: combinedNotes
-    };
-
-    const saleRes = await axios.post(`${API_BASE}/sales`, salePayload);
-    const saleId = saleRes.data.data.id;
-
-    // 3. 배송 정보 업데이트
-    const courier = document.getElementById('obCourier').value;
-    const tracking = document.getElementById('obTracking').value;
-
-    if (address || courier || tracking) {
-      await axios.put(`${API_BASE}/sales/${saleId}/shipping`, {
-        shipping_address: address,
-        courier: courier,
-        tracking_number: tracking,
-        status: 'completed'
-      });
-    }
-
-    // 4. 출고(Outbound) 지시 생성
-    await axios.post(`${API_BASE}/outbound/create`, {
-      sale_ids: [saleId],
-      notes: notes
-    });
-
-    // 성공 메시지 및 리셋
-    showSuccess("출고 등록이 완료되었습니다.");
-    clearOutboundCart();
-
-    // 폼 초기화
-    document.getElementById('obBuyerName').value = '';
-    document.getElementById('obBuyerPhone').value = '';
-    document.getElementById('obReceiverName').value = '';
-    document.getElementById('obReceiverPhone').value = '';
-    document.getElementById('obAddress').value = '';
-    document.getElementById('obTracking').value = '';
-    document.getElementById('obNotes').value = '';
-    const searchInput = document.getElementById('obCustomerSearch'); // 검색창 초기화
-    if (searchInput) searchInput.value = '';
-
-  } catch (e) {
-    console.error(e);
-    alert("등록 실패: " + (e.response?.data?.error || e.message));
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }
-}
 
 // 출고 이력 페이지네이션 변수
 window.outboundHistoryPage = 1;
