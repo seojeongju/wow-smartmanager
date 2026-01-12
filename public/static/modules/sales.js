@@ -720,19 +720,13 @@ export function getKoreanStatus(status) {
   return map[status] || status;
 }
 
-// 유틸리티 함수들
-export function formatCurrency(amount) {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW'
-  }).format(amount || 0);
-}
+
 
 
 
 // --- CSV 다운로드 유틸리티 ---
 
-}
+
 
 
 // 판매 데이터 다운로드
