@@ -2165,41 +2165,102 @@ window.resetUserPassword = async function (userId, userName) {
   }
 }
 
-// 권한 변경
-window.changeUserRole = async function (userId, userName, currentRole) {
-  const roles = ['ADMIN', 'MANAGER', 'STAFF'];
-  const roleDescriptions = {
-    'ADMIN': '관리자 (모든 권한)',
-    'MANAGER': '매니저 (일반 관리 권한)',
-    'STAFF': '직원 (기본 권한)'
+// 권한 변경 - 현대적인 모달 UI
+window.changeUserRole = function (userId, userName, currentRole) {
+  const existingModal = document.getElementById('roleChangeModal');
+  if (existingModal) existingModal.remove();
+
+  const roleConfig = {
+    'ADMIN': { icon: 'fa-crown', color: 'purple', title: '관리자', desc: '모든 시스템 기능에 대한 전체 액세스 권한', gradient: 'from-purple-500 to-indigo-600' },
+    'MANAGER': { icon: 'fa-user-tie', color: 'blue', title: '매니저', desc: '일반 관리 및 팀 운영 권한', gradient: 'from-blue-500 to-cyan-600' },
+    'STAFF': { icon: 'fa-user', color: 'emerald', title: '직원', desc: '기본적인 업무 수행 권한', gradient: 'from-emerald-500 to-teal-600' }
   };
 
-  let message = `${userName} 사용자의 권한을 변경합니다.\n현재 권한: ${currentRole}\n\n선택할 권한:\n`;
-  roles.forEach((role, idx) => {
-    message += `${idx + 1}. ${roleDescriptions[role]}\n`;
-  });
-  message += '\n변경할 권한 번호를 입력하세요 (1-3):';
+  const modalHTML = `
+    <div id="roleChangeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 transition-all duration-300 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 text-white">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-user-shield text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold">권한 변경</h3>
+                <p class="text-white/80 text-sm mt-0.5">${userName}님의 역할을 선택하세요</p>
+              </div>
+            </div>
+            <button onclick="closeRoleModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-slate-600 font-medium">현재 권한:</span>
+            <span class="px-3 py-1 bg-slate-200 text-slate-700 rounded-full font-bold text-xs flex items-center gap-1.5">
+              <i class="fas ${roleConfig[currentRole]?.icon || 'fa-user'}"></i>
+              ${roleConfig[currentRole]?.title || currentRole}
+            </span>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${Object.keys(roleConfig).map(role => {
+    const config = roleConfig[role];
+    const isCurrent = role === currentRole;
+    return `
+                <button onclick="selectRole('${role}', ${userId}, '${userName}')" class="role-card group relative bg-white border-2 ${isCurrent ? 'border-' + config.color + '-500 ring-4 ring-' + config.color + '-100 opacity-50 cursor-not-allowed' : 'border-slate-200 hover:border-' + config.color + '-300 cursor-pointer hover:-translate-y-1'} rounded-xl p-5 transition-all duration-200 hover:shadow-lg" ${isCurrent ? 'disabled' : ''}>
+                  ${isCurrent ? '<div class="absolute top-2 right-2"><span class="bg-slate-700 text-white text-xs font-bold px-2 py-1 rounded-full">현재</span></div>' : ''}
+                  <div class="flex flex-col items-center text-center gap-3">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                      <i class="fas ${config.icon} text-3xl text-white"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-slate-800 text-lg mb-1">${config.title}</h4>
+                      <p class="text-xs text-slate-500 leading-relaxed">${config.desc}</p>
+                    </div>
+                    ${!isCurrent ? `<div class="mt-2 w-full"><div class="text-xs font-bold text-${config.color}-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1"><i class="fas fa-arrow-right"></i>선택하기</div></div>` : ''}
+                  </div>
+                </button>
+              `;
+  }).join('')}
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+          <button onclick="closeRoleModal()" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+        </div>
+      </div>
+    </div>
+  `;
 
-  const input = prompt(message);
-  if (!input) return;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  setTimeout(() => {
+    const modal = document.getElementById('roleChangeModal');
+    modal.classList.remove('opacity-0');
+    modal.querySelector('.bg-white').classList.remove('scale-95');
+    modal.querySelector('.bg-white').classList.add('scale-100');
+  }, 10);
+}
 
-  const selectedIndex = parseInt(input) - 1;
-  if (selectedIndex < 0 || selectedIndex >= roles.length) {
-    alert('올바른 번호를 입력해주세요.');
-    return;
+window.closeRoleModal = function () {
+  const modal = document.getElementById('roleChangeModal');
+  if (modal) {
+    modal.classList.add('opacity-0');
+    modal.querySelector('.bg-white').classList.add('scale-95');
+    modal.querySelector('.bg-white').classList.remove('scale-100');
+    setTimeout(() => modal.remove(), 300);
   }
+}
 
-  const newRole = roles[selectedIndex];
-  if (newRole === currentRole) {
-    alert('현재 권한과 동일합니다.');
-    return;
-  }
-
+window.selectRole = async function (newRole, userId, userName) {
+  if (!confirm(`${userName}님의 권한을 "${newRole}"(으)로 변경하시겠습니까?`)) return;
   try {
     const response = await axios.post(`${API_BASE}/system/users/${userId}/change-role`, { role: newRole });
     if (response.data.success) {
-      alert(`✅ ${response.data.message}`);
-      switchSystemTab('users');
+      closeRoleModal();
+      showSuccess(response.data.message);
+      setTimeout(() => switchSystemTab('users'), 500);
     }
   } catch (e) {
     alert('❌ 권한 변경 실패: ' + (e.response?.data?.error || e.message));
