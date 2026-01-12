@@ -412,22 +412,36 @@ export function renderOrderList() {
 
   if (!tbody || !window.allSales) return;
 
-  const statusFilter = document.getElementById('orderStatusFilter').value;
-  const searchText = document.getElementById('orderSearchInput').value.toLowerCase();
-  const startDate = document.getElementById('orderStartDate').value;
-  const endDate = document.getElementById('orderEndDate').value;
+  const statusFilter = document.getElementById('orderStatusFilter')?.value || 'all';
+  const searchText = document.getElementById('orderSearchInput')?.value?.toLowerCase() || '';
+  const startDate = document.getElementById('orderStartDate')?.value || '';
+  const endDate = document.getElementById('orderEndDate')?.value || '';
 
   const filtered = window.allSales.filter(s => {
     // 상태 필터
     if (statusFilter !== 'all' && s.status !== statusFilter) return false;
 
-    // 검색어 필터
-    const searchMatch = (s.customer_name || '').toLowerCase().includes(searchText) ||
-      (s.customer_phone || '').includes(searchText) ||
-      `#${s.id}`.includes(searchText);
-    if (!searchMatch) return false;
+    // 검색어 필터 (빈 검색어면 모두 통과)
+    if (searchText) {
+      // 고객명, 전화번호, 주문번호로 검색
+      const customerMatch = (s.customer_name || '').toLowerCase().includes(searchText) ||
+        (s.customer_phone || '').includes(searchText) ||
+        `#${s.id}`.includes(searchText);
 
-    // 날짜 필터 (Optional: 날짜 선택 안하면 전체)
+      // 상품명으로도 검색
+      let productMatch = false;
+      if (s.items && Array.isArray(s.items)) {
+        productMatch = s.items.some(item =>
+          (item.product_name || item.name || '').toLowerCase().includes(searchText)
+        );
+      } else if (s.product_name) {
+        productMatch = s.product_name.toLowerCase().includes(searchText);
+      }
+
+      if (!customerMatch && !productMatch) return false;
+    }
+
+    // 날짜 필터 (날짜가 설정되어 있을 때만)
     if (startDate && endDate) {
       const sDate = new Date(s.created_at).toISOString().split('T')[0];
       if (sDate < startDate || sDate > endDate) return false;
