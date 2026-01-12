@@ -1264,13 +1264,24 @@ export async function renderSimpleOutboundTab(container) {
         </div>
         
         <div class="p-4 border-b border-slate-100 bg-white space-y-3">
-           <div class="flex items-center gap-4 text-sm font-medium text-slate-600">
-              <label class="flex items-center cursor-pointer"><input type="radio" name="scanMode" checked class="mr-2 text-emerald-600 focus:ring-emerald-500">스캔 (자동 +1)</label>
-              <label class="flex items-center cursor-pointer"><input type="radio" name="scanMode" class="mr-2 text-emerald-600 focus:ring-emerald-500">수량 수동 입력</label>
+           <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4 text-sm font-medium text-slate-600">
+                <label class="flex items-center cursor-pointer"><input type="radio" name="scanMode" checked class="mr-2 text-emerald-600 focus:ring-emerald-500">스캔 (+1)</label>
+                <label class="flex items-center cursor-pointer"><input type="radio" name="scanMode" class="mr-2 text-emerald-600 focus:ring-emerald-500">수동 입력</label>
+              </div>
+              <div class="flex gap-1.5">
+                  <button onclick="applyOutboundQuickFilter('in-stock')" id="btnObInStock" class="text-[10px] px-2 py-0.5 rounded border border-slate-200 text-slate-500 hover:border-emerald-500 transition-all font-medium whitespace-nowrap">재고있음</button>
+                  <select onchange="sortOutboundProducts(this.value)" class="text-[10px] border border-slate-200 rounded px-1.5 py-0.5 focus:outline-none focus:border-emerald-500 bg-white text-slate-600 font-medium">
+                      <option value="name-asc">이름순</option>
+                      <option value="stock-desc" selected>재고많은순</option>
+                      <option value="stock-asc">재고적은순</option>
+                      <option value="newest">최신순</option>
+                  </select>
+              </div>
            </div>
            <div class="relative">
              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-             <input type="text" id="outboundProductSearch" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="상품명 또는 SKU 검색..." onkeyup="filterOutboundProducts(this.value)">
+             <input type="text" id="obSearch" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="상품명 또는 SKU 검색..." onkeyup="filterOutboundProducts()">
            </div>
         </div>
 
@@ -1420,14 +1431,65 @@ export async function renderSimpleOutboundTab(container) {
 window.outboundPage = 1;
 window.outboundItemsPerPage = 7;
 window.filteredOutboundList = null;
+window.outboundSortKey = 'stock-desc';
+window.outboundInStockOnly = false;
 
-export function filterOutboundProducts(query) {
+// 5. 상품 필터링 (통합)
+export function filterOutboundProducts() {
+  const query = document.getElementById('obSearch')?.value?.toLowerCase() || '';
   if (!window.products) return;
-  const q = query.toLowerCase();
-  const filtered = window.products.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
-  window.filteredOutboundList = filtered;
-  window.outboundPage = 1; // Reset to page 1
-  renderOutboundProductList(filtered);
+
+  let list = [...window.products];
+
+  // 1. 텍스트 검색
+  if (query) {
+    list = list.filter(p => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query));
+  }
+
+  // 2. 재고 필터
+  if (window.outboundInStockOnly) {
+    list = list.filter(p => p.current_stock > 0);
+  }
+
+  // 3. 정렬 적용
+  list = applyOutboundSort(list, window.outboundSortKey);
+
+  window.filteredOutboundList = list;
+  window.outboundPage = 1;
+  renderOutboundProductList(list);
+}
+
+export function sortOutboundProducts(sortKey) {
+  window.outboundSortKey = sortKey;
+  filterOutboundProducts();
+}
+
+export function applyOutboundQuickFilter(type) {
+  if (type === 'in-stock') {
+    window.outboundInStockOnly = !window.outboundInStockOnly;
+    const btn = document.getElementById('btnObInStock');
+    if (window.outboundInStockOnly) {
+      btn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
+    } else {
+      btn.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500');
+    }
+  }
+  filterOutboundProducts();
+}
+
+function applyOutboundSort(list, key) {
+  switch (key) {
+    case 'stock-desc':
+      return list.sort((a, b) => (b.current_stock || 0) - (a.current_stock || 0));
+    case 'stock-asc':
+      return list.sort((a, b) => (a.current_stock || 0) - (b.current_stock || 0));
+    case 'name-asc':
+      return list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    case 'newest':
+      return list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    default:
+      return list;
+  }
 }
 
 export function changeOutboundPage(delta) {
@@ -1575,6 +1637,8 @@ window.fillOutboundCustomer = fillOutboundCustomer;
 window.copyBuyerToReceiver = copyBuyerToReceiver;
 window.submitSimpleOutbound = submitSimpleOutbound;
 window.filterOutboundProducts = filterOutboundProducts;
+window.sortOutboundProducts = sortOutboundProducts;
+window.applyOutboundQuickFilter = applyOutboundQuickFilter;
 window.changeOutboundPage = changeOutboundPage;
 window.searchOutboundCustomer = searchOutboundCustomer;
 window.selectOutboundCustomer = selectOutboundCustomer;
