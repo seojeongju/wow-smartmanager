@@ -573,3 +573,26 @@ export async function fillCategoryDatalist() {
   } catch (e) {
     console.error('카테고리 로드 실패', e);
   }
+
+
+// --- Extracted from app.js ---
+export async function loadCategories() {
+  try {
+    const response = await axios.get(`${API_BASE}/products/meta/categories`);
+    const categories = response.data.data;
+    const select = document.getElementById('filterCategory');
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('카테고리 로드 실패:', error);
+  }
+}
+
+export function filterProducts() {
+  // 필터링 로직 (추후 구현)
+  window.loadPage('products');
+}
