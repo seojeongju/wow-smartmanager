@@ -96,11 +96,12 @@ function setupNavigation() {
       loadPage(page);
 
       // 만약 tab 속성이 있으면 해당 탭으로 이동
-      if (tab && page === 'sales') {
-        // 페이지 로드 후 탭 전환 (약간의 딜레이)
+      if (tab) {
         setTimeout(() => {
-          if (window.switchSalesTab) {
+          if (page === 'sales' && window.switchSalesTab) {
             window.switchSalesTab(tab);
+          } else if (page === 'outbound' && window.switchOutboundTab) {
+            window.switchOutboundTab(tab);
           }
         }, 100);
       }
