@@ -2003,10 +2003,10 @@ async function renderSystemTenants(container) {
                             <td class="p-4 text-slate-600">${t.product_count}</td>
                             <td class="p-4 text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
                             <td class="p-4 text-center flex justify-center gap-2">
-                                <button class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded transition-colors" title="상세"><i class="fas fa-eye"></i></button>
-                                <button class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="수정"><i class="fas fa-edit"></i></button>
-                                <button class="px-2 py-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded text-xs font-bold transition-colors" title="관리"><i class="fas fa-sign-in-alt mr-1"></i>관리</button>
-                                <button class="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition-colors" title="삭제"><i class="fas fa-trash"></i></button>
+                                <button onclick="viewTenantDetail(${t.id})" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded transition-colors" title="상세"><i class="fas fa-eye"></i></button>
+                                <button onclick="editTenant(${t.id}, '${t.name}', '${t.plan}', '${t.status}')" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="수정"><i class="fas fa-edit"></i></button>
+                                <button onclick="manageTenant(${t.id})" class="px-2 py-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded text-xs font-bold transition-colors" title="관리"><i class="fas fa-sign-in-alt mr-1"></i>관리</button>
+                                <button onclick="deleteTenant(${t.id}, '${t.name}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition-colors" title="삭제"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
                     `).join('')}
@@ -2130,13 +2130,298 @@ async function renderPlanRequests(container) {
     `;
 }
 
+// ========== 조직(Tenant) 관리 기능 ==========
+
+// 조직 생성 모달
 window.openTenantModal = function () {
-  const name = prompt('조직명을 입력하세요:');
-  if (name) {
-    axios.post(`${API_BASE}/system/tenants`, { name, plan: 'FREE' })
-      .then(() => { alert('조직이 생성되었습니다.'); switchSystemTab('tenants'); })
-      .catch(e => alert(e.message));
+  const existingModal = document.getElementById('tenantCreateModal');
+  if (existingModal) existingModal.remove();
+
+  const modalHTML = `
+    <div id="tenantCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 text-white rounded-t-2xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-building text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold">새 조직 생성</h3>
+            </div>
+            <button onclick="closeTenantModal('create')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">조직명 *</label>
+              <input type="text" id="tenantName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none" placeholder="조직 이름을 입력하세요">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">플랜 *</label>
+              <select id="tenantPlan" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
+                <option value="FREE">FREE - 무료 플랜</option>
+                <option value="BASIC">BASIC - 기본 플랜</option>
+                <option value="PRO">PRO - 프로 플랜</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3 border-t border-slate-200">
+          <button onclick="closeTenantModal('create')" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+          <button onclick="submitCreateTenant()" class="px-5 py-2.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md">생성하기</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  setTimeout(() => {
+    const modal = document.getElementById('tenantCreateModal');
+    modal.classList.remove('opacity-0');
+    modal.querySelector('.bg-white').classList.remove('scale-95');
+    modal.querySelector('.bg-white').classList.add('scale-100');
+    document.getElementById('tenantName').focus();
+  }, 10);
+}
+
+window.closeTenantModal = function (type) {
+  const modalId = type === 'create' ? 'tenantCreateModal' : type === 'edit' ? 'tenantEditModal' : 'tenantDetailModal';
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('opacity-0');
+    modal.querySelector('.bg-white').classList.add('scale-95');
+    setTimeout(() => modal.remove(), 300);
   }
+}
+
+window.submitCreateTenant = async function () {
+  const name = document.getElementById('tenantName').value.trim();
+  const plan = document.getElementById('tenantPlan').value;
+
+  if (!name) {
+    alert('조직명을 입력해주세요.');
+    document.getElementById('tenantName').focus();
+    return;
+  }
+
+  try {
+    await axios.post(`${API_BASE}/system/tenants`, { name, plan });
+    closeTenantModal('create');
+    showSuccess('조직이 성공적으로 생성되었습니다.');
+    setTimeout(() => switchSystemTab('tenants'), 500);
+  } catch (e) {
+    alert('조직 생성 실패: ' + (e.response?.data?.error || e.message));
+  }
+}
+
+// 조직 상세보기
+window.viewTenantDetail = async function (tenantId) {
+  try {
+    const res = await axios.get(`${API_BASE}/system/tenants`);
+    const tenant = res.data.data.find(t => t.id === tenantId);
+    if (!tenant) {
+      alert('조직을 찾을 수 없습니다.');
+      return;
+    }
+
+    const existingModal = document.getElementById('tenantDetailModal');
+    if (existingModal) existingModal.remove();
+
+    const statusBadge = tenant.status === 'ACTIVE'
+      ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">활성</span>'
+      : '<span class="px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-sm font-bold">비활성</span>';
+
+    const modalHTML = `
+      <div id="tenantDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 transition-all duration-300">
+          <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-5 text-white rounded-t-2xl">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-building text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold">조직 상세 정보</h3>
+                  <p class="text-white/80 text-sm">#${tenant.id}</p>
+                </div>
+              </div>
+              <button onclick="closeTenantModal('detail')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="p-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="col-span-2">
+                <label class="block text-xs font-semibold text-slate-500 mb-2">조직명</label>
+                <p class="text-2xl font-bold text-slate-800">${tenant.name}</p>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-2">플랜</label>
+                <p class="text-lg font-mono font-bold text-indigo-600">${tenant.plan}</p>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-2">상태</label>
+                <div>${statusBadge}</div>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-2">사용자 수</label>
+                <p class="text-lg font-bold text-slate-800"><i class="fas fa-users text-emerald-500 mr-2"></i>${tenant.user_count || 0}명</p>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-2">상품 수</label>
+                <p class="text-lg font-bold text-slate-800"><i class="fas fa-box text-blue-500 mr-2"></i>${tenant.product_count || 0}개</p>
+              </div>
+              
+              <div class="col-span-2">
+                <label class="block text-xs font-semibold text-slate-500 mb-2">생성일</label>
+                <p class="text-sm text-slate-600"><i class="far fa-calendar mr-2"></i>${new Date(tenant.created_at).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-between border-t border-slate-200">
+            <button onclick="editTenant(${tenant.id}, '${tenant.name}', '${tenant.plan}', '${tenant.status}')" class="px-5 py-2.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+              <i class="fas fa-edit mr-2"></i>수정
+            </button>
+            <button onclick="closeTenantModal('detail')" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">닫기</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    setTimeout(() => {
+      const modal = document.getElementById('tenantDetailModal');
+      modal.classList.remove('opacity-0');
+      modal.querySelector('.bg-white').classList.remove('scale-95');
+      modal.querySelector('.bg-white').classList.add('scale-100');
+    }, 10);
+  } catch (e) {
+    alert('조직 정보 로드 실패: ' + e.message);
+  }
+}
+
+// 조직 수정
+window.editTenant = function (tenantId, currentName, currentPlan, currentStatus) {
+  // 상세 모달이 열려있으면 닫기
+  const detailModal = document.getElementById('tenantDetailModal');
+  if (detailModal) detailModal.remove();
+
+  const existingModal = document.getElementById('tenantEditModal');
+  if (existingModal) existingModal.remove();
+
+  const modalHTML = `
+    <div id="tenantEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 text-white rounded-t-2xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-edit text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold">조직 정보 수정</h3>
+            </div>
+            <button onclick="closeTenantModal('edit')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">조직명 *</label>
+              <input type="text" id="editTenantName" value="${currentName}" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">플랜 *</label>
+              <select id="editTenantPlan" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
+                <option value="FREE" ${currentPlan === 'FREE' ? 'selected' : ''}>FREE - 무료 플랜</option>
+                <option value="BASIC" ${currentPlan === 'BASIC' ? 'selected' : ''}>BASIC - 기본 플랜</option>
+                <option value="PRO" ${currentPlan === 'PRO' ? 'selected' : ''}>PRO - 프로 플랜</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">상태 *</label>
+              <select id="editTenantStatus" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
+                <option value="ACTIVE" ${currentStatus === 'ACTIVE' ? 'selected' : ''}>활성</option>
+                <option value="INACTIVE" ${currentStatus === 'INACTIVE' ? 'selected' : ''}>비활성</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3 border-t border-slate-200">
+          <button onclick="closeTenantModal('edit')" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+          <button onclick="submitEditTenant(${tenantId})" class="px-5 py-2.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md">저장하기</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  setTimeout(() => {
+    const modal = document.getElementById('tenantEditModal');
+    modal.classList.remove('opacity-0');
+    modal.querySelector('.bg-white').classList.remove('scale-95');
+    modal.querySelector('.bg-white').classList.add('scale-100');
+    document.getElementById('editTenantName').focus();
+  }, 10);
+}
+
+window.submitEditTenant = async function (tenantId) {
+  const name = document.getElementById('editTenantName').value.trim();
+  const plan = document.getElementById('editTenantPlan').value;
+  const status = document.getElementById('editTenantStatus').value;
+
+  if (!name) {
+    alert('조직명을 입력해주세요.');
+    return;
+  }
+
+  try {
+    await axios.put(`${API_BASE}/system/tenants/${tenantId}`, { name, plan, status });
+    closeTenantModal('edit');
+    showSuccess('조직 정보가 성공적으로 수정되었습니다.');
+    setTimeout(() => switchSystemTab('tenants'), 500);
+  } catch (e) {
+    alert('조직 수정 실패: ' + (e.response?.data?.error || e.message));
+  }
+}
+
+// 조직 삭제
+window.deleteTenant = async function (tenantId, tenantName) {
+  if (!confirm(`"${tenantName}" 조직을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) return;
+
+  try {
+    await axios.delete(`${API_BASE}/system/tenants/${tenantId}`);
+    showSuccess('조직이 성공적으로 삭제되었습니다.');
+    setTimeout(() => switchSystemTab('tenants'), 500);
+  } catch (e) {
+    alert('조직 삭제 실패: ' + (e.response?.data?.error || e.message));
+  }
+}
+
+// 조직 관리 (상세 페이지로 이동)
+window.manageTenant = function (tenantId) {
+  // TODO: 조직 관리 대시보드로 이동하는 기능
+  // 현재는 상세보기와 동일하게 처리
+  alert(`조직 #${tenantId} 관리 기능은 추후 구현 예정입니다.\n현재는 상세보기로 이동합니다.`);
+  viewTenantDetail(tenantId);
 }
 
 window.processPlanRequest = async function (id, action) {
