@@ -82,6 +82,7 @@ function setupNavigation() {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const page = e.currentTarget.dataset.page;
+      const tab = e.currentTarget.dataset.tab; // 탭 정보 가져오기
 
       // 활성 상태 변경
       document.querySelectorAll('.nav-link').forEach(l => {
@@ -91,7 +92,18 @@ function setupNavigation() {
       e.currentTarget.classList.add('active', 'text-white', 'bg-blue-500', 'shadow-md');
       e.currentTarget.classList.remove('text-blue-100');
 
+      // 페이지 로드
       loadPage(page);
+
+      // 만약 tab 속성이 있으면 해당 탭으로 이동
+      if (tab && page === 'sales') {
+        // 페이지 로드 후 탭 전환 (약간의 딜레이)
+        setTimeout(() => {
+          if (window.switchSalesTab) {
+            window.switchSalesTab(tab);
+          }
+        }, 100);
+      }
     });
   });
 }

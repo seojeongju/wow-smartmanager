@@ -472,10 +472,32 @@ app.get('/', (c: Context) => {
 
                     <!-- 영업 및 물류 -->
                     <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">영업 및 물류</p>
-                    <a href="#" data-page="sales" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
-                        <i class="fas fa-cash-register w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
-                        <span class="font-medium text-sm">판매 관리</span>
-                    </a>
+                    
+                    <!-- 판매 관리 (확장 가능) -->
+                    <div class="submenu-container">
+                        <button class="nav-link w-full flex items-center justify-between px-3 py-2.5 rounded-lg group" onclick="toggleSubmenu('sales-submenu')">
+                            <div class="flex items-center">
+                                <i class="fas fa-cash-register w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
+                                <span class="font-medium text-sm">판매 관리</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="sales-submenu-icon"></i>
+                        </button>
+                        <div id="sales-submenu" class="submenu hidden ml-8 mt-1 space-y-1">
+                            <a href="#" data-page="sales" data-tab="pos" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-shopping-cart w-4 text-center mr-2 text-slate-500 group-hover:text-emerald-400 transition-colors text-xs"></i>
+                                <span class="font-medium text-slate-400 group-hover:text-white transition-colors">POS (판매등록)</span>
+                            </a>
+                            <a href="#" data-page="sales" data-tab="orders" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-truck w-4 text-center mr-2 text-slate-500 group-hover:text-blue-400 transition-colors text-xs"></i>
+                                <span class="font-medium text-slate-400 group-hover:text-white transition-colors">주문/배송 관리</span>
+                            </a>
+                            <a href="#" data-page="sales" data-tab="claims" class="nav-link flex items-center px-3 py-2 rounded-lg group text-sm">
+                                <i class="fas fa-undo w-4 text-center mr-2 text-slate-500 group-hover:text-amber-400 transition-colors text-xs"></i>
+                                <span class="font-medium text-slate-400 group-hover:text-white transition-colors">반품/교환 관리</span>
+                            </a>
+                        </div>
+                    </div>
+
                     <a href="#" data-page="outbound" class="nav-link flex items-center px-3 py-2.5 rounded-lg group">
                         <i class="fas fa-truck-loading w-5 text-center mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium text-sm">출고 관리</span>
