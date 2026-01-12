@@ -104,7 +104,8 @@ export async function switchOutboundTab(tabName) {
 export async function renderWarehouseTab(container) {
   try {
     const response = await axios.get(`${API_BASE}/warehouses`);
-    const warehouses = response.data.data;
+    window.warehouses = response.data.data;
+    const warehouses = window.warehouses;
 
     container.innerHTML = `
             <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -191,6 +192,26 @@ export async function renderWarehouseTab(container) {
 }
 
 // 창고 관리 관련 함수들
+
+export function editWarehouse(id) {
+  const warehouse = window.warehouses?.find(w => w.id === id);
+  if (warehouse) {
+    openWarehouseModal(true, warehouse);
+  }
+}
+
+export async function deleteWarehouse(id) {
+  if (!confirm('정말 이 창고를 삭제하시겠습니까?')) return;
+
+  try {
+    await axios.delete(`${API_BASE}/warehouses/${id}`);
+    showSuccess('창고가 삭제되었습니다.');
+    renderWarehouseTab(document.getElementById('outboundTabContent'));
+  } catch (e) {
+    console.error(e);
+    alert('삭제 실패: ' + (e.response?.data?.error || e.message));
+  }
+}
 
 let currentEditingWarehouseId = null;
 
@@ -1485,4 +1506,33 @@ export function changeOutboundPage(delta) {
   }
 }
 
+
+// 전역 스코프에 함수 노출 (HTML onclick 핸들러용)
+window.switchOutboundTab = switchOutboundTab;
+window.renderSimpleOutboundTab = renderSimpleOutboundTab;
+window.renderOutboundHistoryTab = renderOutboundHistoryTab;
+window.renderWarehouseTab = renderWarehouseTab;
+window.editWarehouse = editWarehouse;
+window.deleteWarehouse = deleteWarehouse;
+window.openWarehouseModal = openWarehouseModal;
+window.closeWarehouseModal = closeWarehouseModal;
+window.submitWarehouse = submitWarehouse;
+window.addToOutboundCart = addToOutboundCart;
+window.updateOutboundQty = updateOutboundQty;
+window.removeOutboundItem = removeOutboundItem;
+window.clearOutboundCart = clearOutboundCart;
+window.fillOutboundCustomer = fillOutboundCustomer;
+window.copyBuyerToReceiver = copyBuyerToReceiver;
+window.submitSimpleOutbound = submitSimpleOutbound;
+window.filterOutboundProducts = filterOutboundProducts;
+window.changeOutboundPage = changeOutboundPage;
+window.changeOutboundHistoryPage = changeOutboundHistoryPage;
+window.downloadOutboundExcel = downloadOutboundExcel;
+window.openOutboundDetail = openOutboundDetail;
+window.savePicking = savePicking;
+window.performPacking = performPacking;
+window.confirmShipment = confirmShipment;
+window.loadInvoice = loadInvoice;
+window.openInvoiceModal = openInvoiceModal;
+window.printInvoice = printInvoice;
 
