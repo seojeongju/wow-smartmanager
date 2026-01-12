@@ -2045,8 +2045,8 @@ async function renderSystemUsers(container) {
                             <td class="p-4 uppercase text-xs font-mono text-slate-500">${u.role || 'STAFF'}</td>
                             <td class="p-4 text-slate-400 text-xs">${new Date(u.created_at).toLocaleDateString()}</td>
                             <td class="p-4 text-center flex justify-center gap-2">
-                                <button class="px-3 py-1 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 text-xs font-bold transition-colors">비번 초기화</button>
-                                <button class="px-3 py-1 text-emerald-600 border border-emerald-200 rounded hover:bg-emerald-50 text-xs font-bold transition-colors">권한 변경</button>
+                                <button onclick="resetUserPassword(${u.id}, '${u.name}')" class="px-3 py-1 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 text-xs font-bold transition-colors">비번 초기화</button>
+                                <button onclick="changeUserRole(${u.id}, '${u.name}', '${u.role || 'STAFF'}')" class="px-3 py-1 text-emerald-600 border border-emerald-200 rounded hover:bg-emerald-50 text-xs font-bold transition-colors">권한 변경</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -2147,6 +2147,62 @@ window.processPlanRequest = async function (id, action) {
     switchSystemTab('plan-requests');
   } catch (e) {
     alert(e.message);
+  }
+}
+
+// 비밀번호 초기화
+window.resetUserPassword = async function (userId, userName) {
+  if (!confirm(`${userName} 사용자의 비밀번호를 초기화하시겠습니까?`)) return;
+
+  try {
+    const response = await axios.post(`${API_BASE}/system/users/${userId}/reset-password`);
+    if (response.data.success) {
+      alert(`✅ ${response.data.message}\n\n새 비밀번호: ${response.data.default_password}\n\n사용자에게 이 비밀번호를 전달해주세요.`);
+      switchSystemTab('users');
+    }
+  } catch (e) {
+    alert('❌ 비밀번호 초기화 실패: ' + (e.response?.data?.error || e.message));
+  }
+}
+
+// 권한 변경
+window.changeUserRole = async function (userId, userName, currentRole) {
+  const roles = ['ADMIN', 'MANAGER', 'STAFF'];
+  const roleDescriptions = {
+    'ADMIN': '관리자 (모든 권한)',
+    'MANAGER': '매니저 (일반 관리 권한)',
+    'STAFF': '직원 (기본 권한)'
+  };
+
+  let message = `${userName} 사용자의 권한을 변경합니다.\n현재 권한: ${currentRole}\n\n선택할 권한:\n`;
+  roles.forEach((role, idx) => {
+    message += `${idx + 1}. ${roleDescriptions[role]}\n`;
+  });
+  message += '\n변경할 권한 번호를 입력하세요 (1-3):';
+
+  const input = prompt(message);
+  if (!input) return;
+
+  const selectedIndex = parseInt(input) - 1;
+  if (selectedIndex < 0 || selectedIndex >= roles.length) {
+    alert('올바른 번호를 입력해주세요.');
+    return;
+  }
+
+  const newRole = roles[selectedIndex];
+  if (newRole === currentRole) {
+    alert('현재 권한과 동일합니다.');
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${API_BASE}/system/users/${userId}/change-role`, { role: newRole });
+    if (response.data.success) {
+      alert(`✅ ${response.data.message}`);
+      switchSystemTab('users');
+    }
+  } catch (e) {
+    alert('❌ 권한 변경 실패: ' + (e.response?.data?.error || e.message));
   }
 }
 
@@ -8153,11 +8209,11 @@ window.testApiKey = async function () {
 
 // Warehouse Management Settings Implementation
 async function renderWarehouseSettings(container) {
-    try {
-        const res = await axios.get(`${API_BASE}/warehouses`);
-        const warehouses = res.data.data || [];
+  try {
+    const res = await axios.get(`${API_BASE}/warehouses`);
+    const warehouses = res.data.data || [];
 
-        container.innerHTML = `
+    container.innerHTML = `
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex justify-between items-center">
@@ -8215,7 +8271,7 @@ async function renderWarehouseSettings(container) {
                   </td>
                   <td class="p-4 text-center">
                     <span class="px-3 py-1 rounded-full text-xs font-bold ${wh.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-            }">
+      }">
                       ${wh.status === 'active' ? '사용중' : '미사용'}
                     </span>
                   </td>
@@ -8273,106 +8329,106 @@ async function renderWarehouseSettings(container) {
         </div>
       </div>
     `;
-    } catch (e) {
-        console.error(e);
-        container.innerHTML = '<div class="text-red-500 p-4">창고 목록을 불러오는데 실패했습니다.</div>';
-    }
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = '<div class="text-red-500 p-4">창고 목록을 불러오는데 실패했습니다.</div>';
+  }
 }
 
 window.openWarehouseModal = function (warehouseData) {
-    const modal = document.getElementById('warehouseModal');
-    const title = document.getElementById('modalTitle');
+  const modal = document.getElementById('warehouseModal');
+  const title = document.getElementById('modalTitle');
 
-    if (warehouseData) {
-        title.textContent = '창고 수정';
-        document.getElementById('warehouseId').value = warehouseData.id;
-        document.getElementById('warehouseName').value = warehouseData.name;
-        document.getElementById('warehouseAddress').value = warehouseData.address || '';
-        document.getElementById('warehouseContact').value = warehouseData.contact || '';
-        document.getElementById('warehouseStatus').value = warehouseData.status || 'active';
-    } else {
-        title.textContent = '창고 추가';
-        document.getElementById('warehouseId').value = '';
-        document.getElementById('warehouseName').value = '';
-        document.getElementById('warehouseAddress').value = '';
-        document.getElementById('warehouseContact').value = '';
-        document.getElementById('warehouseStatus').value = 'active';
-    }
+  if (warehouseData) {
+    title.textContent = '창고 수정';
+    document.getElementById('warehouseId').value = warehouseData.id;
+    document.getElementById('warehouseName').value = warehouseData.name;
+    document.getElementById('warehouseAddress').value = warehouseData.address || '';
+    document.getElementById('warehouseContact').value = warehouseData.contact || '';
+    document.getElementById('warehouseStatus').value = warehouseData.status || 'active';
+  } else {
+    title.textContent = '창고 추가';
+    document.getElementById('warehouseId').value = '';
+    document.getElementById('warehouseName').value = '';
+    document.getElementById('warehouseAddress').value = '';
+    document.getElementById('warehouseContact').value = '';
+    document.getElementById('warehouseStatus').value = 'active';
+  }
 
-    modal.classList.remove('hidden');
+  modal.classList.remove('hidden');
 }
 
 window.closeWarehouseModal = function () {
-    document.getElementById('warehouseModal').classList.add('hidden');
+  document.getElementById('warehouseModal').classList.add('hidden');
 }
 
 window.saveWarehouse = async function (e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const id = document.getElementById('warehouseId').value;
-    const data = {
-        name: document.getElementById('warehouseName').value,
-        address: document.getElementById('warehouseAddress').value,
-        contact: document.getElementById('warehouseContact').value,
-        status: document.getElementById('warehouseStatus').value
-    };
+  const id = document.getElementById('warehouseId').value;
+  const data = {
+    name: document.getElementById('warehouseName').value,
+    address: document.getElementById('warehouseAddress').value,
+    contact: document.getElementById('warehouseContact').value,
+    status: document.getElementById('warehouseStatus').value
+  };
 
-    try {
-        if (id) {
-            await axios.put(`${API_BASE}/warehouses/${id}`, data);
-            alert('창고가 수정되었습니다.');
-        } else {
-            await axios.post(`${API_BASE}/warehouses`, data);
-            alert('창고가 추가되었습니다.');
-        }
-
-        closeWarehouseModal();
-        switchSettingsTab('warehouse'); // Refresh
-    } catch (e) {
-        console.error(e);
-        alert('저장 실패: ' + (e.response?.data?.message || e.message));
+  try {
+    if (id) {
+      await axios.put(`${API_BASE}/warehouses/${id}`, data);
+      alert('창고가 수정되었습니다.');
+    } else {
+      await axios.post(`${API_BASE}/warehouses`, data);
+      alert('창고가 추가되었습니다.');
     }
+
+    closeWarehouseModal();
+    switchSettingsTab('warehouse'); // Refresh
+  } catch (e) {
+    console.error(e);
+    alert('저장 실패: ' + (e.response?.data?.message || e.message));
+  }
 }
 
 window.editWarehouse = async function (id) {
-    try {
-        const res = await axios.get(`${API_BASE}/warehouses`);
-        const warehouse = res.data.data.find(w => w.id === id);
-        if (warehouse) {
-            openWarehouseModal(warehouse);
-        }
-    } catch (e) {
-        alert('창고 정보를 불러오는데 실패했습니다.');
+  try {
+    const res = await axios.get(`${API_BASE}/warehouses`);
+    const warehouse = res.data.data.find(w => w.id === id);
+    if (warehouse) {
+      openWarehouseModal(warehouse);
     }
+  } catch (e) {
+    alert('창고 정보를 불러오는데 실패했습니다.');
+  }
 }
 
 window.deleteWarehouse = async function (id, name) {
-    if (!confirm(`'${name}' 창고를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
-        return;
-    }
+  if (!confirm(`'${name}' 창고를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+    return;
+  }
 
-    try {
-        await axios.delete(`${API_BASE}/warehouses/${id}`);
-        alert('창고가 삭제되었습니다.');
-        switchSettingsTab('warehouse'); // Refresh
-    } catch (e) {
-        console.error(e);
-        alert('삭제 실패: ' + (e.response?.data?.message || e.message));
-    }
+  try {
+    await axios.delete(`${API_BASE}/warehouses/${id}`);
+    alert('창고가 삭제되었습니다.');
+    switchSettingsTab('warehouse'); // Refresh
+  } catch (e) {
+    console.error(e);
+    alert('삭제 실패: ' + (e.response?.data?.message || e.message));
+  }
 }
 
 window.syncWarehouseStock = async function () {
-    if (!confirm('모든 창고의 재고 데이터를 동기화하시겠습니까?\n\n이 작업은 몇 분이 소요될 수 있습니다.')) {
-        return;
-    }
+  if (!confirm('모든 창고의 재고 데이터를 동기화하시겠습니까?\n\n이 작업은 몇 분이 소요될 수 있습니다.')) {
+    return;
+  }
 
-    try {
-        // Mock sync - in real implementation, this would trigger a background job
-        await new Promise(resolve => setTimeout(resolve, 2000));
+  try {
+    // Mock sync - in real implementation, this would trigger a background job
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-        alert('재고 데이터 동기화가 완료되었습니다.\n\n총 동기화된 창고: 3개\n동기화된 품목: 247개');
-    } catch (e) {
-        console.error(e);
-        alert('동기화 실패: ' + (e.response?.data?.message || e.message));
-    }
+    alert('재고 데이터 동기화가 완료되었습니다.\n\n총 동기화된 창고: 3개\n동기화된 품목: 247개');
+  } catch (e) {
+    console.error(e);
+    alert('동기화 실패: ' + (e.response?.data?.message || e.message));
+  }
 }

@@ -63,6 +63,50 @@ app.get('/users', async (c) => {
     return c.json({ success: true, data: results })
 })
 
+// Reset user password to default
+app.post('/users/:id/reset-password', async (c) => {
+    const { DB } = c.env
+    const id = c.req.param('id')
+
+    // Default password: "reset1234" (you should hash this in production)
+    const defaultPassword = 'reset1234'
+
+    await DB.prepare('UPDATE users SET password = ? WHERE id = ?')
+        .bind(defaultPassword, id)
+        .run()
+
+    return c.json({
+        success: true,
+        message: '비밀번호가 초기화되었습니다.',
+        default_password: defaultPassword
+    })
+})
+
+// Change user role
+app.post('/users/:id/change-role', async (c) => {
+    const { DB } = c.env
+    const id = c.req.param('id')
+    const body = await c.req.json<any>()
+
+    if (!body.role) {
+        return c.json({ success: false, error: 'Role is required' }, 400)
+    }
+
+    const validRoles = ['ADMIN', 'MANAGER', 'STAFF']
+    if (!validRoles.includes(body.role)) {
+        return c.json({ success: false, error: 'Invalid role' }, 400)
+    }
+
+    await DB.prepare('UPDATE users SET role = ? WHERE id = ?')
+        .bind(body.role, id)
+        .run()
+
+    return c.json({
+        success: true,
+        message: `권한이 ${body.role}(으)로 변경되었습니다.`
+    })
+})
+
 
 // --- Plan Requests ---
 
