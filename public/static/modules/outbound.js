@@ -435,14 +435,14 @@ export function renderOutboundCart() {
                 <div class="font-medium text-slate-800 text-sm truncate">${item.name}</div>
                 <div class="text-xs text-slate-400 mt-0.5">${item.code || item.sku}</div>
             </div>
-            <div class="flex items-center gap-3">
-                 <div class="flex items-center border border-slate-200 rounded bg-white">
-                     <button onclick="updateOutboundQty(${item.id}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-emerald-600"><i class="fas fa-minus text-[10px]"></i></button>
-                     <span class="w-8 text-center text-xs font-bold text-slate-700">${item.qty}</span>
-                     <button onclick="updateOutboundQty(${item.id}, 1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-emerald-600"><i class="fas fa-plus text-[10px]"></i></button>
-                 </div>
-                 <button onclick="removeOutboundItem(${item.id})" class="text-slate-300 hover:text-rose-500 px-1"><i class="fas fa-times"></i></button>
-            </div>
+             <div class="flex items-center gap-3">
+                  <div class="flex items-center border border-slate-200 rounded bg-white overflow-hidden">
+                      <button onclick="updateOutboundQty(${item.id}, -1)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-colors"><i class="fas fa-minus text-[8px]"></i></button>
+                      <input type="number" value="${item.qty}" min="1" onchange="setOutboundQty(${item.id}, this.value)" class="w-10 h-7 text-center text-xs font-bold text-slate-700 border-x border-slate-100 focus:outline-none focus:bg-emerald-50/30 font-mono p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                      <button onclick="updateOutboundQty(${item.id}, 1)" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-slate-50 transition-colors"><i class="fas fa-plus text-[8px]"></i></button>
+                  </div>
+                  <button onclick="removeOutboundItem(${item.id})" class="text-slate-300 hover:text-rose-500 px-1 transition-colors"><i class="fas fa-times text-sm"></i></button>
+             </div>
         </div>
         `;
   }).join('');
@@ -458,6 +458,19 @@ export function updateOutboundQty(id, delta) {
   } else {
     renderOutboundCart();
   }
+}
+
+export function setOutboundQty(id, value) {
+  const item = window.outboundCart.find(i => i.id === id);
+  if (!item) return;
+  const qty = parseInt(value);
+  if (isNaN(qty) || qty <= 0) {
+    item.qty = 1; // 기본값 1로 복구하거나 0이면 삭제
+    if (qty === 0) return removeOutboundItem(id);
+  } else {
+    item.qty = qty;
+  }
+  renderOutboundCart();
 }
 
 export function removeOutboundItem(id) {
@@ -1651,6 +1664,7 @@ window.closeWarehouseModal = closeWarehouseModal;
 window.submitWarehouse = submitWarehouse;
 window.addToOutboundCart = addToOutboundCart;
 window.updateOutboundQty = updateOutboundQty;
+window.setOutboundQty = setOutboundQty;
 window.removeOutboundItem = removeOutboundItem;
 window.clearOutboundCart = clearOutboundCart;
 window.fillOutboundCustomer = fillOutboundCustomer;
