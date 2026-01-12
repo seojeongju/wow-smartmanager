@@ -11,6 +11,14 @@ window.outboundPage = 1;
 window.outboundItemsPerPage = 7;
 window.filteredOutboundList = [];
 
+export function updateTime() {
+  const el = document.getElementById('outboundCurrentTime');
+  if (el) {
+    const now = new Date();
+    el.innerHTML = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 <span class="ml-2">${now.toLocaleTimeString()}</span>`;
+  }
+}
+
 export async function loadOutbound(content) {
   content.innerHTML = `
     <div class="flex flex-col h-full overflow-hidden">
@@ -45,13 +53,7 @@ export async function loadOutbound(content) {
   if (window.outboundTimer) clearInterval(window.outboundTimer);
   updateTime();
   window.outboundTimer = setInterval(updateTime, 1000);
-  export function updateTime() {
-    const el = document.getElementById('outboundCurrentTime');
-    if (el) {
-      const now = new Date();
-      el.innerHTML = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 <span class="ml-2">${now.toLocaleTimeString()}</span>`;
-    }
-  }
+
 
   // 데이터 사전 로드 (상품, 고객) - 없으면 로드
   if (!window.products || window.products.length === 0) {
@@ -311,39 +313,39 @@ export async function submitWarehouse() {
 
 export async function editWarehouse(id) {
   try {
-export function renderOutboundProductList(list = window.products) {
-  const container = document.getElementById('outboundProductList');
-  const prevBtn = document.getElementById('btnObPrev');
-  const nextBtn = document.getElementById('btnObNext');
-  const indicator = document.getElementById('obPageIndicator');
+    export function renderOutboundProductList(list = window.products) {
+      const container = document.getElementById('outboundProductList');
+      const prevBtn = document.getElementById('btnObPrev');
+      const nextBtn = document.getElementById('btnObNext');
+      const indicator = document.getElementById('obPageIndicator');
 
-  if (!container) return;
+      if (!container) return;
 
-  if (!list || list.length === 0) {
-    container.innerHTML = '<div class="p-6 text-center text-slate-400">검색 결과가 없습니다.</div>';
-    if (indicator) indicator.textContent = "0 / 0";
-    if (prevBtn) prevBtn.disabled = true;
-    if (nextBtn) nextBtn.disabled = true;
-    return;
-  }
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="p-6 text-center text-slate-400">검색 결과가 없습니다.</div>';
+        if (indicator) indicator.textContent = "0 / 0";
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+      }
 
-  // Pagination Logic
-  const totalItems = list.length;
-  const totalPages = Math.ceil(totalItems / window.outboundItemsPerPage);
+      // Pagination Logic
+      const totalItems = list.length;
+      const totalPages = Math.ceil(totalItems / window.outboundItemsPerPage);
 
-  if (window.outboundPage > totalPages) window.outboundPage = totalPages;
-  if (window.outboundPage < 1) window.outboundPage = 1;
+      if (window.outboundPage > totalPages) window.outboundPage = totalPages;
+      if (window.outboundPage < 1) window.outboundPage = 1;
 
-  const startIdx = (window.outboundPage - 1) * window.outboundItemsPerPage;
-  const endIdx = startIdx + window.outboundItemsPerPage;
-  const pageItems = list.slice(startIdx, endIdx);
+      const startIdx = (window.outboundPage - 1) * window.outboundItemsPerPage;
+      const endIdx = startIdx + window.outboundItemsPerPage;
+      const pageItems = list.slice(startIdx, endIdx);
 
-  // Update Controls
-  if (indicator) indicator.textContent = `${window.outboundPage} / ${totalPages}`;
-  if (prevBtn) prevBtn.disabled = window.outboundPage <= 1;
-  if (nextBtn) nextBtn.disabled = window.outboundPage >= totalPages;
+      // Update Controls
+      if (indicator) indicator.textContent = `${window.outboundPage} / ${totalPages}`;
+      if (prevBtn) prevBtn.disabled = window.outboundPage <= 1;
+      if (nextBtn) nextBtn.disabled = window.outboundPage >= totalPages;
 
-  container.innerHTML = pageItems.map(p => `
+      container.innerHTML = pageItems.map(p => `
         <div class="bg-white border border-slate-100 rounded p-3 flex justify-between items-center hover:border-emerald-400 group transition-all">
             <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-700 text-sm truncate">${p.name}</div>
@@ -358,36 +360,36 @@ export function renderOutboundProductList(list = window.products) {
             </button>
         </div>
     `).join('');
-}
+    }
 
-export function addToOutboundCart(productId) {
-  const product = window.products.find(p => p.id === productId);
-  if (!product) return;
+    export function addToOutboundCart(productId) {
+      const product = window.products.find(p => p.id === productId);
+      if (!product) return;
 
-  const existing = window.outboundCart.find(i => i.id === productId);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    window.outboundCart.push({ ...product, qty: 1 });
-  }
-  renderOutboundCart();
-}
+      const existing = window.outboundCart.find(i => i.id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        window.outboundCart.push({ ...product, qty: 1 });
+      }
+      renderOutboundCart();
+    }
 
-export function renderOutboundCart() {
-  const container = document.getElementById('outboundCartList');
-  const totalEl = document.getElementById('outboundTotalQty');
-  if (!container) return;
+    export function renderOutboundCart() {
+      const container = document.getElementById('outboundCartList');
+      const totalEl = document.getElementById('outboundTotalQty');
+      if (!container) return;
 
-  if (window.outboundCart.length === 0) {
-    container.innerHTML = '<div class="h-24 flex items-center justify-center text-slate-400 text-sm">상품을 선택해주세요.</div>';
-    totalEl.textContent = '0개';
-    return;
-  }
+      if (window.outboundCart.length === 0) {
+        container.innerHTML = '<div class="h-24 flex items-center justify-center text-slate-400 text-sm">상품을 선택해주세요.</div>';
+        totalEl.textContent = '0개';
+        return;
+      }
 
-  let totalQty = 0;
-  container.innerHTML = window.outboundCart.map(item => {
-    totalQty += item.qty;
-    return `
+      let totalQty = 0;
+      container.innerHTML = window.outboundCart.map(item => {
+        totalQty += item.qty;
+        return `
         <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50">
             <div class="flex-1 min-w-0 pr-3">
                 <div class="font-medium text-slate-800 text-sm truncate">${item.name}</div>
@@ -403,196 +405,196 @@ export function renderOutboundCart() {
             </div>
         </div>
         `;
-  }).join('');
-  totalEl.textContent = `${totalQty}개`;
-}
-
-export function updateOutboundQty(id, delta) {
-  const item = window.outboundCart.find(i => i.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) {
-    removeOutboundItem(id);
-  } else {
-    renderOutboundCart();
-  }
-}
-
-export function removeOutboundItem(id) {
-  window.outboundCart = window.outboundCart.filter(i => i.id !== id);
-  renderOutboundCart();
-}
-
-export function clearOutboundCart() {
-  window.outboundCart = [];
-  renderOutboundCart();
-}
-
-// 고객 선택 시 자동 채움
-export function fillOutboundCustomer(value) {
-  // "이름 (전화번호)" 형식 파싱
-  if (!window.customers) return;
-  const match = window.customers.find(c => `${c.name} (${c.phone})` === value);
-  if (match) {
-    document.getElementById('obBuyerName').value = match.name;
-    document.getElementById('obBuyerPhone').value = match.phone;
-    document.getElementById('obReceiverName').value = match.name;
-    document.getElementById('obReceiverPhone').value = match.phone;
-    document.getElementById('obAddress').value = match.address || '';
-  }
-}
-
-export function copyBuyerToReceiver() {
-  const isChecked = document.getElementById('obSameAsBuyer').checked;
-  if (isChecked) {
-    document.getElementById('obReceiverName').value = document.getElementById('obBuyerName').value;
-    document.getElementById('obReceiverPhone').value = document.getElementById('obBuyerPhone').value;
-  }
-}
-
-export async function submitSimpleOutbound() {
-  if (window.outboundCart.length === 0) {
-    alert("출고할 상품을 선택해주세요.");
-    return;
-  }
-  const buyerName = document.getElementById('obBuyerName').value;
-  if (!buyerName) {
-    alert("구매자 정보를 입력해주세요.");
-    return;
-  }
-
-  const btn = document.getElementById('btnSubmitOutbound');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
-  btn.disabled = true;
-
-  try {
-    // 1. 고객 ID 찾기
-    let customerId = null;
-    const buyerPhone = document.getElementById('obBuyerPhone').value;
-    if (buyerName && window.customers) {
-      // 이름과 전화번호로 매칭 (전화번호 뒷자리만 매칭하거나, 정확히 매칭)
-      // 여기서는 정확한 매칭을 시도
-      const match = window.customers.find(c => c.name === buyerName && (!buyerPhone || c.phone === buyerPhone));
-      if (match) customerId = match.id;
+      }).join('');
+      totalEl.textContent = `${totalQty}개`;
     }
 
-    // 2. 판매(Sales) 생성
-    const receiverName = document.getElementById('obReceiverName').value;
-    const receiverPhone = document.getElementById('obReceiverPhone').value;
-    const address = document.getElementById('obAddress').value;
-    const notes = document.getElementById('obNotes').value;
-
-    // 메모에 수령인 정보 병합
-    const combinedNotes = `[출고등록] ${notes} / 수령인: ${receiverName} (${receiverPhone})`;
-
-    const salePayload = {
-      items: window.outboundCart.map(i => ({ product_id: i.id, quantity: i.qty })),
-      customer_id: customerId,
-      payment_method: 'card',
-      notes: combinedNotes
-    };
-
-    const saleRes = await axios.post(`${API_BASE}/sales`, salePayload);
-    const saleId = saleRes.data.data.id;
-
-    // 3. 배송 정보 업데이트
-    const courier = document.getElementById('obCourier').value;
-    const tracking = document.getElementById('obTracking').value;
-
-    if (address || courier || tracking) {
-      await axios.put(`${API_BASE}/sales/${saleId}/shipping`, {
-        shipping_address: address,
-        courier: courier,
-        tracking_number: tracking,
-        status: 'completed'
-      });
+    export function updateOutboundQty(id, delta) {
+      const item = window.outboundCart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) {
+        removeOutboundItem(id);
+      } else {
+        renderOutboundCart();
+      }
     }
 
-    // 4. 출고(Outbound) 지시 생성
-    await axios.post(`${API_BASE}/outbound/create`, {
-      sale_ids: [saleId],
-      notes: notes
-    });
-
-    // 성공 메시지 및 리셋
-    showSuccess("출고 등록이 완료되었습니다.");
-    clearOutboundCart();
-
-    // 폼 초기화
-    document.getElementById('obBuyerName').value = '';
-    document.getElementById('obBuyerPhone').value = '';
-    document.getElementById('obReceiverName').value = '';
-    document.getElementById('obReceiverPhone').value = '';
-    document.getElementById('obAddress').value = '';
-    document.getElementById('obTracking').value = '';
-    document.getElementById('obNotes').value = '';
-    const searchInput = document.getElementById('obCustomerSearch'); // 검색창 초기화
-    if (searchInput) searchInput.value = '';
-
-  } catch (e) {
-    console.error(e);
-    alert("등록 실패: " + (e.response?.data?.error || e.message));
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }
-}
-
-// 출고 이력 페이지네이션 변수
-window.outboundHistoryPage = 1;
-window.outboundHistoryItemsPerPage = 20;
-window.filteredOutboundHistory = null;
-
-// 기존 출고 목록 뷰 (2번째 탭)
-export async function renderOutboundHistoryTab(container) {
-  const startDate = document.getElementById('obsStartDate')?.value || '';
-  const endDate = document.getElementById('obsEndDate')?.value || '';
-  const searchQuery = document.getElementById('obsSearch')?.value?.toLowerCase() || '';
-  const statusFilter = document.getElementById('obsStatus')?.value || '';
-
-  try {
-    let query = `${API_BASE}/outbound`;
-
-    const response = await axios.get(query);
-    let orders = response.data.data;
-
-    // 프론트엔드 필터링
-    if (startDate) {
-      orders = orders.filter(o => new Date(o.created_at) >= new Date(startDate));
-    }
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      orders = orders.filter(o => new Date(o.created_at) <= end);
-    }
-    if (searchQuery) {
-      orders = orders.filter(o =>
-        (o.order_number && o.order_number.toLowerCase().includes(searchQuery)) ||
-        (o.destination_name && o.destination_name.toLowerCase().includes(searchQuery)) ||
-        (o.product_names && o.product_names.toLowerCase().includes(searchQuery))
-      );
-    }
-    if (statusFilter) {
-      orders = orders.filter(o => o.status === statusFilter);
+    export function removeOutboundItem(id) {
+      window.outboundCart = window.outboundCart.filter(i => i.id !== id);
+      renderOutboundCart();
     }
 
-    // 필터링된 결과 저장
-    window.filteredOutboundHistory = orders;
-    window.currentOutboundOrders = orders; // 엑셀 다운로드용
+    export function clearOutboundCart() {
+      window.outboundCart = [];
+      renderOutboundCart();
+    }
 
-    // 페이지네이션 계산
-    const totalItems = orders.length;
-    const totalPages = Math.ceil(totalItems / window.outboundHistoryItemsPerPage);
+    // 고객 선택 시 자동 채움
+    export function fillOutboundCustomer(value) {
+      // "이름 (전화번호)" 형식 파싱
+      if (!window.customers) return;
+      const match = window.customers.find(c => `${c.name} (${c.phone})` === value);
+      if (match) {
+        document.getElementById('obBuyerName').value = match.name;
+        document.getElementById('obBuyerPhone').value = match.phone;
+        document.getElementById('obReceiverName').value = match.name;
+        document.getElementById('obReceiverPhone').value = match.phone;
+        document.getElementById('obAddress').value = match.address || '';
+      }
+    }
 
-    if (window.outboundHistoryPage > totalPages) window.outboundHistoryPage = totalPages;
-    if (window.outboundHistoryPage < 1) window.outboundHistoryPage = 1;
+    export function copyBuyerToReceiver() {
+      const isChecked = document.getElementById('obSameAsBuyer').checked;
+      if (isChecked) {
+        document.getElementById('obReceiverName').value = document.getElementById('obBuyerName').value;
+        document.getElementById('obReceiverPhone').value = document.getElementById('obBuyerPhone').value;
+      }
+    }
 
-    const startIdx = (window.outboundHistoryPage - 1) * window.outboundHistoryItemsPerPage;
-    const endIdx = startIdx + window.outboundHistoryItemsPerPage;
-    const pageItems = orders.slice(startIdx, endIdx);
+    export async function submitSimpleOutbound() {
+      if (window.outboundCart.length === 0) {
+        alert("출고할 상품을 선택해주세요.");
+        return;
+      }
+      const buyerName = document.getElementById('obBuyerName').value;
+      if (!buyerName) {
+        alert("구매자 정보를 입력해주세요.");
+        return;
+      }
 
-    container.innerHTML = `
+      const btn = document.getElementById('btnSubmitOutbound');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
+      btn.disabled = true;
+
+      try {
+        // 1. 고객 ID 찾기
+        let customerId = null;
+        const buyerPhone = document.getElementById('obBuyerPhone').value;
+        if (buyerName && window.customers) {
+          // 이름과 전화번호로 매칭 (전화번호 뒷자리만 매칭하거나, 정확히 매칭)
+          // 여기서는 정확한 매칭을 시도
+          const match = window.customers.find(c => c.name === buyerName && (!buyerPhone || c.phone === buyerPhone));
+          if (match) customerId = match.id;
+        }
+
+        // 2. 판매(Sales) 생성
+        const receiverName = document.getElementById('obReceiverName').value;
+        const receiverPhone = document.getElementById('obReceiverPhone').value;
+        const address = document.getElementById('obAddress').value;
+        const notes = document.getElementById('obNotes').value;
+
+        // 메모에 수령인 정보 병합
+        const combinedNotes = `[출고등록] ${notes} / 수령인: ${receiverName} (${receiverPhone})`;
+
+        const salePayload = {
+          items: window.outboundCart.map(i => ({ product_id: i.id, quantity: i.qty })),
+          customer_id: customerId,
+          payment_method: 'card',
+          notes: combinedNotes
+        };
+
+        const saleRes = await axios.post(`${API_BASE}/sales`, salePayload);
+        const saleId = saleRes.data.data.id;
+
+        // 3. 배송 정보 업데이트
+        const courier = document.getElementById('obCourier').value;
+        const tracking = document.getElementById('obTracking').value;
+
+        if (address || courier || tracking) {
+          await axios.put(`${API_BASE}/sales/${saleId}/shipping`, {
+            shipping_address: address,
+            courier: courier,
+            tracking_number: tracking,
+            status: 'completed'
+          });
+        }
+
+        // 4. 출고(Outbound) 지시 생성
+        await axios.post(`${API_BASE}/outbound/create`, {
+          sale_ids: [saleId],
+          notes: notes
+        });
+
+        // 성공 메시지 및 리셋
+        showSuccess("출고 등록이 완료되었습니다.");
+        clearOutboundCart();
+
+        // 폼 초기화
+        document.getElementById('obBuyerName').value = '';
+        document.getElementById('obBuyerPhone').value = '';
+        document.getElementById('obReceiverName').value = '';
+        document.getElementById('obReceiverPhone').value = '';
+        document.getElementById('obAddress').value = '';
+        document.getElementById('obTracking').value = '';
+        document.getElementById('obNotes').value = '';
+        const searchInput = document.getElementById('obCustomerSearch'); // 검색창 초기화
+        if (searchInput) searchInput.value = '';
+
+      } catch (e) {
+        console.error(e);
+        alert("등록 실패: " + (e.response?.data?.error || e.message));
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // 출고 이력 페이지네이션 변수
+    window.outboundHistoryPage = 1;
+    window.outboundHistoryItemsPerPage = 20;
+    window.filteredOutboundHistory = null;
+
+    // 기존 출고 목록 뷰 (2번째 탭)
+    export async function renderOutboundHistoryTab(container) {
+      const startDate = document.getElementById('obsStartDate')?.value || '';
+      const endDate = document.getElementById('obsEndDate')?.value || '';
+      const searchQuery = document.getElementById('obsSearch')?.value?.toLowerCase() || '';
+      const statusFilter = document.getElementById('obsStatus')?.value || '';
+
+      try {
+        let query = `${API_BASE}/outbound`;
+
+        const response = await axios.get(query);
+        let orders = response.data.data;
+
+        // 프론트엔드 필터링
+        if (startDate) {
+          orders = orders.filter(o => new Date(o.created_at) >= new Date(startDate));
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          orders = orders.filter(o => new Date(o.created_at) <= end);
+        }
+        if (searchQuery) {
+          orders = orders.filter(o =>
+            (o.order_number && o.order_number.toLowerCase().includes(searchQuery)) ||
+            (o.destination_name && o.destination_name.toLowerCase().includes(searchQuery)) ||
+            (o.product_names && o.product_names.toLowerCase().includes(searchQuery))
+          );
+        }
+        if (statusFilter) {
+          orders = orders.filter(o => o.status === statusFilter);
+        }
+
+        // 필터링된 결과 저장
+        window.filteredOutboundHistory = orders;
+        window.currentOutboundOrders = orders; // 엑셀 다운로드용
+
+        // 페이지네이션 계산
+        const totalItems = orders.length;
+        const totalPages = Math.ceil(totalItems / window.outboundHistoryItemsPerPage);
+
+        if (window.outboundHistoryPage > totalPages) window.outboundHistoryPage = totalPages;
+        if (window.outboundHistoryPage < 1) window.outboundHistoryPage = 1;
+
+        const startIdx = (window.outboundHistoryPage - 1) * window.outboundHistoryItemsPerPage;
+        const endIdx = startIdx + window.outboundHistoryItemsPerPage;
+        const pageItems = orders.slice(startIdx, endIdx);
+
+        container.innerHTML = `
           <!-- 검색 필터 영역 -->
           <div class="flex flex-wrap items-center gap-3 mb-6 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
              
@@ -711,98 +713,98 @@ export async function renderOutboundHistoryTab(container) {
           </div>
         `;
 
-    // 엔터 키로 조회
-    document.getElementById('obsSearch')?.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') {
-        window.outboundHistoryPage = 1;
+        // 엔터 키로 조회
+        document.getElementById('obsSearch')?.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            window.outboundHistoryPage = 1;
+            renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
+          }
+        });
+
+      } catch (e) {
+        console.error(e);
+        container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
+      }
+    }
+
+    export function changeOutboundHistoryPage(delta) {
+      const list = window.filteredOutboundHistory;
+      if (!list) return;
+
+      const totalPages = Math.ceil(list.length / window.outboundHistoryItemsPerPage);
+      const newPage = window.outboundHistoryPage + delta;
+
+      if (newPage >= 1 && newPage <= totalPages) {
+        window.outboundHistoryPage = newPage;
         renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
       }
-    });
+    }
 
-  } catch (e) {
-    console.error(e);
-    container.innerHTML = '<div class="flex items-center justify-center h-full text-rose-500">데이터 로드 실패</div>';
-  }
-}
+    export function downloadOutboundExcel() {
+      if (!window.currentOutboundOrders || window.currentOutboundOrders.length === 0) {
+        alert("다운로드할 데이터가 없습니다.");
+        return;
+      }
 
-export function changeOutboundHistoryPage(delta) {
-  const list = window.filteredOutboundHistory;
-  if (!list) return;
+      const orders = window.currentOutboundOrders;
+      // CSV 헤더
+      let csvContent = "출고번호,상태,상품명,수령인,배송지주소,연락처,품목수,총수량,등록일,운송장번호\n";
 
-  const totalPages = Math.ceil(list.length / window.outboundHistoryItemsPerPage);
-  const newPage = window.outboundHistoryPage + delta;
+      orders.forEach(o => {
+        const escapeCsv = (val) => {
+          if (!val) return "";
+          const str = String(val).replace(/"/g, '""');
+          if (str.search(/("|,|\n)/g) >= 0) return `"${str}"`;
+          return str;
+        };
 
-  if (newPage >= 1 && newPage <= totalPages) {
-    window.outboundHistoryPage = newPage;
-    renderOutboundHistoryTab(document.getElementById('outboundTabContent'));
-  }
-}
+        const row = [
+          o.order_number,
+          o.status,
+          o.product_names,
+          o.destination_name,
+          o.destination_address,
+          o.destination_phone,
+          o.item_count,
+          o.total_quantity,
+          new Date(o.created_at).toLocaleDateString(),
+          o.tracking_number
+        ].map(escapeCsv).join(",");
 
-export function downloadOutboundExcel() {
-  if (!window.currentOutboundOrders || window.currentOutboundOrders.length === 0) {
-    alert("다운로드할 데이터가 없습니다.");
-    return;
-  }
+        csvContent += row + "\n";
+      });
 
-  const orders = window.currentOutboundOrders;
-  // CSV 헤더
-  let csvContent = "출고번호,상태,상품명,수령인,배송지주소,연락처,품목수,총수량,등록일,운송장번호\n";
-
-  orders.forEach(o => {
-    const escapeCsv = (val) => {
-      if (!val) return "";
-      const str = String(val).replace(/"/g, '""');
-      if (str.search(/("|,|\n)/g) >= 0) return `"${str}"`;
-      return str;
-    };
-
-    const row = [
-      o.order_number,
-      o.status,
-      o.product_names,
-      o.destination_name,
-      o.destination_address,
-      o.destination_phone,
-      o.item_count,
-      o.total_quantity,
-      new Date(o.created_at).toLocaleDateString(),
-      o.tracking_number
-    ].map(escapeCsv).join(",");
-
-    csvContent += row + "\n";
-  });
-
-  // BOM (한글 깨짐 방지)
-  const BOM = "\uFEFF";
-  const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  const dateStr = new Date().toISOString().slice(0, 10);
-  link.setAttribute("download", `출고이력_${dateStr}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+      // BOM (한글 깨짐 방지)
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.setAttribute("download", `출고이력_${dateStr}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
 
 
-export function getOutboundStatusColor(status) {
-  switch (status) {
-    case 'PENDING': return 'bg-slate-50 text-slate-500 border-slate-100'; // 대기
-    case 'PICKING': return 'bg-amber-50 text-amber-600 border-amber-100'; // 피킹중
-    case 'PACKING': return 'bg-blue-50 text-blue-600 border-blue-100'; // 패킹중
-    case 'SHIPPED': return 'bg-emerald-50 text-emerald-600 border-emerald-100'; // 출고완료
-    default: return 'bg-gray-50 text-gray-500 border-gray-100';
-  }
-}
+    export function getOutboundStatusColor(status) {
+      switch (status) {
+        case 'PENDING': return 'bg-slate-50 text-slate-500 border-slate-100'; // 대기
+        case 'PICKING': return 'bg-amber-50 text-amber-600 border-amber-100'; // 피킹중
+        case 'PACKING': return 'bg-blue-50 text-blue-600 border-blue-100'; // 패킹중
+        case 'SHIPPED': return 'bg-emerald-50 text-emerald-600 border-emerald-100'; // 출고완료
+        default: return 'bg-gray-50 text-gray-500 border-gray-100';
+      }
+    }
 
-// 상세 모달 로직 (기존 유지)
-export function injectOutboundDetailModal() {
-  if (document.getElementById('outboundDetailModal')) return;
+    // 상세 모달 로직 (기존 유지)
+    export function injectOutboundDetailModal() {
+      if (document.getElementById('outboundDetailModal')) return;
 
-  const modalHtml = `
+      const modalHtml = `
       <div id="outboundDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 border border-slate-100 flex flex-col max-h-[95vh]">
             <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-white sticky top-0 rounded-t-2xl z-10">
@@ -888,41 +890,41 @@ export function injectOutboundDetailModal() {
         </div>
       </div>
     `;
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
 
-let currentOutboundId = null;
+    let currentOutboundId = null;
 
-export async function openOutboundDetail(id) {
-  injectOutboundDetailModal();
-  currentOutboundId = id;
+    export async function openOutboundDetail(id) {
+      injectOutboundDetailModal();
+      currentOutboundId = id;
 
-  try {
-    const res = await axios.get(`${API_BASE}/outbound/${id}`);
-    const data = res.data.data;
+      try {
+        const res = await axios.get(`${API_BASE}/outbound/${id}`);
+        const data = res.data.data;
 
-    document.getElementById('outboundDetailStatus').textContent = data.status;
-    document.getElementById('outboundDetailStatus').className = `text-sm px-2.5 py-1 rounded-full font-bold ${getOutboundStatusColor(data.status)}`;
-    document.getElementById('outboundDetailNo').textContent = data.order_number;
+        document.getElementById('outboundDetailStatus').textContent = data.status;
+        document.getElementById('outboundDetailStatus').className = `text-sm px-2.5 py-1 rounded-full font-bold ${getOutboundStatusColor(data.status)}`;
+        document.getElementById('outboundDetailNo').textContent = data.order_number;
 
-    document.getElementById('outDetailReceiver').textContent = data.destination_name;
-    document.getElementById('outDetailPhone').textContent = data.destination_phone;
-    document.getElementById('outDetailAddress').textContent = data.destination_address;
+        document.getElementById('outDetailReceiver').textContent = data.destination_name;
+        document.getElementById('outDetailPhone').textContent = data.destination_phone;
+        document.getElementById('outDetailAddress').textContent = data.destination_address;
 
-    document.getElementById('outDetailSales').textContent = data.sales.map(s => `#${s.id}`).join(', ');
-    document.getElementById('outDetailNotes').textContent = data.notes || '-';
+        document.getElementById('outDetailSales').textContent = data.sales.map(s => `#${s.id}`).join(', ');
+        document.getElementById('outDetailNotes').textContent = data.notes || '-';
 
-    const itemsBody = document.getElementById('outDetailItems');
-    itemsBody.innerHTML = data.items.map(item => `
+        const itemsBody = document.getElementById('outDetailItems');
+        itemsBody.innerHTML = data.items.map(item => `
             <tr class="text-sm text-slate-700">
                 <td class="px-5 py-3 font-medium">${item.product_name}</td>
                 <td class="px-5 py-3 font-mono text-slate-500">${item.sku}</td>
                 <td class="px-5 py-3 text-center font-bold">${item.quantity_ordered}</td>
                 <td class="px-5 py-3 text-center">
                     ${data.status === 'PENDING' || data.status === 'PICKING' ?
-        `<input type="number" class="picking-input w-20 text-center border rounded py-1" 
+            `<input type="number" class="picking-input w-20 text-center border rounded py-1" 
                             data-id="${item.product_id}" max="${item.quantity_ordered}" value="${item.quantity_picked || 0}">`
-        : item.quantity_picked}
+            : item.quantity_picked}
                 </td>
                 <td class="px-5 py-3 text-center">
                      <span class="px-2 py-0.5 rounded text-xs ${item.status === 'PICKED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${item.status}</span>
@@ -930,109 +932,109 @@ export async function openOutboundDetail(id) {
             </tr>
         `).join('');
 
-    const btnSavePicking = document.getElementById('btnSavePicking');
-    const actionArea = document.getElementById('outDetailActionArea');
-    const btnPacking = document.getElementById('btnPacking');
-    const btnConfirm = document.getElementById('btnConfirmShip');
-    const pkgInputs = [document.getElementById('outPkgCourier'), document.getElementById('outPkgTracking')];
+        const btnSavePicking = document.getElementById('btnSavePicking');
+        const actionArea = document.getElementById('outDetailActionArea');
+        const btnPacking = document.getElementById('btnPacking');
+        const btnConfirm = document.getElementById('btnConfirmShip');
+        const pkgInputs = [document.getElementById('outPkgCourier'), document.getElementById('outPkgTracking')];
 
-    if (data.status === 'PENDING' || data.status === 'PICKING') {
-      btnSavePicking.classList.remove('hidden');
-      actionArea.classList.add('hidden');
-    } else {
-      btnSavePicking.classList.add('hidden');
-      actionArea.classList.remove('hidden');
+        if (data.status === 'PENDING' || data.status === 'PICKING') {
+          btnSavePicking.classList.remove('hidden');
+          actionArea.classList.add('hidden');
+        } else {
+          btnSavePicking.classList.add('hidden');
+          actionArea.classList.remove('hidden');
 
-      if (data.packages && data.packages.length > 0) {
-        document.getElementById('outPkgCourier').value = data.packages[0].courier || '';
-        document.getElementById('outPkgTracking').value = data.packages[0].tracking_number || '';
-      }
+          if (data.packages && data.packages.length > 0) {
+            document.getElementById('outPkgCourier').value = data.packages[0].courier || '';
+            document.getElementById('outPkgTracking').value = data.packages[0].tracking_number || '';
+          }
 
-      if (data.status === 'PACKING') {
-        btnPacking.classList.remove('hidden');
-        btnConfirm.classList.add('hidden');
-        btnPacking.disabled = false;
-        btnConfirm.classList.remove('hidden');
-      } else if (data.status === 'SHIPPED') {
-        btnPacking.classList.add('hidden');
-        btnConfirm.classList.add('hidden');
-        pkgInputs.forEach(i => i.disabled = true);
+          if (data.status === 'PACKING') {
+            btnPacking.classList.remove('hidden');
+            btnConfirm.classList.add('hidden');
+            btnPacking.disabled = false;
+            btnConfirm.classList.remove('hidden');
+          } else if (data.status === 'SHIPPED') {
+            btnPacking.classList.add('hidden');
+            btnConfirm.classList.add('hidden');
+            pkgInputs.forEach(i => i.disabled = true);
+          }
+        }
+
+        document.getElementById('outboundDetailModal').classList.remove('hidden');
+      } catch (e) {
+        console.error(e);
+        alert('상세 정보 로드 실패');
       }
     }
 
-    document.getElementById('outboundDetailModal').classList.remove('hidden');
-  } catch (e) {
-    console.error(e);
-    alert('상세 정보 로드 실패');
-  }
-}
+    export async function savePicking() {
+      const inputs = document.querySelectorAll('.picking-input');
+      const items = Array.from(inputs).map(input => ({
+        product_id: parseInt(input.dataset.id),
+        quantity: parseInt(input.value) - parseInt(input.defaultValue)
+      })).filter(i => i.quantity > 0);
 
-export async function savePicking() {
-  const inputs = document.querySelectorAll('.picking-input');
-  const items = Array.from(inputs).map(input => ({
-    product_id: parseInt(input.dataset.id),
-    quantity: parseInt(input.value) - parseInt(input.defaultValue)
-  })).filter(i => i.quantity > 0);
+      if (items.length === 0) {
+        alert('변경 사항이 없습니다.');
+        return;
+      }
 
-  if (items.length === 0) {
-    alert('변경 사항이 없습니다.');
-    return;
-  }
+      try {
+        await axios.post(`${API_BASE}/outbound/${currentOutboundId}/picking`, { items });
+        showSuccess('피킹 정보가 저장되었습니다.');
+        openOutboundDetail(currentOutboundId);
+        loadPage('outbound');
+      } catch (e) {
+        alert('저장 실패: ' + e.message);
+      }
+    }
 
-  try {
-    await axios.post(`${API_BASE}/outbound/${currentOutboundId}/picking`, { items });
-    showSuccess('피킹 정보가 저장되었습니다.');
-    openOutboundDetail(currentOutboundId);
-    loadPage('outbound');
-  } catch (e) {
-    alert('저장 실패: ' + e.message);
-  }
-}
+    export async function performPacking() {
+      const courier = document.getElementById('outPkgCourier').value;
+      const tracking = document.getElementById('outPkgTracking').value;
 
-export async function performPacking() {
-  const courier = document.getElementById('outPkgCourier').value;
-  const tracking = document.getElementById('outPkgTracking').value;
+      if (!courier || !tracking) {
+        alert('택배사와 운송장번호를 입력해주세요.');
+        return;
+      }
 
-  if (!courier || !tracking) {
-    alert('택배사와 운송장번호를 입력해주세요.');
-    return;
-  }
+      try {
+        await axios.post(`${API_BASE}/outbound/${currentOutboundId}/packing`, {
+          courier,
+          tracking_number: tracking,
+          box_type: 'BOX',
+          box_count: 1,
+          weight: 0
+        });
+        showSuccess('패킹 완료.');
+        openOutboundDetail(currentOutboundId);
+      } catch (e) {
+        alert('패킹 실패');
+      }
+    }
 
-  try {
-    await axios.post(`${API_BASE}/outbound/${currentOutboundId}/packing`, {
-      courier,
-      tracking_number: tracking,
-      box_type: 'BOX',
-      box_count: 1,
-      weight: 0
-    });
-    showSuccess('패킹 완료.');
-    openOutboundDetail(currentOutboundId);
-  } catch (e) {
-    alert('패킹 실패');
-  }
-}
+    export async function confirmShipment() {
+      if (!confirm('출고를 확정하시겠습니까? 재고가 차감됩니다.')) return;
 
-export async function confirmShipment() {
-  if (!confirm('출고를 확정하시겠습니까? 재고가 차감됩니다.')) return;
+      try {
+        await axios.post(`${API_BASE}/outbound/${currentOutboundId}/confirm`);
+        showSuccess('출고가 확정되었습니다.');
+        openOutboundDetail(currentOutboundId);
+        loadPage('outbound');
+      } catch (e) {
+        alert('출고 확정 실패: ' + (e.response?.data?.error || e.message));
+      }
+    }
 
-  try {
-    await axios.post(`${API_BASE}/outbound/${currentOutboundId}/confirm`);
-    showSuccess('출고가 확정되었습니다.');
-    openOutboundDetail(currentOutboundId);
-    loadPage('outbound');
-  } catch (e) {
-    alert('출고 확정 실패: ' + (e.response?.data?.error || e.message));
-  }
-}
+    // 거래명세서 출력
+    export async function loadInvoice(content) {
+      try {
+        const response = await axios.get(`${API_BASE}/sales?status=completed&limit=50`);
+        const sales = response.data.data;
 
-// 거래명세서 출력
-export async function loadInvoice(content) {
-  try {
-    const response = await axios.get(`${API_BASE}/sales?status=completed&limit=50`);
-    const sales = response.data.data;
-
-    content.innerHTML = `
+        content.innerHTML = `
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-slate-800">
           <i class="fas fa-file-invoice mr-2 text-indigo-600"></i>거래명세서 관리
@@ -1078,18 +1080,18 @@ export async function loadInvoice(content) {
       </div>
     `;
 
-    injectInvoiceModal();
+        injectInvoiceModal();
 
-  } catch (error) {
-    console.error(error);
-    showError(content, '거래 내역을 불러오지 못했습니다.');
-  }
-}
+      } catch (error) {
+        console.error(error);
+        showError(content, '거래 내역을 불러오지 못했습니다.');
+      }
+    }
 
-export function injectInvoiceModal() {
-  if (document.getElementById('invoiceModal')) return;
+    export function injectInvoiceModal() {
+      if (document.getElementById('invoiceModal')) return;
 
-  const modalHtml = `
+      const modalHtml = `
       <div id="invoiceModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 transition-all duration-300">
         <div class="bg-white rounded-none md:rounded-2xl shadow-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex justify-between items-center p-4 border-b border-slate-100 no-print">
@@ -1205,48 +1207,48 @@ export function injectInvoiceModal() {
         </style>
       </div>
     `;
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
 
-export async function openInvoiceModal(saleId) {
-  injectInvoiceModal();
-  try {
-    const response = await axios.get(`${API_BASE}/sales/${saleId}`);
-    const sale = response.data.data;
+    export async function openInvoiceModal(saleId) {
+      injectInvoiceModal();
+      try {
+        const response = await axios.get(`${API_BASE}/sales/${saleId}`);
+        const sale = response.data.data;
 
-    // Data mapping
-    const date = new Date(sale.created_at);
-    document.getElementById('invoiceModal').classList.remove('hidden');
+        // Data mapping
+        const date = new Date(sale.created_at);
+        document.getElementById('invoiceModal').classList.remove('hidden');
 
-    // Buyer
-    document.getElementById('invCustRegNo').textContent = '-'; // Add if customer DB has it
-    document.getElementById('invCustCompany').textContent = sale.customer_name || '비회원';
-    document.getElementById('invCustName').textContent = sale.customer_name || '';
-    document.getElementById('invCustAddress').textContent = sale.shipping_address || sale.customer_address || '-';
-    document.getElementById('invCustPhone').textContent = sale.customer_phone || '-';
+        // Buyer
+        document.getElementById('invCustRegNo').textContent = '-'; // Add if customer DB has it
+        document.getElementById('invCustCompany').textContent = sale.customer_name || '비회원';
+        document.getElementById('invCustName').textContent = sale.customer_name || '';
+        document.getElementById('invCustAddress').textContent = sale.shipping_address || sale.customer_address || '-';
+        document.getElementById('invCustPhone').textContent = sale.customer_phone || '-';
 
-    // Date
-    document.getElementById('invDate').textContent = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        // Date
+        document.getElementById('invDate').textContent = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 
-    // Items
-    const tbody = document.getElementById('invoiceItems');
-    let totalQty = 0;
-    let totalSupply = 0;
-    let totalTax = 0;
+        // Items
+        const tbody = document.getElementById('invoiceItems');
+        let totalQty = 0;
+        let totalSupply = 0;
+        let totalTax = 0;
 
-    // Rows (Fill 10 rows minimum for look)
-    let html = '';
-    const items = sale.items || [];
-    const emptyRows = Math.max(0, 10 - items.length);
+        // Rows (Fill 10 rows minimum for look)
+        let html = '';
+        const items = sale.items || [];
+        const emptyRows = Math.max(0, 10 - items.length);
 
-    items.forEach(item => {
-      const supply = Math.round(item.subtotal / 1.1);
-      const tax = item.subtotal - supply;
-      totalQty += item.quantity;
-      totalSupply += supply;
-      totalTax += tax;
+        items.forEach(item => {
+          const supply = Math.round(item.subtotal / 1.1);
+          const tax = item.subtotal - supply;
+          totalQty += item.quantity;
+          totalSupply += supply;
+          totalTax += tax;
 
-      html += `
+          html += `
                 <tr>
                     <td class="border border-slate-300 py-2">${date.getMonth() + 1}</td>
                     <td class="border border-slate-300 py-2">${date.getDate()}</td>
@@ -1257,10 +1259,10 @@ export async function openInvoiceModal(saleId) {
                     <td class="border border-slate-300 py-2 text-right px-2">${formatCurrency(tax).replace('₩', '')}</td>
                 </tr>
             `;
-    });
+        });
 
-    for (let i = 0; i < emptyRows; i++) {
-      html += `
+        for (let i = 0; i < emptyRows; i++) {
+          html += `
                 <tr>
                     <td class="border border-slate-300 py-2 text-transparent">.</td>
                     <td class="border border-slate-300 py-2"></td>
@@ -1271,32 +1273,32 @@ export async function openInvoiceModal(saleId) {
                     <td class="border border-slate-300 py-2"></td>
                 </tr>
             `;
+        }
+
+        tbody.innerHTML = html;
+
+        // Totals
+        document.getElementById('invTotalQty').textContent = totalQty;
+        document.getElementById('invTotalSupply').textContent = formatCurrency(totalSupply).replace('₩', '');
+        document.getElementById('invTotalTax').textContent = formatCurrency(totalTax).replace('₩', '');
+        document.getElementById('invGrandTotal').textContent = formatCurrency(sale.final_amount).replace('₩', '');
+
+      } catch (e) {
+        alert('명세서 로드 실패: ' + e.message);
+      }
     }
 
-    tbody.innerHTML = html;
-
-    // Totals
-    document.getElementById('invTotalQty').textContent = totalQty;
-    document.getElementById('invTotalSupply').textContent = formatCurrency(totalSupply).replace('₩', '');
-    document.getElementById('invTotalTax').textContent = formatCurrency(totalTax).replace('₩', '');
-    document.getElementById('invGrandTotal').textContent = formatCurrency(sale.final_amount).replace('₩', '');
-
-  } catch (e) {
-    alert('명세서 로드 실패: ' + e.message);
-  }
-}
-
-export function printInvoice() {
-  window.print();
-}
-
-}
+    export function printInvoice() {
+      window.print();
+    }
 
 
-// 재고 관리 로드
 
-export function renderSimpleOutboundTab(container) {
-  container.innerHTML = `
+
+    // 재고 관리 로드
+
+    export function renderSimpleOutboundTab(container) {
+      container.innerHTML = `
     <div class="flex flex-col lg:flex-row h-full gap-4">
       <!-- 1. 좌측: 상품 선택 -->
       <div class="w-full lg:w-5/12 flex flex-col bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden h-full">
@@ -1455,33 +1457,33 @@ export function renderSimpleOutboundTab(container) {
     </div>
   `;
 
-  renderOutboundProductList();
-}
+      renderOutboundProductList();
+    }
 
-window.outboundPage = 1;
-window.outboundItemsPerPage = 7;
-window.filteredOutboundList = null;
+    window.outboundPage = 1;
+    window.outboundItemsPerPage = 7;
+    window.filteredOutboundList = null;
 
-export function filterOutboundProducts(query) {
-  if (!window.products) return;
-  const q = query.toLowerCase();
-  const filtered = window.products.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
-  window.filteredOutboundList = filtered;
-  window.outboundPage = 1; // Reset to page 1
-  renderOutboundProductList(filtered);
-}
+    export function filterOutboundProducts(query) {
+      if (!window.products) return;
+      const q = query.toLowerCase();
+      const filtered = window.products.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+      window.filteredOutboundList = filtered;
+      window.outboundPage = 1; // Reset to page 1
+      renderOutboundProductList(filtered);
+    }
 
-export function changeOutboundPage(delta) {
-  const list = window.filteredOutboundList || window.products;
-  if (!list) return;
+    export function changeOutboundPage(delta) {
+      const list = window.filteredOutboundList || window.products;
+      if (!list) return;
 
-  const totalPages = Math.ceil(list.length / window.outboundItemsPerPage);
-  const newPage = window.outboundPage + delta;
+      const totalPages = Math.ceil(list.length / window.outboundItemsPerPage);
+      const newPage = window.outboundPage + delta;
 
-  if (newPage >= 1 && newPage <= totalPages) {
-    window.outboundPage = newPage;
-    renderOutboundProductList(list);
-  }
-}
+      if (newPage >= 1 && newPage <= totalPages) {
+        window.outboundPage = newPage;
+        renderOutboundProductList(list);
+      }
+    }
 
 
