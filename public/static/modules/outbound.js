@@ -1404,12 +1404,16 @@ export async function renderSimpleOutboundTab(container) {
                              ${warehouseOptions}
                         </select>
                     </div>
-                    <div>
+                    <div class="relative">
                          <label class="block text-xs font-semibold text-slate-500 mb-1">기존 고객 검색</label>
-                         <input type="text" list="customerList" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="이름 또는 연락처로 고객 검색..." onchange="fillOutboundCustomer(this.value)">
-                        <datalist id="customerList">
-                            ${window.customers ? window.customers.map(c => `<option value="${c.name} (${c.phone})">`).join('') : ''}
-                        </datalist>
+                         <div class="relative">
+                             <i class="fas fa-user-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                             <input type="text" id="obCustomerSearch" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" placeholder="이름 또는 연락처로 고도로 검색..." oninput="searchOutboundCustomer(this.value)" onfocus="searchOutboundCustomer(this.value)">
+                         </div>
+                         <!-- 커스텀 검색 결과 드롭다운 -->
+                         <div id="obCustomerResults" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-[300px] overflow-y-auto hidden custom-scrollbar">
+                             <!-- 결과가 여기에 렌더링됨 -->
+                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -1524,6 +1528,65 @@ export function changeOutboundPage(delta) {
   }
 }
 
+// 6. 고객 검색 기능 (커스텀 드롭다운)
+export function searchOutboundCustomer(query) {
+  const resultsContainer = document.getElementById('obCustomerResults');
+  if (!window.customers) return;
+
+  const q = query.toLowerCase();
+  const filtered = window.customers.filter(c =>
+    c.name.toLowerCase().includes(q) || c.phone.replace(/-/g, '').includes(q.replace(/-/g, ''))
+  );
+
+  if (filtered.length === 0) {
+    resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs">검색 결과가 없습니다.</div>';
+  } else {
+    resultsContainer.innerHTML = filtered.map(c => `
+      <div onclick="selectOutboundCustomer(${c.id})" class="flex items-center justify-between p-3 hover:bg-emerald-50 cursor-pointer border-b border-slate-50 last:border-0 group transition-colors">
+        <div>
+          <div class="font-bold text-slate-700 group-hover:text-emerald-700">${c.name}</div>
+          <div class="text-xs text-slate-500">${c.phone}</div>
+        </div>
+        <div class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 font-bold">${c.grade || '일반'}</div>
+      </div>
+    `).join('');
+  }
+
+  resultsContainer.classList.remove('hidden');
+
+  // 외부 클릭 시 닫기 처리
+  const closeResults = (e) => {
+    if (!e.target.closest('#obCustomerSearch') && !e.target.closest('#obCustomerResults')) {
+      resultsContainer.classList.add('hidden');
+      document.removeEventListener('click', closeResults);
+    }
+  };
+  document.addEventListener('click', closeResults);
+}
+
+export function selectOutboundCustomer(id) {
+  const customer = window.customers.find(c => c.id === id);
+  if (!customer) return;
+
+  document.getElementById('obBuyerName').value = customer.name;
+  document.getElementById('obBuyerPhone').value = customer.phone;
+  document.getElementById('obReceiverName').value = customer.name;
+  document.getElementById('obReceiverPhone').value = customer.phone;
+  document.getElementById('obAddress').value = customer.address || '';
+
+  // 수령인 주소칸이 있다면 같이 채우기
+  const detailAddress = customer.address_detail ? ' ' + customer.address_detail : '';
+  if (document.getElementById('obAddress')) {
+    document.getElementById('obAddress').value = (customer.address || '') + detailAddress;
+  }
+
+  document.getElementById('obCustomerResults').classList.add('hidden');
+  document.getElementById('obCustomerSearch').value = customer.name;
+
+  showSuccess(`${customer.name} 고객 정보를 불러왔습니다.`);
+}
+
+
 // 6. 출고 상세 등록 및 전송
 export async function submitSimpleOutbound() {
   if (!window.outboundCart || window.outboundCart.length === 0) {
@@ -1598,6 +1661,8 @@ window.copyBuyerToReceiver = copyBuyerToReceiver;
 window.submitSimpleOutbound = submitSimpleOutbound;
 window.filterOutboundProducts = filterOutboundProducts;
 window.changeOutboundPage = changeOutboundPage;
+window.searchOutboundCustomer = searchOutboundCustomer;
+window.selectOutboundCustomer = selectOutboundCustomer;
 window.changeOutboundHistoryPage = changeOutboundHistoryPage;
 window.downloadOutboundExcel = downloadOutboundExcel;
 window.openOutboundDetail = openOutboundDetail;
