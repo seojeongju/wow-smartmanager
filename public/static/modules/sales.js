@@ -213,16 +213,18 @@ export async function renderPosTab(container) {
                <div class="w-1 bg-emerald-600 h-4 rounded-full"></div>
                주문 내역
             </h3>
-            <div class="relative">
-              <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <input list="customerList" id="posCustomerInput" placeholder="회원 조회 (이름/연락처)" 
-                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm"
-                     onchange="selectCustomerFromInput(this.value)">
-              <datalist id="customerList">
-                ${window.customers.map(c => `<option value="${c.name} (${c.phone})" data-id="${c.id}">`).join('')}
-              </datalist>
-              <input type="hidden" id="posCustomer">
-            </div>
+             <div class="relative group">
+               <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+               <input type="text" id="posCustomerInput" placeholder="회원 이름 또는 연락처 검색" 
+                      class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm transition-all"
+                      oninput="searchSalesCustomer(this.value)" onfocus="searchSalesCustomer(this.value)">
+               
+               <!-- 커스텀 검색 결과 드롭다운 -->
+               <div id="posCustomerResults" class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-30 max-h-[250px] overflow-y-auto hidden custom-scrollbar border-t-4 border-t-emerald-500">
+                   <!-- 결과가 여기에 렌더링됨 -->
+               </div>
+               <input type="hidden" id="posCustomer">
+             </div>
           </div>
 
           <!-- 장바구니 아이템 -->
@@ -292,15 +294,9 @@ export async function renderPosTab(container) {
       catSelect.appendChild(opt);
     });
 
-    // 고객 검색 로직 (datalist workaround)
-    window.selectCustomerFromInput = (value) => {
-      const customer = window.customers.find(c => `${c.name} (${c.phone})` === value);
-      if (customer) {
-        document.getElementById('posCustomer').value = customer.id;
-      } else {
-        document.getElementById('posCustomer').value = '';
-      }
-    };
+    // 고객 검색 로직 (커스텀 모달 방식)
+    window.searchSalesCustomer = searchSalesCustomer;
+    window.selectSalesCustomer = selectSalesCustomer;
 
   } catch (error) {
     console.error('POS 로드 실패:', error);
@@ -1085,6 +1081,58 @@ export function applyQuickFilter(filterType) {
   });
 
   filterPosProducts();
+}
+
+// POS 고객 검색 (커스텀 드롭다운)
+export function searchSalesCustomer(query) {
+  const resultsContainer = document.getElementById('posCustomerResults');
+  if (!window.customers || !resultsContainer) return;
+
+  const q = query.toLowerCase();
+  const filtered = window.customers.filter(c =>
+    c.name.toLowerCase().includes(q) || c.phone.replace(/-/g, '').includes(q.replace(/-/g, ''))
+  );
+
+  if (filtered.length === 0) {
+    resultsContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs">회원 정보가 없습니다.</div>';
+  } else {
+    resultsContainer.innerHTML = filtered.map(c => `
+      <div onclick="selectSalesCustomer(${c.id})" class="flex items-center justify-between p-3 hover:bg-emerald-50 cursor-pointer border-b border-slate-50 last:border-0 group transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">
+            ${c.name.substring(0, 1)}
+          </div>
+          <div>
+            <div class="font-bold text-slate-700 group-hover:text-emerald-700 text-sm">${c.name}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${c.phone}</div>
+          </div>
+        </div>
+        <div class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 font-bold tracking-tighter">${c.grade || '일반'}</div>
+      </div>
+    `).join('');
+  }
+
+  resultsContainer.classList.remove('hidden');
+
+  // 외부 클릭 시 닫기 처리
+  const closeResults = (e) => {
+    if (!e.target.closest('#posCustomerInput') && !e.target.closest('#posCustomerResults')) {
+      resultsContainer.classList.add('hidden');
+      document.removeEventListener('click', closeResults);
+    }
+  };
+  document.addEventListener('click', closeResults);
+}
+
+export function selectSalesCustomer(id) {
+  const customer = window.customers.find(c => c.id === id);
+  if (!customer) return;
+
+  document.getElementById('posCustomer').value = customer.id;
+  document.getElementById('posCustomerInput').value = `${customer.name} (${customer.phone})`;
+  document.getElementById('posCustomerResults').classList.add('hidden');
+
+  showSuccess(`${customer.name} 회원님이 선택되었습니다.`);
 }
 
 // 고급 필터 토글
