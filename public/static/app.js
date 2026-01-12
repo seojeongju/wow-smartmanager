@@ -2150,69 +2150,66 @@ async function renderPlanRequests(container) {
 
 // 조직 생성 모달
 window.openTenantModal = function () {
-  const existingModal = document.getElementById('tenantCreateModal');
-  if (existingModal) existingModal.remove();
-
-  const modalHTML = `
-    <div id="tenantCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform scale-95 transition-all duration-300">
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 text-white rounded-t-2xl">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <i class="fas fa-building text-xl"></i>
-              </div>
-              <h3 class="text-xl font-bold">새 조직 생성</h3>
-            </div>
-            <button onclick="closeTenantModal('create')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
-              <i class="fas fa-times text-xl"></i>
-            </button>
+  const modalId = 'tenantCreateModal';
+  const content = `
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 text-white">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <i class="fas fa-building text-xl"></i>
           </div>
+          <h3 class="text-xl font-bold">새 조직 생성</h3>
+        </div>
+        <button onclick="closeTenantModal('create')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">조직명 *</label>
+          <input type="text" id="tenantName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none" placeholder="조직 이름을 입력하세요">
         </div>
         
-        <div class="p-6">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-semibold text-slate-700 mb-2">조직명 *</label>
-              <input type="text" id="tenantName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none" placeholder="조직 이름을 입력하세요">
-            </div>
-            
-            <div>
-              <label class="block text-sm font-semibold text-slate-700 mb-2">플랜 *</label>
-              <select id="tenantPlan" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
-                <option value="FREE">FREE - 무료 플랜</option>
-                <option value="BASIC">BASIC - 기본 플랜</option>
-                <option value="PRO">PRO - 프로 플랜</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3 border-t border-slate-200">
-          <button onclick="closeTenantModal('create')" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">취소</button>
-          <button onclick="submitCreateTenant()" class="px-5 py-2.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md">생성하기</button>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">플랜 *</label>
+          <select id="tenantPlan" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all outline-none">
+            <option value="FREE">FREE - 무료 플랜</option>
+            <option value="BASIC">BASIC - 기본 플랜</option>
+            <option value="PRO">PRO - 프로 플랜</option>
+          </select>
         </div>
       </div>
     </div>
+    
+    <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3 border-t border-slate-200">
+      <button onclick="closeTenantModal('create')" class="px-5 py-2.5 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+      <button onclick="submitCreateTenant()" class="px-5 py-2.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md">생성하기</button>
+    </div>
   `;
 
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  new Modal({
+    id: modalId,
+    content: content,
+    size: 'md'
+  }).open();
+
   setTimeout(() => {
-    const modal = document.getElementById('tenantCreateModal');
-    modal.classList.remove('opacity-0');
-    modal.querySelector('.bg-white').classList.remove('scale-95');
-    modal.querySelector('.bg-white').classList.add('scale-100');
-    document.getElementById('tenantName').focus();
-  }, 10);
+    const input = document.getElementById('tenantName');
+    if (input) input.focus();
+  }, 100);
 }
 
 window.closeTenantModal = function (type) {
   const modalId = type === 'create' ? 'tenantCreateModal' : type === 'edit' ? 'tenantEditModal' : 'tenantDetailModal';
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('opacity-0');
-    modal.querySelector('.bg-white').classList.add('scale-95');
-    setTimeout(() => modal.remove(), 300);
+  const closeFunc = window[`Modal_${modalId}_close`];
+  if (typeof closeFunc === 'function') {
+    closeFunc();
+  } else {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.remove();
   }
 }
 
