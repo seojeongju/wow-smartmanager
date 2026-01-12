@@ -9,7 +9,9 @@ window.dashboardState = {
   recentSales: { page: 1, data: [], itemsPerPage: 5 },
   lowStock: { page: 1, data: [], itemsPerPage: 5 },
   salesChartView: 'daily', // 'daily' or 'monthly'
-  salesChartData: null
+  salesChartData: null,
+  categoryView: 'chart', // 'chart' or 'list'
+  categoryData: null
 };
 
 // 대시보드 로드
@@ -138,11 +140,33 @@ export async function loadDashboard(content) {
 
         <!-- 카테고리별 비중 (1칸 차지) -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <h3 class="font-bold text-slate-800 mb-6 flex items-center">
-            <i class="fas fa-chart-pie mr-2 text-emerald-500"></i>카테고리별 판매 비중
-          </h3>
-          <div class="h-[300px] flex items-center justify-center">
-            <canvas id="categoryChart"></canvas>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 flex items-center">
+              <i class="fas fa-chart-pie mr-2 text-emerald-500"></i>카테고리별 판매 비중
+            </h3>
+            <div class="flex bg-slate-50 rounded-lg p-1">
+              <button onclick="switchCategoryView('chart')" id="btnCategoryChart" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all">
+                <i class="fas fa-chart-pie text-[10px] mr-1"></i>차트
+              </button>
+              <button onclick="switchCategoryView('list')" id="btnCategoryList" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">
+                <i class="fas fa-list text-[10px] mr-1"></i>리스트
+              </button>
+            </div>
+          </div>
+          
+          <!-- 차트 뷰 -->
+          <div id="categoryChartView" class="h-[340px]">
+            <div class="h-full flex items-center justify-center relative">
+              <canvas id="categoryChart"></canvas>
+              <!-- 중앙 텍스트는 차트 렌더링 후 추가 -->
+            </div>
+          </div>
+          
+          <!-- 리스트 뷰 -->
+          <div id="categoryListView" class="hidden h-[340px] overflow-y-auto">
+            <div id="categoryListContent" class="space-y-2">
+              <!-- 동적으로 채워짐 -->
+            </div>
           </div>
         </div>
       </div>
@@ -240,52 +264,11 @@ export async function loadDashboard(content) {
 
     // 차트 데이터 저장
     window.dashboardState.salesChartData = salesData;
+    window.dashboardState.categoryData = categoryData;
 
     // 차트 렌더링
     renderSalesChart(salesData);
-
-    // 카테고리별 차트 (Doughnut)
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-      type: 'doughnut',
-      data: {
-        labels: categoryData.map(d => d.category),
-        datasets: [{
-          data: categoryData.map(d => d.total_revenue),
-          backgroundColor: [
-            '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1'
-          ],
-          borderWidth: 0,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'right',
-            labels: {
-              usePointStyle: true,
-              pointStyle: 'circle',
-              boxWidth: 8,
-              font: { size: 11, family: 'Inter' }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                const value = context.raw;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = Math.round((value / total) * 100) + '%';
-                return ` ${context.label}: ${percentage}`;
-              }
-            }
-          }
-        },
-        cutout: '75%'
-      }
-    });
+    renderCategoryChart(categoryData);
 
     // 페이지 인디케이터 업데이트
     updateDashboardPaginationControls();
@@ -611,5 +594,177 @@ function calculateGrowthRate(data) {
 
   if (previousAvg === 0) return 0;
   return ((recentAvg - previousAvg) / previousAvg) * 100;
+}
+
+// 카테고리 차트 렌더링 함수
+function renderCategoryChart(categoryData) {
+  // 기존 차트 제거
+  const existingChart = Chart.getChart("categoryChart");
+  if (existingChart) existingChart.destroy();
+
+  const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+
+  // 색상 팔레트
+  const colors = [
+    '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1',
+    '#ef4444', '#06b6d4', '#84cc16', '#f97316'
+  ];
+
+  // 총 매출 계산
+  const totalRevenue = categoryData.reduce((sum, d) => sum + d.total_revenue, 0);
+
+  new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+      labels: categoryData.map(d => d.category),
+      datasets: [{
+        data: categoryData.map(d => d.total_revenue),
+        backgroundColor: colors.slice(0, categoryData.length),
+        borderWidth: 2,
+        borderColor: '#ffffff',
+        hoverOffset: 8,
+        hoverBorderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'point'
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 8,
+            padding: 12,
+            font: { size: 11, weight: '600', family: 'Inter' },
+            color: '#64748b'
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            label: function (context) {
+              const value = context.raw;
+              const percentage = ((value / totalRevenue) * 100).toFixed(1);
+              return ` ${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      cutout: '70%',
+      animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 800,
+        easing: 'easeInOutQuart'
+      }
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw: function (chart) {
+        const { ctx, width, height } = chart;
+        ctx.restore();
+
+        const fontSize = Math.floor(height / 180);
+        ctx.font = `${fontSize * 2.5}px Inter`;
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1e293b';
+        ctx.fontWeight = 'bold';
+
+        const text = formatCurrency(totalRevenue);
+        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+        const textY = height / 2 - fontSize;
+
+        ctx.fillText(text, textX, textY);
+
+        // 서브텍스트
+        ctx.font = `${fontSize}px Inter`;
+        ctx.fillStyle = '#64748b';
+        const subText = '총 매출';
+        const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+        const subTextY = height / 2 + fontSize * 1.5;
+
+        ctx.fillText(subText, subTextX, subTextY);
+        ctx.save();
+      }
+    }]
+  });
+
+  // 리스트 뷰 렌더링
+  renderCategoryList(categoryData, totalRevenue);
+}
+
+// 카테고리 리스트 렌더링
+function renderCategoryList(categoryData, totalRevenue) {
+  const colors = [
+    '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1',
+    '#ef4444', '#06b6d4', '#84cc16', '#f97316'
+  ];
+
+  // 매출액 기준 정렬
+  const sortedData = [...categoryData].sort((a, b) => b.total_revenue - a.total_revenue);
+
+  const listHTML = sortedData.map((item, index) => {
+    const percentage = ((item.total_revenue / totalRevenue) * 100).toFixed(1);
+    const color = colors[index % colors.length];
+
+    return `
+      <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100">
+        <div class="flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm" style="background-color: ${color}20; color: ${color};">
+          ${index + 1}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <p class="font-semibold text-slate-800 text-sm truncate">${item.category}</p>
+            <span class="text-xs font-mono text-slate-500 ml-2">${percentage}%</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500" style="width: ${percentage}%; background-color: ${color};"></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="font-bold text-slate-800 text-sm">${formatCurrency(item.total_revenue)}</p>
+          <p class="text-[10px] text-slate-500">${item.total_quantity || '-'}개</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('categoryListContent').innerHTML = listHTML || '<div class="text-center text-slate-400 py-8">데이터가 없습니다.</div>';
+}
+
+// 카테고리 뷰 전환 함수
+export function switchCategoryView(view) {
+  if (window.dashboardState.categoryView === view) return;
+
+  window.dashboardState.categoryView = view;
+
+  // 버튼 스타일 업데이트
+  const chartBtn = document.getElementById('btnCategoryChart');
+  const listBtn = document.getElementById('btnCategoryList');
+
+  if (view === 'chart') {
+    chartBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all';
+    listBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all';
+
+    document.getElementById('categoryChartView').classList.remove('hidden');
+    document.getElementById('categoryListView').classList.add('hidden');
+  } else {
+    chartBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all';
+    listBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all';
+
+    document.getElementById('categoryChartView').classList.add('hidden');
+    document.getElementById('categoryListView').classList.remove('hidden');
+  }
 }
 
