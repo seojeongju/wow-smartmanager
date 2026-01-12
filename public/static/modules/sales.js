@@ -45,16 +45,25 @@ export async function loadSales(content) {
 
 // 탭 전환 함수
 export async function switchSalesTab(tabName) {
+  // 현재 활성 탭 추적 (Race Condition 방지)
+  window.currentSalesTab = tabName;
+
   // 탭 스타일 업데이트
   document.querySelectorAll('[id^="tab-"]').forEach(el => {
     el.classList.remove('text-emerald-600', 'border-b-2', 'border-emerald-600', 'font-bold');
     el.classList.add('text-slate-500', 'font-medium', 'border-transparent');
   });
   const activeTab = document.getElementById(`tab-${tabName}`);
-  activeTab.classList.remove('text-slate-500', 'font-medium', 'border-transparent');
-  activeTab.classList.add('text-emerald-600', 'border-b-2', 'border-emerald-600', 'font-bold');
+  if (activeTab) {
+    activeTab.classList.remove('text-slate-500', 'font-medium', 'border-transparent');
+    activeTab.classList.add('text-emerald-600', 'border-b-2', 'border-emerald-600', 'font-bold');
+  }
 
   const container = document.getElementById('salesTabContent');
+  // 컨텐츠 영역 확실히 초기화
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
   container.innerHTML = '<div class="flex items-center justify-center h-full"><i class="fas fa-spinner fa-spin text-4xl text-emerald-500"></i></div>';
 
   switch (tabName) {
@@ -77,6 +86,9 @@ export async function renderPosTab(container) {
       axios.get(`${API_BASE}/products`),
       axios.get(`${API_BASE}/customers`)
     ]);
+
+    // 탭이 변경되었으면 렌더링 중단
+    if (window.currentSalesTab !== 'pos') return;
 
     window.products = productsRes.data.data;
     window.customers = customersRes.data.data;
@@ -300,6 +312,10 @@ export async function renderPosTab(container) {
 export async function renderOrderManagementTab(container) {
   try {
     const response = await axios.get(`${API_BASE}/sales?limit=100`);
+
+    // 탭이 변경되었으면 렌더링 중단
+    if (window.currentSalesTab !== 'orders') return;
+
     window.allSales = response.data.data; // 전체 데이터 저장 for filtering
 
     container.innerHTML = `
@@ -573,6 +589,10 @@ export function changeOrderPage(delta) {
 export async function renderClaimsTab(container) {
   try {
     const response = await axios.get(`${API_BASE}/claims`);
+
+    // 탭이 변경되었으면 렌더링 중단
+    if (window.currentSalesTab !== 'claims') return;
+
     window.allClaims = response.data.data || []; // 전체 데이터 저장
 
     container.innerHTML = `
