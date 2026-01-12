@@ -350,6 +350,7 @@ export async function renderOrderManagementTab(container) {
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">주문번호</th>
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[180px]">일시</th>
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[120px]">고객</th>
+                <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap min-w-[200px]">상품명</th>
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[120px]">금액</th>
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">담당자</th>
                 <th class="px-6 py-4 text-left font-bold text-slate-600 whitespace-nowrap w-[100px]">배송상태</th>
@@ -439,7 +440,7 @@ export function renderOrderList() {
   window.filteredOrderList = filtered;
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-20 text-center text-slate-400">데이터가 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-20 text-center text-slate-400">데이터가 없습니다.</td></tr>';
     if (indicator) indicator.textContent = "0 / 0";
     if (prevBtn) prevBtn.disabled = true;
     if (nextBtn) nextBtn.disabled = true;
@@ -483,6 +484,23 @@ export function renderOrderList() {
     if (s.status === 'completed') statusBadge = 'bg-slate-100 text-slate-500 border border-slate-200';
     if (s.status === 'pending_shipment') statusText = '배송준비';
 
+    // 상품명 표시 (items 데이터가 있는 경우)
+    let productNames = '-';
+    if (s.items && Array.isArray(s.items) && s.items.length > 0) {
+      const firstProduct = s.items[0].product_name || s.items[0].name || '상품';
+      if (s.items.length === 1) {
+        productNames = `<div class="text-slate-800 font-medium text-sm truncate max-w-[200px]">${firstProduct}</div>`;
+      } else {
+        productNames = `
+          <div class="text-slate-800 font-medium text-sm truncate max-w-[200px]">${firstProduct}</div>
+          <div class="text-slate-400 text-xs mt-0.5">외 ${s.items.length - 1}개</div>
+        `;
+      }
+    } else if (s.product_name) {
+      // 단일 상품 정보만 있는 경우
+      productNames = `<div class="text-slate-800 font-medium text-sm truncate max-w-[200px]">${s.product_name}</div>`;
+    }
+
     return `
         <tr class="hover:bg-slate-50/80 transition-colors group border-b border-slate-50 last:border-0">
           <td class="px-6 py-5 font-mono text-slate-500 text-xs whitespace-nowrap">#${String(s.id).padStart(2, '0')}</td>
@@ -490,6 +508,9 @@ export function renderOrderList() {
           <td class="px-6 py-5">
             <div class="font-bold text-slate-800 text-sm whitespace-nowrap">${s.customer_name || '비회원'}</div>
             <div class="text-[11px] text-slate-400 font-mono mt-0.5 whitespace-nowrap">${s.customer_phone || '-'}</div>
+          </td>
+          <td class="px-6 py-5">
+            ${productNames}
           </td>
           <td class="px-6 py-5 font-bold text-slate-800 text-sm whitespace-nowrap">${formatCurrency(s.final_amount)}</td>
           <td class="px-6 py-5 text-slate-500 text-sm whitespace-nowrap">김순희</td>
