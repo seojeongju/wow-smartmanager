@@ -136,7 +136,7 @@ app.post('/plan-requests/:id/approve', async (c) => {
         .run()
 
     // Update Request
-    await DB.prepare('UPDATE plan_requests SET status = ?, status_changed_at = CURRENT_TIMESTAMP WHERE id = ?')
+    await DB.prepare('UPDATE plan_requests SET status = ? WHERE id = ?')
         .bind('APPROVED', id)
         .run()
 
@@ -151,7 +151,7 @@ app.post('/plan-requests/:id/reject', async (c) => {
     if (!req) return c.json({ success: false, error: 'Request not found' }, 404)
     if (req.status !== 'PENDING') return c.json({ success: false, error: 'Request already processed' }, 400)
 
-    await DB.prepare('UPDATE plan_requests SET status = ?, status_changed_at = CURRENT_TIMESTAMP WHERE id = ?')
+    await DB.prepare('UPDATE plan_requests SET status = ? WHERE id = ?')
         .bind('REJECTED', id)
         .run()
 
