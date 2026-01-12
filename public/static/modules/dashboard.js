@@ -7,7 +7,9 @@ import { API_BASE } from '../utils/constants.js';
 window.dashboardState = {
   recentProducts: { page: 1, data: [], itemsPerPage: 5 },
   recentSales: { page: 1, data: [], itemsPerPage: 5 },
-  lowStock: { page: 1, data: [], itemsPerPage: 5 }
+  lowStock: { page: 1, data: [], itemsPerPage: 5 },
+  salesChartView: 'daily', // 'daily' or 'monthly'
+  salesChartData: null
 };
 
 // 대시보드 로드
@@ -103,16 +105,33 @@ export async function loadDashboard(content) {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- 매출 분석 차트 (2칸 차지) -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-2">
-          <div class="flex justify-between items-center mb-6">
+          <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-slate-800 flex items-center">
               <i class="fas fa-chart-line mr-2 text-indigo-500"></i>매출 및 순익 분석
             </h3>
             <div class="flex bg-slate-50 rounded-lg p-1">
-              <button class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200">일별</button>
-              <button class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700">월별</button>
+              <button onclick="switchSalesChartView('daily')" id="btnChartDaily" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all">일별</button>
+              <button onclick="switchSalesChartView('monthly')" id="btnChartMonthly" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all">월별</button>
             </div>
           </div>
-          <div class="h-[300px]">
+          
+          <!-- 요약 통계 -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-lg p-3 border border-indigo-200">
+              <p class="text-xs text-indigo-600 font-semibold mb-1">총 매출</p>
+              <p class="text-lg font-bold text-indigo-700" id="chartTotalRevenue">-</p>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-lg p-3 border border-emerald-200">
+              <p class="text-xs text-emerald-600 font-semibold mb-1">총 순익</p>
+              <p class="text-lg font-bold text-emerald-700" id="chartTotalProfit">-</p>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-lg p-3 border border-amber-200">
+              <p class="text-xs text-amber-600 font-semibold mb-1">평균 성장률</p>
+              <p class="text-lg font-bold text-amber-700" id="chartGrowthRate">-</p>
+            </div>
+          </div>
+          
+          <div class="h-[280px]">
             <canvas id="salesChart"></canvas>
           </div>
         </div>
@@ -219,65 +238,11 @@ export async function loadDashboard(content) {
       </div>
     `;
 
-    // 차트 초기화 전 기존 차트 제거
-    const chartStatus = Chart.getChart("salesChart");
-    if (chartStatus != undefined) chartStatus.destroy();
-    const catChartStatus = Chart.getChart("categoryChart");
-    if (catChartStatus != undefined) catChartStatus.destroy();
+    // 차트 데이터 저장
+    window.dashboardState.salesChartData = salesData;
 
-    // 매출 차트 (Line)
-    const ctx = document.getElementById('salesChart').getContext('2d');
-
-    // 그라데이션 효과
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)'); // Indigo
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: salesData.map(d => d.date.substring(5)), // 월-일
-        datasets: [{
-          label: '매출액',
-          data: salesData.map(d => d.revenue),
-          borderColor: '#6366f1', // Indigo 500
-          backgroundColor: gradient,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#6366f1',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: (context) => formatCurrency(context.raw)
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { borderDash: [4, 4], color: '#f1f5f9' },
-            ticks: {
-              callback: value => formatCurrency(value).replace('₩', '')
-            }
-          },
-          x: {
-            grid: { display: false }
-          }
-        }
-      }
-    });
+    // 차트 렌더링
+    renderSalesChart(salesData);
 
     // 카테고리별 차트 (Doughnut)
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
@@ -455,4 +420,196 @@ function updateDashboardPaginationControls() {
   document.getElementById('btnLowStockNext').disabled = lowStockState.page >= lowStockTotalPages;
 }
 
+// 매출 차트 렌더링 함수
+function renderSalesChart(salesData) {
+  // 기존 차트 제거
+  const existingChart = Chart.getChart("salesChart");
+  if (existingChart) existingChart.destroy();
+
+  const ctx = document.getElementById('salesChart').getContext('2d');
+
+  // 그라데이션 효과 (매출)
+  const revenueGradient = ctx.createLinearGradient(0, 0, 0, 280);
+  revenueGradient.addColorStop(0, 'rgba(99, 102, 241, 0.15)');
+  revenueGradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+  // 그라데이션 효과 (순익)
+  const profitGradient = ctx.createLinearGradient(0, 0, 0, 280);
+  profitGradient.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
+  profitGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+  // 라벨 포맷팅
+  const view = window.dashboardState.salesChartView;
+  const labels = salesData.map(d => {
+    if (view === 'monthly') {
+      return d.date.substring(0, 7); // YYYY-MM
+    }
+    return d.date.substring(5); // MM-DD
+  });
+
+  // 통계 계산
+  const totalRevenue = salesData.reduce((sum, d) => sum + d.revenue, 0);
+  const totalProfit = salesData.reduce((sum, d) => sum + (d.profit || d.revenue * 0.3), 0);
+  const avgGrowthRate = calculateGrowthRate(salesData.map(d => d.revenue));
+
+  // 요약 카드 업데이트
+  document.getElementById('chartTotalRevenue').textContent = formatCurrency(totalRevenue);
+  document.getElementById('chartTotalProfit').textContent = formatCurrency(totalProfit);
+  document.getElementById('chartGrowthRate').textContent = avgGrowthRate >= 0 ? `+${avgGrowthRate.toFixed(1)}%` : `${avgGrowthRate.toFixed(1)}%`;
+  document.getElementById('chartGrowthRate').className = avgGrowthRate >= 0
+    ? 'text-lg font-bold text-emerald-700'
+    : 'text-lg font-bold text-rose-700';
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '매출액',
+          data: salesData.map(d => d.revenue),
+          borderColor: '#6366f1',
+          backgroundColor: revenueGradient,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#6366f1',
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          order: 1
+        },
+        {
+          label: '순익',
+          data: salesData.map(d => d.profit || d.revenue * 0.3), // 순익 데이터가 없으면 매출의 30%로 계산
+          borderColor: '#10b981',
+          backgroundColor: profitGradient,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#10b981',
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 8,
+            font: { size: 11, weight: '600', family: 'Inter' },
+            padding: 15
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          bodySpacing: 6,
+          callbacks: {
+            label: function (context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += formatCurrency(context.parsed.y);
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            borderDash: [4, 4],
+            color: '#f1f5f9',
+            drawBorder: false
+          },
+          ticks: {
+            callback: value => formatCurrency(value).replace('₩', ''),
+            font: { size: 11 }
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: {
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: view === 'monthly' ? 12 : 15,
+            font: { size: 11 }
+          }
+        }
+      },
+      animation: {
+        duration: 750,
+        easing: 'easeInOutQuart'
+      }
+    }
+  });
+}
+
+// 차트 뷰 전환 함수
+export async function switchSalesChartView(view) {
+  if (window.dashboardState.salesChartView === view) return;
+
+  window.dashboardState.salesChartView = view;
+
+  // 버튼 스타일 업데이트
+  const dailyBtn = document.getElementById('btnChartDaily');
+  const monthlyBtn = document.getElementById('btnChartMonthly');
+
+  if (view === 'daily') {
+    dailyBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all';
+    monthlyBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all';
+  } else {
+    dailyBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-700 transition-all';
+    monthlyBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-800 shadow-sm border border-slate-200 transition-all';
+  }
+
+  // 새로운 데이터 로드
+  try {
+    const endpoint = view === 'daily'
+      ? `${API_BASE}/dashboard/sales-chart?days=30`
+      : `${API_BASE}/dashboard/sales-chart?months=12`;
+
+    const response = await axios.get(endpoint);
+    const salesData = response.data.data;
+
+    window.dashboardState.salesChartData = salesData;
+    renderSalesChart(salesData);
+  } catch (error) {
+    console.error('차트 데이터 로드 실패:', error);
+    // 에러 시 기존 데이터로 렌더링
+    renderSalesChart(window.dashboardState.salesChartData);
+  }
+}
+
+// 성장률 계산 헬퍼 함수
+function calculateGrowthRate(data) {
+  if (!data || data.length < 2) return 0;
+
+  const recentAvg = data.slice(-7).reduce((a, b) => a + b, 0) / 7;
+  const previousAvg = data.slice(-14, -7).reduce((a, b) => a + b, 0) / 7;
+
+  if (previousAvg === 0) return 0;
+  return ((recentAvg - previousAvg) / previousAvg) * 100;
+}
 
