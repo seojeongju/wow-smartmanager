@@ -144,7 +144,7 @@ app.post('/create', async (c) => {
 
         return c.json({ success: true, message: '출고 지시가 생성되었습니다.', data: { id: orderId } })
 
-    } catch (e) {
+    } catch (e: any) {
         return c.json({ success: false, error: '출고 지시 생성 중 오류가 발생했습니다: ' + e.message }, 500)
     }
 })

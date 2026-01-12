@@ -1,6 +1,6 @@
 // Cloudflare Bindings 타입
 export type Bindings = {
-  DB: D1Database;
+  DB: any; // D1Database 호환을 위해 any 또는 정식 타입으로 지정
 }
 
 // 상품 타입
