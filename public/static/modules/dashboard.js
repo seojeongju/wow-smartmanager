@@ -3,25 +3,38 @@
  */
 import { API_BASE } from '../utils/constants.js';
 
+// Pagination state
+window.dashboardState = {
+  recentProducts: { page: 1, data: [], itemsPerPage: 5 },
+  recentSales: { page: 1, data: [], itemsPerPage: 5 },
+  lowStock: { page: 1, data: [], itemsPerPage: 5 }
+};
+
 // 대시보드 로드
 export async function loadDashboard(content) {
   try {
-    // 병렬 데이터 로드
+    // 병렬 데이터 로드 - limit을 늘려서 더 많은 데이터 가져오기
     const [summaryRes, salesChartRes, categoryStatsRes, recentProductsRes, recentSalesRes, lowStockRes] = await Promise.all([
       axios.get(`${API_BASE}/dashboard/summary`),
       axios.get(`${API_BASE}/dashboard/sales-chart?days=30`),
       axios.get(`${API_BASE}/dashboard/category-stats`),
-      axios.get(`${API_BASE}/dashboard/recent-products?limit=5`),
-      axios.get(`${API_BASE}/dashboard/recent-sales?limit=5`),
-      axios.get(`${API_BASE}/dashboard/low-stock-alerts?limit=5`)
+      axios.get(`${API_BASE}/dashboard/recent-products?limit=20`), // 20개로 증가
+      axios.get(`${API_BASE}/dashboard/recent-sales?limit=20`),    // 20개로 증가
+      axios.get(`${API_BASE}/dashboard/low-stock-alerts?limit=20`) // 20개로 증가
     ]);
 
     const summary = summaryRes.data.data;
     const salesData = salesChartRes.data.data;
     const categoryData = categoryStatsRes.data.data;
-    const recentProducts = recentProductsRes.data.data;
-    const recentSales = recentSalesRes.data.data;
-    const lowStock = lowStockRes.data.data;
+
+    // 페이지네이션 상태 업데이트
+    window.dashboardState.recentProducts.data = recentProductsRes.data.data;
+    window.dashboardState.recentSales.data = recentSalesRes.data.data;
+    window.dashboardState.lowStock.data = lowStockRes.data.data;
+
+    const recentProducts = window.dashboardState.recentProducts.data;
+    const recentSales = window.dashboardState.recentSales.data;
+    const lowStock = window.dashboardState.lowStock.data;
 
     content.innerHTML = `
       <!-- Header -->
@@ -128,25 +141,20 @@ export async function loadDashboard(content) {
             </h3>
           </div>
           <div class="p-4 flex-1">
-            <ul class="space-y-4">
-              ${recentProducts.length > 0 ? recentProducts.map(p => `
-                <li class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                  <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden flex-shrink-0 border border-slate-200">
-                    ${p.image_url ? `<img src="${p.image_url}" class="w-full h-full object-cover">` : '<i class="fas fa-image"></i>'}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate">${p.name}</p>
-                    <p class="text-xs text-slate-500 truncate">${p.category} > ${p.sku}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="font-bold text-emerald-600 text-sm">${formatCurrency(p.selling_price)}</p>
-                    <p class="text-xs text-slate-400">재고: ${p.current_stock}</p>
-                  </div>
-                </li>
-              `).join('') : '<li class="text-center text-slate-400 py-8 text-sm">등록된 상품이 없습니다.</li>'}
+            <ul class="space-y-4" id="recentProductsList">
+              ${renderPaginatedProducts()}
             </ul>
           </div>
-          <div class="p-4 border-t border-slate-50 text-center">
+          <div class="px-4 py-3 border-t border-slate-50 flex items-center justify-between">
+             <button onclick="changeDashboardPage('recentProducts', -1)" id="btnProductsPrev" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               <i class="fas fa-chevron-left mr-1"></i>이전
+             </button>
+             <span class="text-xs font-mono text-slate-600" id="productsPageIndicator">1 / 1</span>
+             <button onclick="changeDashboardPage('recentProducts', 1)" id="btnProductsNext" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               다음<i class="fas fa-chevron-right ml-1"></i>
+             </button>
+          </div>
+          <div class="px-4 pb-4 text-center border-t border-slate-50">
              <button onclick="loadPage('products')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center justify-center w-full py-1">
                 전체보기 <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
              </button>
@@ -161,23 +169,23 @@ export async function loadDashboard(content) {
             </h3>
           </div>
           <div class="p-4 flex-1">
-            <ul class="space-y-4">
-              ${recentSales.length > 0 ? recentSales.map(s => `
-                <li class="flex items-center justify-between">
-                  <div>
-                    <p class="font-semibold text-slate-800 text-sm">${s.customer_name || '비회원'}</p>
-                    <p class="text-xs text-slate-500">${new Date(s.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="font-bold text-slate-800 text-sm">${formatCurrency(s.final_amount)}</p>
-                    <span class="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">완료</span>
-                  </div>
-                </li>
-              `).join('') : '<li class="text-center text-slate-400 py-4 text-sm">판매 내역이 없습니다.</li>'}
+            <ul class="space-y-4" id="recentSalesList">
+              ${renderPaginatedSales()}
             </ul>
           </div>
-          <div class="p-3 border-t border-slate-50 text-center">
-             <button onclick="loadPage('sales')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors">전체보기 <i class="fas fa-chevron-right ml-1"></i></button>
+          <div class="px-4 py-3 border-t border-slate-50 flex items-center justify-between">
+             <button onclick="changeDashboardPage('recentSales', -1)" id="btnSalesPrev" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               <i class="fas fa-chevron-left mr-1"></i>이전
+             </button>
+             <span class="text-xs font-mono text-slate-600" id="salesPageIndicator">1 / 1</span>
+             <button onclick="changeDashboardPage('recentSales', 1)" id="btnSalesNext" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               다음<i class="fas fa-chevron-right ml-1"></i>
+             </button>
+          </div>
+          <div class="px-4 pb-4 text-center border-t border-slate-50">
+             <button onclick="loadPage('sales')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center justify-center w-full py-1">
+                전체보기 <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
+             </button>
           </div>
         </div>
 
@@ -189,23 +197,23 @@ export async function loadDashboard(content) {
             </h3>
           </div>
           <div class="p-4 flex-1">
-            <ul class="space-y-3">
-              ${lowStock.length > 0 ? lowStock.map(p => `
-                <li class="bg-rose-50/50 rounded-lg p-3 border border-rose-100">
-                  <div class="flex justify-between items-start mb-1">
-                    <p class="font-semibold text-slate-800 text-sm truncate flex-1 mr-2">${p.name}</p>
-                    <span class="bg-rose-100 text-rose-600 text-[10px] font-bold px-1.5 py-0.5 rounded">${p.current_stock}개 남음</span>
-                  </div>
-                  <div class="flex justify-between text-xs text-slate-500">
-                     <span>${p.sku}</span>
-                     <span>최소 유지: ${p.min_stock_alert}</span>
-                  </div>
-                </li>
-              `).join('') : '<li class="text-center text-slate-400 py-4 text-sm">재고 부족 상품이 없습니다.</li>'}
+            <ul class="space-y-3" id="lowStockList">
+              ${renderPaginatedLowStock()}
             </ul>
           </div>
-          <div class="p-3 border-t border-slate-50 text-center">
-             <button onclick="loadPage('stock')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors">전체보기 <i class="fas fa-chevron-right ml-1"></i></button>
+          <div class="px-4 py-3 border-t border-slate-50 flex items-center justify-between">
+             <button onclick="changeDashboardPage('lowStock', -1)" id="btnLowStockPrev" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               <i class="fas fa-chevron-left mr-1"></i>이전
+             </button>
+             <span class="text-xs font-mono text-slate-600" id="lowStockPageIndicator">1 / 1</span>
+             <button onclick="changeDashboardPage('lowStock', 1)" id="btnLowStockNext" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+               다음<i class="fas fa-chevron-right ml-1"></i>
+             </button>
+          </div>
+          <div class="px-4 pb-4 text-center border-t border-slate-50">
+             <button onclick="loadPage('stock')" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center justify-center w-full py-1">
+                전체보기 <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
+             </button>
           </div>
         </div>
       </div>
@@ -314,10 +322,137 @@ export async function loadDashboard(content) {
       }
     });
 
+    // 페이지 인디케이터 업데이트
+    updateDashboardPaginationControls();
+
   } catch (error) {
     console.error('대시보드 로드 실패:', error);
     showError(content, '대시보드 정보를 불러오는데 실패했습니다.');
   }
+}
+
+// 페이지네이션 렌더링 함수들
+function renderPaginatedProducts() {
+  const { page, data, itemsPerPage } = window.dashboardState.recentProducts;
+  const start = (page - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const pageData = data.slice(start, end);
+
+  if (pageData.length === 0) {
+    return '<li class="text-center text-slate-400 py-8 text-sm">등록된 상품이 없습니다.</li>';
+  }
+
+  return pageData.map(p => `
+    <li class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+      <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden flex-shrink-0 border border-slate-200">
+        ${p.image_url ? `<img src="${p.image_url}" class="w-full h-full object-cover">` : '<i class="fas fa-image"></i>'}
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-slate-800 text-sm truncate">${p.name}</p>
+        <p class="text-xs text-slate-500 truncate">${p.category} > ${p.sku}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold text-emerald-600 text-sm">${formatCurrency(p.selling_price)}</p>
+        <p class="text-xs text-slate-400">재고: ${p.current_stock}</p>
+      </div>
+    </li>
+  `).join('');
+}
+
+function renderPaginatedSales() {
+  const { page, data, itemsPerPage } = window.dashboardState.recentSales;
+  const start = (page - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const pageData = data.slice(start, end);
+
+  if (pageData.length === 0) {
+    return '<li class="text-center text-slate-400 py-4 text-sm">판매 내역이 없습니다.</li>';
+  }
+
+  return pageData.map(s => `
+    <li class="flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-slate-800 text-sm">${s.customer_name || '비회원'}</p>
+        <p class="text-xs text-slate-500">${new Date(s.created_at).toLocaleDateString()}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold text-slate-800 text-sm">${formatCurrency(s.final_amount)}</p>
+        <span class="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-medium">완료</span>
+      </div>
+    </li>
+  `).join('');
+}
+
+function renderPaginatedLowStock() {
+  const { page, data, itemsPerPage } = window.dashboardState.lowStock;
+  const start = (page - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const pageData = data.slice(start, end);
+
+  if (pageData.length === 0) {
+    return '<li class="text-center text-slate-400 py-4 text-sm">재고 부족 상품이 없습니다.</li>';
+  }
+
+  return pageData.map(p => `
+    <li class="bg-rose-50/50 rounded-lg p-3 border border-rose-100">
+      <div class="flex justify-between items-start mb-1">
+        <p class="font-semibold text-slate-800 text-sm truncate flex-1 mr-2">${p.name}</p>
+        <span class="bg-rose-100 text-rose-600 text-[10px] font-bold px-1.5 py-0.5 rounded">${p.current_stock}개 남음</span>
+      </div>
+      <div class="flex justify-between text-xs text-slate-500">
+         <span>${p.sku}</span>
+         <span>최소 유지: ${p.min_stock_alert}</span>
+      </div>
+    </li>
+  `).join('');
+}
+
+// 페이지 변경 함수
+export function changeDashboardPage(widgetName, delta) {
+  const state = window.dashboardState[widgetName];
+  if (!state) return;
+
+  const totalPages = Math.ceil(state.data.length / state.itemsPerPage);
+  const newPage = state.page + delta;
+
+  if (newPage >= 1 && newPage <= totalPages) {
+    state.page = newPage;
+
+    // 위젯별 리스트 업데이트
+    if (widgetName === 'recentProducts') {
+      document.getElementById('recentProductsList').innerHTML = renderPaginatedProducts();
+    } else if (widgetName === 'recentSales') {
+      document.getElementById('recentSalesList').innerHTML = renderPaginatedSales();
+    } else if (widgetName === 'lowStock') {
+      document.getElementById('lowStockList').innerHTML = renderPaginatedLowStock();
+    }
+
+    updateDashboardPaginationControls();
+  }
+}
+
+// 페이지네이션 컨트롤 업데이트
+function updateDashboardPaginationControls() {
+  // 최근 상품
+  const productsState = window.dashboardState.recentProducts;
+  const productsTotalPages = Math.ceil(productsState.data.length / productsState.itemsPerPage);
+  document.getElementById('productsPageIndicator').textContent = `${productsState.page} / ${productsTotalPages}`;
+  document.getElementById('btnProductsPrev').disabled = productsState.page <= 1;
+  document.getElementById('btnProductsNext').disabled = productsState.page >= productsTotalPages;
+
+  // 최근 판매
+  const salesState = window.dashboardState.recentSales;
+  const salesTotalPages = Math.ceil(salesState.data.length / salesState.itemsPerPage);
+  document.getElementById('salesPageIndicator').textContent = `${salesState.page} / ${salesTotalPages}`;
+  document.getElementById('btnSalesPrev').disabled = salesState.page <= 1;
+  document.getElementById('btnSalesNext').disabled = salesState.page >= salesTotalPages;
+
+  // 재고 부족
+  const lowStockState = window.dashboardState.lowStock;
+  const lowStockTotalPages = Math.ceil(lowStockState.data.length / lowStockState.itemsPerPage);
+  document.getElementById('lowStockPageIndicator').textContent = `${lowStockState.page} / ${lowStockTotalPages}`;
+  document.getElementById('btnLowStockPrev').disabled = lowStockState.page <= 1;
+  document.getElementById('btnLowStockNext').disabled = lowStockState.page >= lowStockTotalPages;
 }
 
 
