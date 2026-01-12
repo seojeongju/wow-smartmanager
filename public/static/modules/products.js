@@ -92,6 +92,7 @@ export async function loadProducts(content) {
     console.error('상품 목록 로드 실패:', error);
     showError(content, '상품 목록을 불러오는데 실패했습니다.');
   }
+}
 
 // 상품 데이터 다운로드
 export async function downloadProducts() {
@@ -118,9 +119,9 @@ export async function downloadProducts() {
 
     downloadCSV(products, `상품목록_${new Date().toISOString().slice(0, 10)}.csv`, headers);
   } catch (error) {
-    console.error('상품 데이터 다운로드 실패:', error);
     alert('데이터를 불러오는데 실패했습니다.');
   }
+}
 
 
 export function injectProductModal() {
@@ -573,7 +574,7 @@ export async function fillCategoryDatalist() {
   } catch (e) {
     console.error('카테고리 로드 실패', e);
   }
-
+}
 
 // --- Extracted from app.js ---
 export async function loadCategories() {
@@ -595,4 +596,16 @@ export async function loadCategories() {
 export function filterProducts() {
   // 필터링 로직 (추후 구현)
   window.loadPage('products');
+}
+
+export async function deleteProduct(id) {
+  if (!confirm('정말 이 상품을 삭제하시겠습니까?')) return;
+  try {
+    await axios.delete(`${API_BASE}/products/${id}`);
+    showSuccess('상품이 삭제되었습니다.');
+    loadPage('products');
+  } catch (error) {
+    console.error('상품 삭제 실패:', error);
+    alert('상품 삭제에 실패했습니다.');
+  }
 }
