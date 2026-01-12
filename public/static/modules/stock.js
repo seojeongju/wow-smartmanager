@@ -823,8 +823,11 @@ export async function loadPricePolicies(content) {
         <div id="contractModalContainer"></div>
     `;
 
-  // Initial Load
-  await loadPriceData();
+
+  // Wait for DOM to render before loading data
+  setTimeout(() => {
+    loadPriceData();
+  }, 10);
 }
 
 export async function loadPriceData() {
@@ -851,11 +854,18 @@ export function renderPriceTable() {
   const footer = document.getElementById('priceFooter');
   const searchBar = document.getElementById('priceGlobalSearch');
 
+  // Add null checks
+  if (!content || !footer || !searchBar) {
+    console.error('Price table DOM elements not found');
+    return;
+  }
+
   if (activeTab === 'grade') {
     searchBar.style.display = 'block';
     footer.style.display = 'flex';
 
-    const searchTerm = document.getElementById('priceSearchInput').value.toLowerCase();
+    const searchInput = document.getElementById('priceSearchInput');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     const filteredProducts = products.filter(p =>
       (p.name && p.name.toLowerCase().includes(searchTerm)) ||
       (p.sku && p.sku.toLowerCase().includes(searchTerm))
