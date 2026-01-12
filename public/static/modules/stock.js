@@ -1802,14 +1802,17 @@ export async function saveContractItems() {
 
 // === Settings Page ===
 
-const res = await axios.get(`${API_BASE}/warehouses`);
-const warehouse = res.data.data.find(w => w.id === id);
-if (warehouse) {
-  openWarehouseModal(true, warehouse);
-}
+
+export async function editWarehouse(id) {
+  try {
+    const res = await axios.get(`${API_BASE}/warehouses`);
+    const warehouse = res.data.data.find(w => w.id === id);
+    if (warehouse) {
+      openWarehouseModal(true, warehouse);
+    }
   } catch (e) {
-  console.error(e);
-}
+    console.error(e);
+  }
 }
 
 export async function deleteWarehouse(id) {
