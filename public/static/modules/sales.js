@@ -1489,4 +1489,11 @@ export async function updateClaimStatus(id, status) {
   }
 }
 
+// 전역 스코프에 필터 함수 노출 (HTML onclick 핸들러용)
+window.toggleAdvancedFilters = toggleAdvancedFilters;
+window.applyQuickFilter = applyQuickFilter;
+window.resetFilters = resetFilters;
+window.filterPosProducts = filterPosProducts;
+
+
 // (Moved to end of file)
