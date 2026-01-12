@@ -88,17 +88,90 @@ export async function renderPosTab(container) {
         <!-- 왼쪽: 상품 목록 -->
         <div class="w-3/4 flex flex-col gap-4">
           <!-- 검색 및 필터 -->
-          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 items-center">
-            <div class="relative flex-1">
-              <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <input type="text" id="posSearch" placeholder="상품명 또는 SKU 검색..." 
-                     class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow bg-slate-50 placeholder-slate-400"
-                     onkeyup="filterPosProducts()">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+            <!-- 검색 바 -->
+            <div class="flex gap-3 items-center">
+              <div class="relative flex-1">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="posSearch" placeholder="상품명 또는 SKU 검색..." 
+                       class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow bg-slate-50 placeholder-slate-400"
+                       onkeyup="filterPosProducts()">
+              </div>
+              <select id="posCategory" class="min-w-[180px] border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-slate-700 font-medium"
+                      onchange="filterPosProducts()">
+                <option value="">전체 카테고리</option>
+              </select>
+              <button onclick="toggleAdvancedFilters()" id="btnAdvancedFilter"
+                      class="px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-slate-600 font-medium">
+                <i class="fas fa-filter"></i>
+                <span class="hidden md:inline">필터</span>
+              </button>
             </div>
-            <select id="posCategory" class="min-w-[180px] border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-slate-700 font-medium"
-                    onchange="filterPosProducts()">
-              <option value="">전체 카테고리</option>
-            </select>
+
+            <!-- 빠른 필터 버튼 -->
+            <div class="flex flex-wrap gap-2">
+              <button onclick="applyQuickFilter('all')" data-filter="all"
+                      class="quick-filter-btn active px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-all hover:border-emerald-500">
+                <i class="fas fa-th mr-1"></i>전체 상품
+              </button>
+              <button onclick="applyQuickFilter('popular')" data-filter="popular"
+                      class="quick-filter-btn px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-all hover:border-emerald-500">
+                <i class="fas fa-fire text-rose-500 mr-1"></i>인기 상품
+              </button>
+              <button onclick="applyQuickFilter('new')" data-filter="new"
+                      class="quick-filter-btn px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-all hover:border-emerald-500">
+                <i class="fas fa-star text-amber-500 mr-1"></i>신상품
+              </button>
+              <button onclick="applyQuickFilter('low-stock')" data-filter="low-stock"
+                      class="quick-filter-btn px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-all hover:border-emerald-500">
+                <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i>재고 부족
+              </button>
+              <button onclick="applyQuickFilter('in-stock')" data-filter="in-stock"
+                      class="quick-filter-btn px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium transition-all hover:border-emerald-500">
+                <i class="fas fa-check-circle text-emerald-600 mr-1"></i>재고 있음
+              </button>
+            </div>
+
+            <!-- 고급 필터 (접기/펼치기) -->
+            <div id="advancedFilters" class="hidden border-t border-slate-100 pt-4 space-y-3">
+              <!-- 가격 범위 -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1.5">최소 가격</label>
+                  <input type="number" id="priceMin" placeholder="0" 
+                         class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                         onchange="filterPosProducts()">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1.5">최대 가격</label>
+                  <input type="number" id="priceMax" placeholder="999999" 
+                         class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                         onchange="filterPosProducts()">
+                </div>
+              </div>
+
+              <!-- 재고 범위 -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1.5">최소 재고</label>
+                  <input type="number" id="stockMin" placeholder="0" 
+                         class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                         onchange="filterPosProducts()">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1.5">최대 재고</label>
+                  <input type="number" id="stockMax" placeholder="999999" 
+                         class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                         onchange="filterPosProducts()">
+                </div>
+              </div>
+
+              <!-- 필터 초기화 -->
+              <button onclick="resetFilters()" 
+                      class="w-full py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors border border-slate-200">
+                <i class="fas fa-redo mr-1"></i>필터 초기화
+              </button>
+            </div>
           </div>
 
           <!-- 상품 그리드 -->
@@ -888,11 +961,123 @@ export function renderPosProducts(filterText = '', filterCat = '') {
 }
 
 export function filterPosProducts() {
-  const text = document.getElementById('posSearch').value;
-  const cat = document.getElementById('posCategory').value;
+  const text = document.getElementById('posSearch')?.value || '';
+  const cat = document.getElementById('posCategory')?.value || '';
+  const priceMin = parseFloat(document.getElementById('priceMin')?.value) || 0;
+  const priceMax = parseFloat(document.getElementById('priceMax')?.value) || Infinity;
+  const stockMin = parseFloat(document.getElementById('stockMin')?.value) || 0;
+  const stockMax = parseFloat(document.getElementById('stockMax')?.value) || Infinity;
+
   window.posPage = 1; // 검색 시 1페이지로 리셋
+
+  let filtered = window.products || [];
+
+  // 텍스트 검색
+  if (text) {
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(text.toLowerCase()) ||
+      p.sku.toLowerCase().includes(text.toLowerCase())
+    );
+  }
+
+  // 카테고리 필터
+  if (cat) {
+    filtered = filtered.filter(p => p.category === cat);
+  }
+
+  // 가격 범위 필터
+  filtered = filtered.filter(p =>
+    p.selling_price >= priceMin && p.selling_price <= priceMax
+  );
+
+  // 재고 범위 필터
+  filtered = filtered.filter(p =>
+    p.current_stock >= stockMin && p.current_stock <= stockMax
+  );
+
+  // 빠른 필터 적용
+  const activeQuickFilter = window.activeQuickFilter || 'all';
+  if (activeQuickFilter !== 'all') {
+    filtered = applyQuickFilterLogic(filtered, activeQuickFilter);
+  }
+
+  window.filteredPosList = filtered;
   renderPosProducts(text, cat);
 }
+
+// 빠른 필터 로직
+function applyQuickFilterLogic(products, filterType) {
+  switch (filterType) {
+    case 'popular':
+      // 판매량이 높은 상품 (실제로는 sales_count 필드 필요)
+      return products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 50);
+    case 'new':
+      // 최근 등록된 상품 (created_at 기준)
+      return products.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 50);
+    case 'low-stock':
+      // 재고 부족 상품
+      return products.filter(p => p.current_stock > 0 && p.current_stock <= (p.min_stock_alert || 10));
+    case 'in-stock':
+      // 재고 있는 상품
+      return products.filter(p => p.current_stock > 0);
+    default:
+      return products;
+  }
+}
+
+// 빠른 필터 적용
+export function applyQuickFilter(filterType) {
+  window.activeQuickFilter = filterType;
+
+  // 버튼 활성화 스타일 업데이트
+  document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    if (btn.dataset.filter === filterType) {
+      btn.classList.add('active', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-500');
+    } else {
+      btn.classList.remove('active', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-500');
+    }
+  });
+
+  filterPosProducts();
+}
+
+// 고급 필터 토글
+export function toggleAdvancedFilters() {
+  const advancedFilters = document.getElementById('advancedFilters');
+  const btn = document.getElementById('btnAdvancedFilter');
+
+  if (advancedFilters.classList.contains('hidden')) {
+    advancedFilters.classList.remove('hidden');
+    btn.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-500');
+  } else {
+    advancedFilters.classList.add('hidden');
+    btn.classList.remove('bg-emerald-50', 'text-emerald-600', 'border-emerald-500');
+  }
+}
+
+// 필터 초기화
+export function resetFilters() {
+  document.getElementById('posSearch').value = '';
+  document.getElementById('posCategory').value = '';
+  document.getElementById('priceMin').value = '';
+  document.getElementById('priceMax').value = '';
+  document.getElementById('stockMin').value = '';
+  document.getElementById('stockMax').value = '';
+
+  window.activeQuickFilter = 'all';
+
+  // 버튼 스타일 초기화
+  document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    if (btn.dataset.filter === 'all') {
+      btn.classList.add('active', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-500');
+    } else {
+      btn.classList.remove('active', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-500');
+    }
+  });
+
+  filterPosProducts();
+}
+
 
 export function changePosPage(delta) {
   const list = window.filteredPosList || window.products;
