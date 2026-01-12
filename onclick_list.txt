@@ -1,0 +1,809 @@
+﻿
+public\static\app.js:176:            <button onclick="switchInb
+oundTab('order')" id="tab-inbound-order" class="px-4 py-2 text-
+sm font-bold text-slate-600 border-b-2 border-transparent hover
+:text-emerald-600 transition-colors">
+public\static\app.js:179:            <button onclick="switchInb
+oundTab('supplier')" id="tab-inbound-supplier" class="px-4 py-2
+ text-sm font-bold text-slate-600 border-b-2 border-transparent
+ hover:text-emerald-600 transition-colors">
+public\static\app.js:183:        <button class="mb-2 bg-indigo-
+600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md
+ shadow-indigo-100 hover:bg-indigo-700 transition-all hover:-tr
+anslate-y-0.5" onclick="alert('준비 중인 기능입니다.')">
+public\static\app.js:291:                 <button onclick="wind
+ow.inboundPage=1; renderInboundOrderList()" class="bg-teal-600 
+text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md s
+hadow-teal-100 hover:bg-teal-700 transition-all hover:-translat
+e-y-0.5 whitespace-nowrap">
+public\static\app.js:315:                                <span 
+class="font-mono text-sm text-slate-600 font-bold group-hover:t
+ext-emerald-600 transition-colors cursor-pointer" onclick="aler
+t('발주서 상세 보기: ${item.po_number}')">${item.po_number}</span>
+public\static\app.js:337:                                    <b
+utton class="px-2 py-1 text-xs font-medium text-emerald-600 bg-
+emerald-50 rounded hover:bg-emerald-100 border border-emerald-2
+00 transition-colors" onclick="openInboundDetailModal(${item.id
+})">상세입고</button>
+public\static\app.js:359:                    <button onclick="c
+hangeInboundPage(-1)" 
+public\static\app.js:365:                    <button onclick="c
+hangeInboundPage(1)" 
+public\static\app.js:431:        <button onclick="switchOutboun
+dTab('simple')" id="tab-outbound-simple" class="px-4 py-2 text-
+sm font-bold text-slate-600 border-b-2 border-transparent hover
+:text-emerald-600 transition-colors">
+public\static\app.js:434:        <button onclick="switchOutboun
+dTab('history')" id="tab-outbound-history" class="px-4 py-2 tex
+t-sm font-bold text-slate-600 border-b-2 border-transparent hov
+er:text-emerald-600 transition-colors">
+public\static\app.js:437:        <button onclick="switchOutboun
+dTab('warehouse')" id="tab-outbound-warehouse" class="px-4 py-2
+ text-sm font-bold text-slate-600 border-b-2 border-transparent
+ hover:text-emerald-600 transition-colors">
+public\static\app.js:522:                    <button onclick="o
+penWarehouseModal()" class="bg-teal-600 text-white px-4 py-2 ro
+unded-lg text-sm font-bold shadow-md shadow-teal-100 hover:bg-t
+eal-700 transition-all hover:-translate-y-0.5 flex items-center
+">
+public\static\app.js:562:                                      
+      <button onclick="editWarehouse(${w.id})" class="text-slat
+e-400 hover:text-indigo-600 transition-colors p-1" title="수정">
+public\static\app.js:565:                                      
+      <button onclick="deleteWarehouse(${w.id})" class="text-sl
+ate-400 hover:text-rose-500 transition-colors p-1" title="삭제">
+public\static\app.js:608:            <button onclick="closeWare
+houseModal()" class="text-slate-400 hover:text-slate-600 transi
+tion-colors">
+public\static\app.js:631:            <button onclick="closeWare
+houseModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold t
+ext-slate-600 hover:bg-slate-200 transition-colors">취소</button>
+public\static\app.js:632:            <button onclick="submitWar
+ehouse()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-
+white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo
+-200 transition-all hover:-translate-y-0.5" id="btnSaveWarehous
+e">저장</button>
+public\static\app.js:772:             <button onclick="changeOu
+tboundPage(-1)" id="btnObPrev" class="px-3 py-1.5 rounded-lg bo
+rder border-slate-200 hover:bg-slate-50 disabled:opacity-50 dis
+abled:cursor-not-allowed transition-colors">
+public\static\app.js:776:             <button onclick="changeOu
+tboundPage(1)" id="btnObNext" class="px-3 py-1.5 rounded-lg bor
+der border-slate-200 hover:bg-slate-50 disabled:opacity-50 disa
+bled:cursor-not-allowed transition-colors">
+public\static\app.js:790:                   <button onclick="cl
+earOutboundCart()" class="text-xs text-rose-500 hover:text-rose
+-700">전체 삭제</button>
+public\static\app.js:895:             <button onclick="submitSi
+mpleOutbound()" class="w-full bg-emerald-600 text-white py-3 ro
+unded-xl font-bold text-lg hover:bg-emerald-700 shadow-lg shado
+w-emerald-200 transition-all">
+public\static\app.js:974:            <button onclick="addToOutb
+oundCart(${p.id})" class="w-8 h-8 flex items-center justify-cen
+ter rounded-full bg-slate-50 text-emerald-600 hover:bg-emerald-
+600 hover:text-white transition-all ml-2">
+public\static\app.js:1016:                     <button onclick=
+"updateOutboundQty(${item.id}, -1)" class="w-6 h-6 flex items-c
+enter justify-center text-slate-500 hover:text-emerald-600"><i 
+class="fas fa-minus text-[10px]"></i></button>
+public\static\app.js:1018:                     <button onclick=
+"updateOutboundQty(${item.id}, 1)" class="w-6 h-6 flex items-ce
+nter justify-center text-slate-500 hover:text-emerald-600"><i c
+lass="fas fa-plus text-[10px]"></i></button>
+public\static\app.js:1020:                 <button onclick="rem
+oveOutboundItem(${item.id})" class="text-slate-300 hover:text-r
+ose-500 px-1"><i class="fas fa-times"></i></button>
+public\static\app.js:1240:             <button onclick="window.
+outboundHistoryPage = 1; renderOutboundHistoryTab(document.getE
+lementById('outboundTabContent'))" class="bg-teal-600 text-whit
+e px-5 py-2.5 rounded-lg text-sm font-bold shadow-md shadow-tea
+l-100 hover:bg-teal-700 transition-all hover:-translate-y-0.5 w
+hitespace-nowrap">
+public\static\app.js:1245:             <button onclick="downloa
+dOutboundExcel()" class="bg-emerald-600 text-white px-5 py-2.5 
+rounded-lg text-sm font-bold shadow-md shadow-emerald-100 hover
+:bg-emerald-700 transition-all hover:-translate-y-0.5 whitespac
+e-nowrap ml-auto">
+public\static\app.js:1293:                        <button oncli
+ck="openOutboundDetail(${o.id})" class="text-indigo-600 hover:t
+ext-indigo-900 font-bold text-xs bg-indigo-50 hover:bg-indigo-1
+00 px-3 py-2 rounded transition-colors">
+public\static\app.js:1316:                <button id="btnOutbou
+ndHistoryPrev" onclick="changeOutboundHistoryPage(-1)" 
+public\static\app.js:1322:                <button id="btnOutbou
+ndHistoryNext" onclick="changeOutboundHistoryPage(1)" 
+public\static\app.js:1437:                <button onclick="docu
+ment.getElementById('outboundDetailModal').classList.add('hidde
+n')" class="text-slate-400 hover:text-slate-600 transition-colo
+rs w-8 h-8 flex items-center justify-center rounded-full hover:
+bg-slate-100">
+public\static\app.js:1466:                        <button id="b
+tnSavePicking" onclick="savePicking()" class="bg-indigo-600 tex
+t-white px-3 py-1.5 rounded text-xs hover:bg-indigo-700 transit
+ion-colors hidden font-semibold">
+public\static\app.js:1500:                        <button id="b
+tnPacking" onclick="performPacking()" class="bg-blue-600 text-w
+hite px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors t
+ext-sm font-bold">
+public\static\app.js:1503:                        <button id="b
+tnConfirmShip" onclick="confirmShipment()" class="bg-emerald-60
+0 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transiti
+on-colors text-sm font-bold">
+public\static\app.js:1688:                    <button onclick="
+openInvoiceModal(${s.id})" class="text-indigo-600 hover:text-in
+digo-900 font-medium text-sm transition-colors bg-indigo-50 px-
+3 py-1.5 rounded-lg hover:bg-indigo-100">
+public\static\app.js:1719:                    <button onclick="
+printInvoice()" class="bg-indigo-600 text-white px-4 py-2 round
+ed-lg hover:bg-indigo-700 transition-colors flex items-center s
+hadow-sm">
+public\static\app.js:1722:                    <button onclick="
+document.getElementById('invoiceModal').classList.add('hidden')
+" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items
+-center justify-center rounded-full hover:bg-slate-100">
+public\static\app.js:1924:                <button onclick="swit
+chSystemTab('tenants')" id="sys-tab-tenants" class="sys-tab-btn
+ pb-3 text-sm font-bold border-b-2 text-emerald-600 border-emer
+ald-500 transition-colors whitespace-nowrap">
+public\static\app.js:1927:                <button onclick="swit
+chSystemTab('users')" id="sys-tab-users" class="sys-tab-btn pb-
+3 text-sm font-medium text-slate-500 border-b-2 border-transpar
+ent hover:text-emerald-600 transition-colors whitespace-nowrap"
+>
+public\static\app.js:1930:                <button onclick="swit
+chSystemTab('stats')" id="sys-tab-stats" class="sys-tab-btn pb-
+3 text-sm font-medium text-slate-500 border-b-2 border-transpar
+ent hover:text-emerald-600 transition-colors whitespace-nowrap"
+>
+public\static\app.js:1933:                <button onclick="swit
+chSystemTab('plan-requests')" id="sys-tab-plan-requests" class=
+"sys-tab-btn pb-3 text-sm font-medium text-slate-500 border-b-2
+ border-transparent hover:text-emerald-600 transition-colors wh
+itespace-nowrap">
+public\static\app.js:1984:            <button onclick="openTena
+ntModal()" class="bg-emerald-600 text-white px-4 py-2 rounded s
+hadow hover:bg-emerald-700 font-bold text-sm transition-colors"
+>
+public\static\app.js:2015:                                <butt
+on onclick="viewTenantDetail(${t.id})" class="p-1.5 text-indigo
+-500 hover:bg-indigo-50 rounded transition-colors" title="상세"><
+i class="fas fa-eye"></i></button>
+public\static\app.js:2016:                                <butt
+on onclick="editTenant(${t.id}, '${t.name}', '${t.plan}', '${t.
+status}')" class="p-1.5 text-emerald-600 hover:bg-emerald-50 ro
+unded transition-colors" title="수정"><i class="fas fa-edit"></i>
+</button>
+public\static\app.js:2017:                                <butt
+on onclick="manageTenant(${t.id})" class="px-2 py-1 text-white 
+bg-emerald-600 hover:bg-emerald-700 rounded text-xs font-bold t
+ransition-colors" title="관리"><i class="fas fa-sign-in-alt mr-1"
+></i>관리</button>
+public\static\app.js:2018:                                <butt
+on onclick="deleteTenant(${t.id}, '${t.name}')" class="p-1.5 te
+xt-rose-500 hover:bg-rose-50 rounded transition-colors" title="
+삭제"><i class="fas fa-trash"></i></button>
+public\static\app.js:2057:                                <butt
+on onclick="resetUserPassword(${u.id}, '${u.name}')" class="px-
+3 py-1 text-indigo-600 border border-indigo-200 rounded hover:b
+g-indigo-50 text-xs font-bold transition-colors">비번 초기화</button
+>
+public\static\app.js:2058:                                <butt
+on onclick="changeUserRole(${u.id}, '${u.name}', '${u.role || '
+STAFF'}')" class="px-3 py-1 text-emerald-600 border border-emer
+ald-200 rounded hover:bg-emerald-50 text-xs font-bold transitio
+n-colors">권한 변경</button>
+public\static\app.js:2139:                                    <
+button onclick="processPlanRequest(${r.id}, 'approve')" class="
+text-emerald-600 hover:bg-emerald-50 px-2 py-1 rounded text-xs 
+font-bold mr-1 border border-emerald-200 transition-colors">수락<
+/button>
+public\static\app.js:2140:                                    <
+button onclick="processPlanRequest(${r.id}, 'reject')" class="t
+ext-rose-500 hover:bg-rose-50 px-2 py-1 rounded text-xs font-bo
+ld border border-rose-200 transition-colors">거절</button>
+public\static\app.js:2170:            <button onclick="closeTen
+antModal('create')" class="w-8 h-8 flex items-center justify-ce
+nter rounded-lg hover:bg-white/20 transition-colors">
+public\static\app.js:2195:          <button onclick="closeTenan
+tModal('create')" class="px-5 py-2.5 rounded-lg font-semibold t
+ext-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+public\static\app.js:2196:          <button onclick="submitCrea
+teTenant()" class="px-5 py-2.5 rounded-lg font-semibold bg-emer
+ald-600 text-white hover:bg-emerald-700 transition-colors shado
+w-md">생성하기</button>
+public\static\app.js:2273:              <button onclick="closeT
+enantModal('detail')" class="w-8 h-8 flex items-center justify-
+center rounded-lg hover:bg-white/20 transition-colors">
+public\static\app.js:2314:            <button onclick="editTena
+nt(${tenant.id}, '${tenant.name}', '${tenant.plan}', '${tenant.
+status}')" class="px-5 py-2.5 rounded-lg font-semibold bg-emera
+ld-600 text-white hover:bg-emerald-700 transition-colors">
+public\static\app.js:2317:            <button onclick="closeTen
+antModal('detail')" class="px-5 py-2.5 rounded-lg font-semibold
+ text-slate-700 hover:bg-slate-200 transition-colors">닫기</butto
+n>
+public\static\app.js:2355:            <button onclick="closeTen
+antModal('edit')" class="w-8 h-8 flex items-center justify-cent
+er rounded-lg hover:bg-white/20 transition-colors">
+public\static\app.js:2388:          <button onclick="closeTenan
+tModal('edit')" class="px-5 py-2.5 rounded-lg font-semibold tex
+t-slate-700 hover:bg-slate-200 transition-colors">취소</button>
+public\static\app.js:2389:          <button onclick="submitEdit
+Tenant(${tenantId})" class="px-5 py-2.5 rounded-lg font-semibol
+d bg-emerald-600 text-white hover:bg-emerald-700 transition-col
+ors shadow-md">저장하기</button>
+public\static\app.js:2548:            <button onclick="closeRol
+eModal()" class="w-8 h-8 flex items-center justify-center round
+ed-lg hover:bg-white/20 transition-colors">
+public\static\app.js:2568:                <button onclick="sele
+ctRole('${role}', ${userId}, '${userName}')" class="role-card g
+roup relative bg-white border-2 ${isCurrent ? 'border-' + confi
+g.color + '-500 ring-4 ring-' + config.color + '-100 opacity-50
+ cursor-not-allowed' : 'border-slate-200 hover:border-' + confi
+g.color + '-300 cursor-pointer hover:-translate-y-1'} rounded-x
+l p-5 transition-all duration-200 hover:shadow-lg" ${isCurrent 
+? 'disabled' : ''}>
+public\static\app.js:2586:          <button onclick="closeRoleM
+odal()" class="px-5 py-2.5 rounded-lg font-semibold text-slate-
+700 hover:bg-slate-200 transition-colors">취소</button>
+public\static\app.js:2660:        <div class="bg-white rounded-
+2xl p-6 shadow-sm border border-slate-100 flex justify-between 
+items-start hover:shadow-md transition-shadow group cursor-poin
+ter" onclick="loadPage('outbound')">
+public\static\app.js:2696:        <div class="bg-white rounded-
+2xl p-6 shadow-sm border border-slate-100 flex justify-between 
+items-start hover:shadow-md transition-shadow group cursor-poin
+ter" onclick="loadPage('stock')">
+public\static\app.js:2769:             <button onclick="loadPag
+e('products')" class="text-xs text-slate-500 hover:text-indigo-
+600 font-medium transition-colors flex items-center justify-cen
+ter w-full py-1">
+public\static\app.js:2799:             <button onclick="loadPag
+e('sales')" class="text-xs text-slate-500 hover:text-indigo-600
+ font-medium transition-colors">전체보기 <i class="fas fa-chevron-r
+ight ml-1"></i></button>
+public\static\app.js:2827:             <button onclick="loadPag
+e('stock')" class="text-xs text-slate-500 hover:text-indigo-600
+ font-medium transition-colors">전체보기 <i class="fas fa-chevron-r
+ight ml-1"></i></button>
+public\static\app.js:2954:          <button onclick="downloadPr
+oducts()" class="bg-emerald-600 text-white px-4 py-2 rounded ho
+ver:bg-emerald-700 flex items-center">
+public\static\app.js:2957:          <button onclick="showProduc
+tModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover
+:bg-blue-700 flex items-center">
+public\static\app.js:3003:                    <button onclick="
+editProduct(${p.id})" class="text-indigo-600 hover:text-indigo-
+900 mr-3 transition-colors">
+public\static\app.js:3006:                    <button onclick="
+deleteProduct(${p.id})" class="text-red-500 hover:text-red-700 
+transition-colors">
+public\static\app.js:3063:                    <button onclick="
+downloadCustomers()" class="px-4 py-2 bg-emerald-50 text-emeral
+d-600 rounded-lg hover:bg-emerald-100 font-bold transition-colo
+rs text-sm border border-emerald-200">
+public\static\app.js:3066:                    <button onclick="
+showCustomerModal()" class="px-4 py-2 bg-indigo-600 text-white 
+rounded-lg hover:bg-indigo-700 font-bold shadow-md shadow-indig
+o-200 transition-all hover:-translate-y-0.5 text-sm">
+public\static\app.js:3163:                    <tr class="hover:
+bg-indigo-50/30 transition-colors group cursor-pointer" onclick
+="openCustomerDetail(${c.id})">
+public\static\app.js:3192:                        <td class="px
+-6 py-4 text-center" onclick="event.stopPropagation()">
+public\static\app.js:3194:                                <butt
+on onclick="editCustomer(${c.id})" class="text-slate-400 hover:
+text-indigo-600 p-2 transition-colors rounded hover:bg-indigo-5
+0" title="수정"><i class="fas fa-edit"></i></button>
+public\static\app.js:3195:                                <butt
+on onclick="deleteCustomer(${c.id})" class="text-slate-400 hove
+r:text-rose-500 p-2 transition-colors rounded hover:bg-rose-50"
+ title="삭제"><i class="fas fa-trash"></i></button>
+public\static\app.js:3256:                       <button onclic
+k="openContractModal(null, {id: ${customer.id}, name: '${custom
+er.name}'})" class="w-full py-2.5 border border-indigo-200 text
+-indigo-600 rounded-xl hover:bg-indigo-50 font-bold text-sm tra
+nsition-colors flex items-center justify-center gap-2">
+public\static\app.js:3259:                        <button oncli
+ck="editCustomer(${customer.id}); document.getElementById('cust
+omerDetailModal').classList.add('hidden');" class="w-full py-2.
+5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 fon
+t-bold text-sm transition-colors">
+public\static\app.js:3309:      <div id="customerDetailModal" c
+lass="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidde
+n transition-opacity opacity-0 flex items-center justify-center
+ p-4" onclick="if(event.target===this) this.classList.add('hidd
+en')">
+public\static\app.js:3313:                 <button onclick="doc
+ument.getElementById('customerDetailModal').classList.add('hidd
+en')" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 h
+over:bg-slate-200 hover:text-slate-600 flex items-center justif
+y-center transition-colors">
+public\static\app.js:3335:                <button id="tab-stock
+-status" onclick="switchStockTab('status')" class="stock-tab-bt
+n pb-3 text-sm font-bold border-b-2 transition-colors border-em
+erald-500 text-emerald-600">
+public\static\app.js:3338:                <button id="tab-stock
+-movements" onclick="switchStockTab('movements')" class="stock-
+tab-btn pb-3 text-sm font-medium border-b-2 border-transparent 
+text-slate-500 hover:text-emerald-600 hover:border-slate-200 tr
+ansition-colors">
+public\static\app.js:3341:                <button id="tab-stock
+-warehouse" onclick="switchStockTab('warehouse')" class="stock-
+tab-btn pb-3 text-sm font-medium border-b-2 border-transparent 
+text-slate-500 hover:text-emerald-600 hover:border-slate-200 tr
+ansition-colors">
+public\static\app.js:3403:        <button id="tab-pos" class="p
+x-6 py-3 font-bold text-emerald-600 border-b-2 border-emerald-6
+00 transition-colors flex items-center gap-2" onclick="switchSa
+lesTab('pos')">
+public\static\app.js:3406:        <button id="tab-orders" class
+="px-6 py-3 font-medium text-slate-500 hover:text-slate-700 tra
+nsition-colors flex items-center gap-2" onclick="switchSalesTab
+('orders')">
+public\static\app.js:3409:        <button id="tab-claims" class
+="px-6 py-3 font-medium text-slate-500 hover:text-slate-700 tra
+nsition-colors flex items-center gap-2" onclick="switchSalesTab
+('claims')">
+public\static\app.js:3490:            <button id="btnPosPrev" o
+nclick="changePosPage(-1)" 
+public\static\app.js:3495:            <button id="btnPosNext" o
+nclick="changePosPage(1)" 
+public\static\app.js:3568:            <button onclick="checkout
+()" class="w-full bg-emerald-600 text-white py-4 rounded-xl fon
+t-bold text-lg hover:bg-emerald-700 shadow-xl shadow-emerald-20
+0 transition-all transform active:scale-[0.98] flex items-cente
+r justify-center gap-2">
+public\static\app.js:3618:              <button onclick="downlo
+adSales()" class="bg-emerald-600 hover:bg-emerald-700 text-whit
+e px-3 py-2 rounded-lg text-sm font-medium flex items-center tr
+ansition-colors shadow-sm whitespace-nowrap">
+public\static\app.js:3645:              <button onclick="window
+.orderPage = 1; renderOrderList()" class="bg-emerald-600 hover:
+bg-emerald-700 text-white px-5 py-1.5 rounded text-sm font-medi
+um transition-colors shadow-sm whitespace-nowrap">
+public\static\app.js:3674:          <button id="btnOrderPrev" o
+nclick="changeOrderPage(-1)" 
+public\static\app.js:3679:          <button id="btnOrderNext" o
+nclick="changeOrderPage(1)" 
+public\static\app.js:3812:               <button onclick="openS
+hippingModal(${s.id})" class="h-8 px-2.5 bg-emerald-50 hover:bg
+-emerald-100 text-emerald-600 border border-emerald-200 rounded
+ text-xs font-semibold transition-colors flex items-center gap-
+1.5 whitespace-nowrap">
+public\static\app.js:3815:               <button onclick="openC
+laimModal(${s.id})" class="h-8 px-2.5 bg-amber-50 hover:bg-ambe
+r-100 text-amber-600 border border-amber-200 rounded text-xs fo
+nt-semibold transition-colors flex items-center gap-1.5 whitesp
+ace-nowrap">
+public\static\app.js:3819:               <button onclick="cance
+lSale(${s.id})" class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 
+text-rose-600 border border-rose-200 rounded text-xs font-semib
+old transition-colors flex items-center gap-1.5 whitespace-nowr
+ap">
+public\static\app.js:3879:            <button onclick="window.c
+laimPage = 1; renderClaimList()" class="bg-amber-600 hover:bg-a
+mber-700 text-white px-5 py-1.5 rounded text-sm font-medium tra
+nsition-colors shadow-sm whitespace-nowrap">
+public\static\app.js:3908:          <button id="btnClaimPrev" o
+nclick="changeClaimPage(-1)" 
+public\static\app.js:3913:          <button id="btnClaimNext" o
+nclick="changeClaimPage(1)" 
+public\static\app.js:4052:              <button onclick="update
+ClaimStatus(${c.id}, 'approved')" 
+public\static\app.js:4056:              <button onclick="update
+ClaimStatus(${c.id}, 'rejected')" 
+public\static\app.js:4061:              <button onclick="update
+ClaimStatus(${c.id}, 'completed')" 
+public\static\app.js:4274:          <button onclick="closeProdu
+ctModal()" class="text-slate-400 hover:text-slate-600 transitio
+n-colors w-8 h-8 flex items-center justify-center rounded-full 
+hover:bg-slate-100">
+public\static\app.js:4280:          <button type="button" oncli
+ck="switchProductTab('basic')" id="tab-basic" class="px-4 py-3 
+text-sm font-medium text-indigo-600 border-b-2 border-indigo-60
+0 transition-colors">기본 정보</button>
+public\static\app.js:4281:          <button type="button" oncli
+ck="switchProductTab('detail')" id="tab-detail" class="px-4 py-
+3 text-sm font-medium text-slate-500 hover:text-slate-700 trans
+ition-colors">상세 정보</button>
+public\static\app.js:4282:          <button type="button" oncli
+ck="switchProductTab('media')" id="tab-media" class="px-4 py-3 
+text-sm font-medium text-slate-500 hover:text-slate-700 transit
+ion-colors">이미지/미디어</button>
+public\static\app.js:4305:                      <button type="b
+utton" id="btnGenerateSku" onclick="generateAutoSku()" class="p
+x-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded
+-lg text-sm font-medium transition-colors whitespace-nowrap">
+public\static\app.js:4418:                    <button type="but
+ton" onclick="removeImage()" id="btnRemoveImage" class="text-sm
+ text-red-500 hover:text-red-700 hidden">
+public\static\app.js:4428:            <button type="button" onc
+lick="closeProductModal()" class="px-5 py-2.5 border border-sla
+te-300 rounded-lg text-sm font-semibold text-slate-600 hover:bg
+-white hover:text-slate-800 transition-colors focus:outline-non
+e focus:ring-2 focus:ring-slate-200">
+public\static\app.js:4728:          <button onclick="closeCusto
+merModal()" class="text-slate-400 hover:text-slate-600 transiti
+on-colors w-8 h-8 flex items-center justify-center rounded-full
+ hover:bg-slate-100">
+public\static\app.js:4808:            <button type="button" onc
+lick="closeCustomerModal()" class="px-5 py-2.5 border border-sl
+ate-300 rounded-lg text-sm font-semibold text-slate-600 hover:b
+g-white hover:text-slate-800 transition-colors focus:outline-no
+ne focus:ring-2 focus:ring-slate-200">
+public\static\app.js:5028:         onclick="addToCart(${p.id})"
+>
+public\static\app.js:5168:          <button onclick="removeFrom
+Cart(${item.product.id})" class="text-slate-300 hover:text-rose
+-500 transition-colors absolute right-2 top-2 p-1">
+public\static\app.js:5175:            <button onclick="updateCa
+rtQuantity(${item.product.id}, -1)" class="w-6 h-6 flex items-c
+enter justify-center text-slate-500 hover:text-emerald-600 hove
+r:bg-emerald-50 rounded-l transition-colors">
+public\static\app.js:5179:            <button onclick="updateCa
+rtQuantity(${item.product.id}, 1)" class="w-6 h-6 flex items-ce
+nter justify-center text-slate-500 hover:text-emerald-600 hover
+:bg-emerald-50 rounded-r transition-colors">
+public\static\app.js:5264:          <button onclick="document.g
+etElementById('shippingModal').classList.add('hidden')" class="
+text-slate-400 hover:text-slate-600 transition-colors w-8 h-8 f
+lex items-center justify-center rounded-full hover:bg-slate-100
+">
+public\static\app.js:5294:            <button type="button" onc
+lick="document.getElementById('shippingModal').classList.add('h
+idden')" class="px-5 py-2.5 border border-slate-300 rounded-lg 
+text-sm font-semibold text-slate-600 hover:bg-white hover:text-
+slate-800 transition-colors focus:outline-none focus:ring-2 foc
+us:ring-slate-200">취소</button>
+public\static\app.js:5352:          <button onclick="document.g
+etElementById('claimModal').classList.add('hidden')" class="tex
+t-slate-400 hover:text-slate-600 transition-colors w-8 h-8 flex
+ items-center justify-center rounded-full hover:bg-slate-100">
+public\static\app.js:5380:            <button type="button" onc
+lick="document.getElementById('claimModal').classList.add('hidd
+en')" class="px-5 py-2.5 border border-slate-300 rounded-lg tex
+t-sm font-semibold text-slate-600 hover:bg-white hover:text-sla
+te-800 transition-colors focus:outline-none focus:ring-2 focus:
+ring-slate-200">취소</button>
+public\static\app.js:5470:          <button class="settings-tab
+ active px-6 py-4 font-medium transition-all flex items-center"
+ data-tab="company" onclick="switchSettingsTab('company')">
+public\static\app.js:5473:          <button class="settings-tab
+ px-6 py-4 font-medium transition-all flex items-center" data-t
+ab="manager" onclick="switchSettingsTab('manager')">
+public\static\app.js:5476:          <button class="settings-tab
+ px-6 py-4 font-medium transition-all flex items-center" data-t
+ab="document" onclick="switchSettingsTab('document')">
+public\static\app.js:5479:          <button class="settings-tab
+ px-6 py-4 font-medium transition-all flex items-center" data-t
+ab="api" onclick="switchSettingsTab('api')">
+public\static\app.js:5482:          <button class="settings-tab
+ px-6 py-4 font-medium transition-all flex items-center" data-t
+ab="logo" onclick="switchSettingsTab('logo')">
+public\static\app.js:5792:                <button onclick="docu
+ment.getElementById('inboundModal').remove()" class="text-slate
+-400 hover:text-white transition-colors">
+public\static\app.js:5851:                    <button onclick="
+document.getElementById('inboundModal').remove()" class="px-5 p
+y-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 round
+ed-lg transition-colors border border-slate-200">
+public\static\app.js:5854:                    <button id="btnPr
+ocessInbound" onclick="processInbound(${item.id})" class="px-6 
+py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indi
+go-700 rounded-lg shadow-lg shadow-indigo-200 transition-all fl
+ex items-center gap-2 hover:-translate-y-0.5 disabled:bg-slate-
+300 disabled:shadow-none disabled:cursor-not-allowed" 
+public\static\app.js:5900:        <button onclick="openSupplier
+Modal()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg
+ text-sm font-bold shadow-md shadow-indigo-100 hover:bg-indigo-
+700 transition-all hover:-translate-y-0.5 flex items-center gap
+-2">
+public\static\app.js:5949:                <button onclick='open
+SupplierModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' 
+class="text-indigo-400 hover:text-indigo-600 mr-3 transition-co
+lors p-2 hover:bg-indigo-50 rounded-full">
+public\static\app.js:5952:                <button onclick="dele
+teSupplier(${item.id})" class="text-rose-400 hover:text-rose-60
+0 transition-colors p-2 hover:bg-rose-50 rounded-full">
+public\static\app.js:5986:                <button onclick="docu
+ment.getElementById('supplierModal').remove()" class="text-slat
+e-400 hover:text-white transition-colors">
+public\static\app.js:6019:                    <button onclick="
+document.getElementById('supplierModal').remove()" class="px-5 
+py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg font-bold t
+ransition-colors">취소</button>
+public\static\app.js:6020:                    <button onclick="
+saveSupplier()" class="px-6 py-2.5 bg-indigo-600 text-white rou
+nded-lg font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-7
+00 hover:-translate-y-0.5 transition-all flex items-center gap-
+2">
+public\static\app.js:6087:                <button onclick="open
+StockModal('in')" class="bg-emerald-600 text-white px-3 py-1.5 
+rounded text-sm font-bold hover:bg-emerald-700 transition-color
+s shadow-sm flex items-center gap-1 shadow-emerald-100">
+public\static\app.js:6090:                <button onclick="open
+StockModal('out')" class="bg-rose-500 text-white px-3 py-1.5 ro
+unded text-sm font-bold hover:bg-rose-600 transition-colors sha
+dow-sm flex items-center gap-1 shadow-rose-100">
+public\static\app.js:6093:                <button onclick="aler
+t('준비 중')" class="bg-blue-600 text-white px-3 py-1.5 rounded te
+xt-sm font-bold hover:bg-blue-700 transition-colors shadow-sm f
+lex items-center gap-1 shadow-blue-100">
+public\static\app.js:6096:                <button onclick="open
+StockModal('adjust')" class="bg-orange-500 text-white px-3 py-1
+.5 rounded text-sm font-bold hover:bg-orange-600 transition-col
+ors shadow-sm flex items-center gap-1 shadow-orange-100">
+public\static\app.js:6099:                <button onclick="rend
+erStockStatus()" class="bg-slate-700 text-white px-3 py-1.5 rou
+nded text-sm font-bold hover:bg-slate-800 transition-colors sha
+dow-sm flex items-center gap-1">
+public\static\app.js:6253:                <button onclick="sear
+chStockMovements()" class="bg-emerald-600 text-white px-4 py-2 
+rounded text-sm font-bold hover:bg-emerald-700 transition-color
+s shadow-sm ml-auto flex items-center gap-1">
+public\static\app.js:6362:                    <button onclick="
+alert('삭제 기능 준비중')" class="text-slate-300 hover:text-rose-500 t
+ransition-colors p-2 rounded-full hover:bg-rose-50">
+public\static\app.js:6381:      pageNums += `<button onclick="w
+indow.stockMovementPage=${i}; loadStockMovementsData()" 
+public\static\app.js:6392:                <button onclick="wind
+ow.stockMovementPage--; loadStockMovementsData()" ${curr <= 1 ?
+ 'disabled' : ''} class="min-w-[32px] h-8 rounded border border
+-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:o
+pacity-50 disabled:cursor-not-allowed text-xs flex items-center
+ justify-center">
+public\static\app.js:6396:                <button onclick="wind
+ow.stockMovementPage++; loadStockMovementsData()" ${curr >= tot
+alPages ? 'disabled' : ''} class="min-w-[32px] h-8 rounded bord
+er border-slate-200 bg-white text-slate-500 hover:bg-slate-50 d
+isabled:opacity-50 disabled:cursor-not-allowed text-xs flex ite
+ms-center justify-center">
+public\static\app.js:6419:          <button onclick="closeStock
+Modal()" class="text-slate-400 hover:text-rose-500 transition-c
+olors w-8 h-8 flex items-center justify-center rounded-full hov
+er:bg-red-50">
+public\static\app.js:6466:            <button type="button" onc
+lick="closeStockModal()" class="px-5 py-2.5 border border-slate
+-300 rounded-lg text-sm font-bold text-slate-500 hover:bg-white
+ hover:text-slate-800 transition-colors">
+public\static\app.js:6620:                        <button oncli
+ck="openStockModal('in')" class="bg-emerald-600 text-white px-4
+ py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-
+sm flex items-center gap-2"><i class="fas fa-plus"></i> 입고</but
+ton>
+public\static\app.js:6621:                        <button oncli
+ck="openStockModal('out')" class="bg-rose-600 text-white px-4 p
+y-2 rounded-lg text-xs font-bold hover:bg-rose-700 shadow-sm fl
+ex items-center gap-2"><i class="fas fa-minus"></i> 출고</button>
+public\static\app.js:6622:                        <button oncli
+ck="openStockModal('adjust')" class="bg-slate-600 text-white px
+-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 shadow-
+sm flex items-center gap-2"><i class="fas fa-sliders-h"></i> 조정
+</button>
+public\static\app.js:6627:                    <button onclick="
+switchStockTab('status')" id="tab-status" class="pb-4 text-sm f
+ont-bold border-b-2 border-indigo-600 text-indigo-700 flex item
+s-center gap-2 transition-colors">
+public\static\app.js:6630:                    <button onclick="
+switchStockTab('movements')" id="tab-movements" class="pb-4 tex
+t-sm font-bold border-b-2 border-transparent text-slate-500 hov
+er:text-slate-700 flex items-center gap-2 transition-colors">
+public\static\app.js:6633:                     <button onclick=
+"switchStockTab('warehouses')" id="tab-warehouses" class="pb-4 
+text-sm font-bold border-b-2 border-transparent text-slate-500 
+hover:text-slate-700 flex items-center gap-2 transition-colors"
+>
+public\static\app.js:6800:            <div onclick="alert('창고 추
+가 기능은 추후 구현 예정입니다.')" class="cursor-pointer border-2 border-das
+hed border-slate-200 rounded-xl bg-slate-50/50 hover:bg-white h
+over:border-indigo-300 transition-all group flex flex-col items
+-center justify-center h-40">
+public\static\app.js:6841:            <button onclick="openOpti
+onGroupModal()" class="bg-teal-600 hover:bg-teal-700 text-white
+ px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-teal
+-500/20 transition-all flex items-center gap-2 transform active
+:scale-95">
+public\static\app.js:6884:                        <button oncli
+ck="openOptionGroupModal(${g.id})" class="w-8 h-8 rounded-lg bg
+-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emeral
+d-50 transition-colors flex items-center justify-center"><i cla
+ss="fas fa-pen text-xs"></i></button>
+public\static\app.js:6885:                        <button oncli
+ck="deleteOptionGroup(${g.id})" class="w-8 h-8 rounded-lg bg-sl
+ate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 tran
+sition-colors flex items-center justify-center"><i class="fas f
+a-trash text-xs"></i></button>
+public\static\app.js:6915:                        <button oncli
+ck="closeOptionGroupModal()" class="text-slate-400 hover:text-s
+late-600 transition-colors"><i class="fas fa-times text-lg"></i
+></button>
+public\static\app.js:6926:                            <button o
+nclick="addOptionValueRow()" class="text-xs font-bold text-emer
+ald-600 hover:text-emerald-700 bg-white border border-emerald-2
+00 px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-emer
+ald-50 transition-colors"><i class="fas fa-plus"></i> 추가하기</but
+ton>
+public\static\app.js:6933:                        <button oncli
+ck="closeOptionGroupModal()" class="px-5 py-2.5 bg-white border
+ border-slate-200 rounded-xl text-sm font-bold text-slate-600 h
+over:bg-slate-50 transition-colors">취소</button>
+public\static\app.js:6934:                        <button oncli
+ck="saveOptionGroup()" class="px-8 py-2.5 bg-emerald-600 text-w
+hite rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-l
+g shadow-emerald-500/30 transition-all transform active:scale-9
+5">저장하기</button>
+public\static\app.js:6992:        <button onclick="this.parentE
+lement.remove()" class="w-10 h-10 flex items-center justify-cen
+ter text-slate-300 hover:text-rose-500 bg-slate-50 hover:bg-ros
+e-50 rounded-xl transition-all"><i class="fas fa-trash-alt"></i
+></button>
+public\static\app.js:7069:                    <button onclick="
+filterPriceTable()" class="absolute right-2 top-2 bottom-2 bg-t
+eal-600 text-white px-4 rounded-lg text-xs font-bold hover:bg-t
+eal-700 transition-colors">검색</button>
+public\static\app.js:7074:                    <button onclick="
+switchPriceTab('grade')" id="tab-grade" class="pb-4 text-sm fon
+t-bold border-b-2 border-teal-600 text-teal-700 flex items-cent
+er gap-2 transition-colors">
+public\static\app.js:7077:                    <button onclick="
+switchPriceTab('customer')" id="tab-customer" class="pb-4 text-
+sm font-bold border-b-2 border-transparent text-slate-500 hover
+:text-slate-700 flex items-center gap-2 transition-colors">
+public\static\app.js:7093:                 <button onclick="sav
+ePriceChanges()" class="bg-teal-600 text-white px-8 py-3 rounde
+d-xl font-bold shadow-lg shadow-teal-500/30 hover:bg-teal-700 t
+ransition-all flex items-center gap-2 transform active:scale-95
+">
+public\static\app.js:7208:                <div onclick="openCon
+tractModal()" class="cursor-pointer border-2 border-dashed bord
+er-slate-200 rounded-2xl bg-slate-50/50 hover:bg-teal-50 hover:
+border-teal-200 transition-all group flex flex-col items-center
+ justify-center h-48">
+public\static\app.js:7219:                        <button oncli
+ck="openContractModal(${c.id})" class="text-slate-400 hover:tex
+t-teal-600"><i class="fas fa-pen"></i></button>
+public\static\app.js:7233:                        <button oncli
+ck="openContractModal(${c.id})" class="flex-1 bg-teal-50 text-t
+eal-700 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-100 t
+ransition-colors">
+public\static\app.js:7275:  const btn = document.querySelector(
+'button[onclick="savePriceChanges()"]');
+public\static\app.js:7349:                <button onclick="aler
+t('엑셀 가져오기 준비중')" class="flex items-center gap-1 px-4 py-2 bg-e
+merald-600 text-white rounded-lg text-sm font-bold hover:bg-eme
+rald-700 shadow-sm transition-colors">
+public\static\app.js:7352:                <button onclick="aler
+t('내보내기 준비중')" class="flex items-center gap-1 px-4 py-2 bg-teal
+-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 
+shadow-sm transition-colors">
+public\static\app.js:7355:                <button onclick="open
+ProductModal()" class="flex items-center gap-1 px-4 py-2 bg-eme
+rald-500 text-white rounded-lg text-sm font-bold hover:bg-emera
+ld-600 shadow-sm transition-colors">
+public\static\app.js:7473:                <button onclick="open
+ProductModal(${p.id})" class="text-slate-400 hover:text-emerald
+-600 mx-1 transition-colors"><i class="fas fa-edit"></i></butto
+n>
+public\static\app.js:7474:                <button onclick="dele
+teProduct(${p.id})" class="text-slate-400 hover:text-rose-600 m
+x-1 transition-colors"><i class="fas fa-trash-alt"></i></button
+>
+public\static\app.js:7485:    pageNums += `<button onclick="win
+dow.productPageState.page=${i}; renderProductList()" 
+public\static\app.js:7493:                <button onclick="wind
+ow.productPageState.page--; renderProductList()" ${page <= 1 ? 
+'disabled' : ''} class="w-8 h-8 rounded-lg border border-slate-
+200 bg-white text-slate-500 text-xs hover:bg-slate-50 disabled:
+opacity-50"><i class="fas fa-chevron-left"></i></button>
+public\static\app.js:7495:                <button onclick="wind
+ow.productPageState.page++; renderProductList()" ${page >= tota
+lPages ? 'disabled' : ''} class="w-8 h-8 rounded-lg border bord
+er-slate-200 bg-white text-slate-500 text-xs hover:bg-slate-50 
+disabled:opacity-50"><i class="fas fa-chevron-right"></i></butt
+on>
+public\static\app.js:7511:                    <button onclick="
+closeProductModal()" class="text-slate-400 hover:text-slate-600
+ transition-colors"><i class="fas fa-times text-xl"></i></butto
+n>
+public\static\app.js:7517:                    <button class="pb
+-3 text-sm font-bold border-b-2 border-transparent text-slate-4
+00 hover:text-slate-600" onclick="alert('준비중')">상세 정보</button>
+public\static\app.js:7518:                    <button class="pb
+-3 text-sm font-bold border-b-2 border-transparent text-slate-4
+00 hover:text-slate-600" onclick="alert('준비중')">이미지/미디어</button
+>
+public\static\app.js:7558:                                    <
+button type="button" onclick="generateSku()" id="btnGenSku" cla
+ss="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-xs fo
+nt-bold hover:bg-slate-300 transition-colors">생성</button>
+public\static\app.js:7607:                    <button onclick="
+closeProductModal()" class="px-5 py-2.5 border border-slate-200
+ rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 
+transition-colors">취소</button>
+public\static\app.js:7608:                    <button onclick="
+saveProduct()" class="px-8 py-2.5 bg-emerald-600 text-white rou
+nded-xl text-sm font-bold hover:bg-emerald-700 shadow-lg shadow
+-emerald-200 transition-all transform active:scale-[0.98]">저장하기
+</button>
+public\static\app.js:7758:                        <button oncli
+ck="closeContractModal()" class="text-slate-400 hover:text-slat
+e-600 transition-colors"><i class="fas fa-times text-lg"></i></
+button>
+public\static\app.js:7777:                                <butt
+on onclick="resetContractCust()" class="ml-auto text-slate-400 
+hover:text-rose-500 text-sm">변경</button>
+public\static\app.js:7800:                                    <
+button onclick="addContractItem()" class="bg-indigo-600 hover:b
+g-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold 
+shadow-md shadow-indigo-200 transition-all h-[38px]">추가</button
+>
+public\static\app.js:7820:                        <button oncli
+ck="closeContractModal()" class="px-5 py-2.5 bg-white border bo
+rder-slate-200 rounded-xl text-sm font-bold text-slate-600 hove
+r:bg-slate-50 transition-colors">닫기</button>
+public\static\app.js:7821:                        <button oncli
+ck="saveContractItems()" class="px-8 py-2.5 bg-teal-600 text-wh
+ite rounded-xl text-sm font-bold hover:bg-teal-700 shadow-lg sh
+adow-teal-500/30 transition-all transform active:scale-95 flex 
+items-center gap-2">
+public\static\app.js:7947:        <div onclick="selectContractP
+roduct(${p.id})" class="px-4 py-2 hover:bg-slate-50 cursor-poin
+ter border-b border-slate-50 last:border-0">
+public\static\app.js:8041:               <button onclick="remov
+eContractItem(${item.product_id})" class="w-8 h-8 rounded-lg bg
+-slate-50 text-slate-400 hover:text-rose-500 hover:bg-rose-50 f
+lex items-center justify-center transition-colors">
+public\static\app.js:8087:          <button onclick="switchSett
+ingsTab('company')" id="tab-company" class="px-4 py-2 font-semi
+bold border-b-2 border-emerald-500 text-emerald-600">회사 정보</but
+ton>
+public\static\app.js:8088:          <button onclick="switchSett
+ingsTab('team')" id="tab-team" class="px-4 py-2 text-slate-500 
+border-b-2 border-transparent">팀 설정</button>
+public\static\app.js:8089:          <button onclick="switchSett
+ingsTab('plan')" id="tab-plan" class="px-4 py-2 text-slate-500 
+border-b-2 border-transparent">플랜 설정</button>
+public\static\app.js:8090:          <button onclick="switchSett
+ingsTab('api')" id="tab-api" class="px-4 py-2 text-slate-500 bo
+rder-b-2 border-transparent">API 설정</button>
+public\static\app.js:8091:          <button onclick="switchSett
+ingsTab('warehouse')" id="tab-warehouse" class="px-4 py-2 text-
+slate-500 border-b-2 border-transparent">창고 관리</button>
+public\static\app.js:8225:        <button onclick="inviteTeamMe
+mber()" class="bg-emerald-600 hover:bg-emerald-700 text-white p
+x-4 py-2 rounded-lg font-semibold flex items-center gap-2 trans
+ition-colors">
+public\static\app.js:8271:                    <button onclick="
+removeTeamMember(${member.id}, '${member.name}')" class="text-s
+late-400 hover:text-rose-500 transition-colors p-2">
+public\static\app.js:8415:        : `<button onclick="requestPl
+anChange('${plan.id}', '${plan.name}')" class="w-full ${plan.po
+pular ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 
+hover:bg-purple-700'} text-white px-4 py-3 rounded-lg font-semi
+bold transition-colors shadow-md">변경 요청</button>`
+public\static\app.js:8497:                    onclick="toggleAp
+iKeyVisibility()" 
+public\static\app.js:8511:                onclick="saveApiKey()
+" 
+public\static\app.js:8517:                onclick="testApiKey()
+" 
+public\static\app.js:8641:            <button onclick="syncWare
+houseStock()" class="bg-blue-600 hover:bg-blue-700 text-white p
+x-4 py-2 rounded-lg font-semibold flex items-center gap-2 trans
+ition-colors shadow-sm">
+public\static\app.js:8645:            <button onclick="openWare
+houseModal()" class="bg-emerald-600 hover:bg-emerald-700 text-w
+hite px-4 py-2 rounded-lg font-semibold flex items-center gap-2
+ transition-colors shadow-sm">
+public\static\app.js:8696:                      <button onclick
+="editWarehouse(${wh.id})" class="text-slate-400 hover:text-blu
+e-500 transition-colors p-2">
+public\static\app.js:8699:                      <button onclick
+="deleteWarehouse(${wh.id}, '${wh.name}')" class="text-slate-40
+0 hover:text-rose-500 transition-colors p-2">
+public\static\app.js:8737:              <button type="button" o
+nclick="closeWarehouseModal()" class="px-4 py-2 text-slate-600 
+hover:bg-slate-100 rounded-lg transition-colors">
+
+
