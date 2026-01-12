@@ -5,46 +5,6 @@ import { API_BASE } from '../utils/constants.js';
 import { formatDate, formatCurrency, formatNumber, formatDateClean } from '../utils/formatters.js';
 import { showSuccess, showError } from '../utils/ui.js';
 
-export async function loadStock(content) {
-  // 탭 상태 초기화
-  if (!window.currentStockTab) window.currentStockTab = 'status';
-
-  content.innerHTML = `
-    <div class="flex flex-col h-full bg-slate-50">
-        <div class="px-8 pt-6 pb-0 bg-white border-b border-slate-200">
-            <h1 class="text-2xl font-bold text-slate-800 mb-6">재고 관리</h1>
-            <div class="flex space-x-8">
-                <button id="tab-stock-status" onclick="switchStockTab('status')" class="stock-tab-btn pb-3 text-sm font-bold border-b-2 transition-colors border-emerald-500 text-emerald-600">
-                    재고 현황
-                </button>
-                <button id="tab-stock-movements" onclick="switchStockTab('movements')" class="stock-tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-emerald-600 hover:border-slate-200 transition-colors">
-                    입출고 내역
-                </button>
-                <button id="tab-stock-warehouse" onclick="switchStockTab('warehouse')" class="stock-tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-emerald-600 hover:border-slate-200 transition-colors">
-                    창고 관리
-                </button>
-            </div>
-        </div>
-        <div id="stockTabContent" class="flex-1 p-8 overflow-y-auto">
-            <!-- 탭 내용 -->
-        </div>
-    </div>
-  `;
-
-  injectStockModal(); // 모달 초기화
-  switchStockTab(window.currentStockTab); // 초기 탭 로드
-}
-
-
-
-// 판매 관리 로드
-
-// ==================== 설정 페이지 ====================
-
-// 설정 페이지 로드
-
-
-
 // Global State for Movements
 window.stockMovementPage = 1;
 window.stockMovementFilters = {
